@@ -1,4 +1,4 @@
-package burst.pool;
+package burst.pool.brs;
 
 /**
  * <p>This class implements the Shabal-256 digest algorithm under the

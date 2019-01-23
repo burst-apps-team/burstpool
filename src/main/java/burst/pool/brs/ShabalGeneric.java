@@ -1,4 +1,4 @@
-package burst.pool;
+package burst.pool.brs;
 
 /**
  * This class implements Shabal for the output size of 256 bits

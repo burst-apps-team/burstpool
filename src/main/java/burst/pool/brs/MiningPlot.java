@@ -1,4 +1,4 @@
-package burst.pool;
+package burst.pool.brs;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;

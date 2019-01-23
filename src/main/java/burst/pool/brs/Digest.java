@@ -1,4 +1,4 @@
-package burst.pool;
+package burst.pool.brs;
 
 /**
  * <p>This interface documents the API for a hash function. This
