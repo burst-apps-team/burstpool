@@ -87,6 +87,8 @@ public class Pool {
             onNewBestDeadline(submission);
         }
 
+        minerTracker.onMinerSubmittedDeadline(miningInfo.get().getHeight(), submission, deadline);
+
         return deadline;
     }
 
