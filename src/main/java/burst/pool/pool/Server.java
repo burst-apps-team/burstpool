@@ -16,7 +16,6 @@ public class Server extends NanoHTTPD {
     public Server(Pool pool) {
         super(8124);
         this.pool = pool;
-        pool.resetRound();
     }
 
     private BurstAddress parseAddressOrNull(String address) {
@@ -49,7 +48,7 @@ public class Server extends NanoHTTPD {
                     response.append(gson.toJson(new NonceSubmissionResponse(e.getMessage(), null)));
                 }
             } else if (session.getUri().contains("/burst") && Objects.equals(params.get("requestType"), "getMiningInfo")) {
-                response.append(gson.toJson(pool.miningInfo.get()));
+                response.append(gson.toJson(pool.getMiningInfo()));
             }
             return NanoHTTPD.newFixedLengthResponse(response.toString());
         } catch (Throwable t) {

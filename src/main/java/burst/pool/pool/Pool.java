@@ -2,24 +2,21 @@ package burst.pool.pool;
 
 import burst.kit.burst.BurstCrypto;
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.response.AccountsWithRewardRecipientResponse;
 import burst.kit.entity.response.MiningInfoResponse;
 import burst.kit.entity.response.SubmitNonceResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.brs.Generator;
-import burst.pool.brs.MiningPlot;
-import burst.pool.brs.Shabal256;
+import burst.pool.miners.MinerTracker;
 import com.google.gson.Gson;
-import fi.iki.elonen.util.ServerRunner;
+import io.reactivex.Observable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import io.reactivex.Observable;
-import io.reactivex.disposables.Disposable;
 
 public class Pool {
     private final BurstNodeService nodeService;
@@ -28,26 +25,17 @@ public class Pool {
     private final long maxDeadline = Long.MAX_VALUE;
 
     private final AtomicReference<Submission> bestDeadline = new AtomicReference<>(); // todo
-    public final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
-
-    private final Object submitLock = new Object();
-
-    private final Map<BurstAddress, String> submissions = new ConcurrentHashMap<>();
+    private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
 
-    private Pool() {
-        this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
-        refreshMiningInfoThread();
-    }
+    private final MinerTracker minerTracker;
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
-    public static void main(String[] args) {
-        ServerRunner.executeInstance(new Server(new Pool()));
-        try {
-            Thread.sleep(Long.MAX_VALUE);
-        } catch (InterruptedException e) {
-            System.out.println("interrupted!");
-            Thread.currentThread().interrupt();
-        }
+    public Pool(MinerTracker minerTracker) {
+        this.minerTracker = minerTracker;
+        this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
+        disposables.add(refreshMiningInfoThread());
+        resetRound();
     }
 
     private Disposable refreshMiningInfoThread() {
@@ -66,20 +54,17 @@ public class Pool {
         }
     }
 
-    public void resetRound() {
-        submissions.clear();
+    private void resetRound() {
         bestDeadline.set(null);
-        nodeService.getAccountsWithRewardRecipient(burstCrypto.getBurstAddressFromPassphrase(passphrase))
-                .subscribe(response -> {
-                    if (response.hasError()) {
-                        System.out.println("ERROR: " + response.getErrorDescription());
-                    }
-                    myRewardRecipients.clear();
-                    myRewardRecipients.addAll(Arrays.asList(response.getAccounts()));
-                }, Throwable::printStackTrace);
+        disposables.add(nodeService.getAccountsWithRewardRecipient(burstCrypto.getBurstAddressFromPassphrase(passphrase))
+                .subscribe(this::onRewardRecipients, this::onRewardRecipientsError));
     }
 
-    public BigInteger checkNewSubmission(Submission submission) throws SubmissionException {
+    BigInteger checkNewSubmission(Submission submission) throws SubmissionException {
+        if (miningInfo.get() == null) {
+            throw new SubmissionException("Pool does not have mining info");
+        }
+
         if (!myRewardRecipients.contains(submission.getMiner())) {
             throw new SubmissionException("Reward recipient not set to pool");
         }
@@ -91,13 +76,10 @@ public class Pool {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");
         }
 
-        submissions.remove(submission.getMiner());
-        submissions.put(submission.getMiner(), submission.getNonce());
-
         if (bestDeadline.get() != null) {
             System.out.println("Best deadline is " + Generator.calcDeadline(miningInfo.get(), bestDeadline.get()) + ", new deadline is " + deadline);
             if (deadline.compareTo(Generator.calcDeadline(miningInfo.get(), bestDeadline.get())) < 0) {
-                System.out.println("Newer deadline is better!");
+                System.out.println("Newer deadline is better! Submitting...");
                 onNewBestDeadline(submission);
             }
         } else {
@@ -114,10 +96,21 @@ public class Pool {
     }
 
     private void submitDeadline(Submission submission) {
-        synchronized (submitLock) {
-            nodeService.submitNonce(passphrase, submission.getNonce(), submission.getMiner().getBurstID())
-                    .subscribe(this::onNonceSubmitted, this::onSubmitNonceError);
+        disposables.add(nodeService.submitNonce(passphrase, submission.getNonce(), submission.getMiner().getBurstID())
+                .subscribe(this::onNonceSubmitted, this::onSubmitNonceError));
+    }
+
+    private void onRewardRecipients(AccountsWithRewardRecipientResponse rewardRecipients) {
+        if (rewardRecipients.hasError()) {
+            System.out.println("ERROR: " + rewardRecipients.getErrorDescription());
+            return;
         }
+        myRewardRecipients.clear();
+        myRewardRecipients.addAll(Arrays.asList(rewardRecipients.getAccounts()));
+    }
+
+    private void onRewardRecipientsError(Throwable t) {
+        t.printStackTrace();
     }
 
     private void onNonceSubmitted(SubmitNonceResponse response) {
@@ -126,5 +119,9 @@ public class Pool {
 
     private void onSubmitNonceError(Throwable t) {
         t.printStackTrace();
+    }
+
+    MiningInfoResponse getMiningInfo() {
+        return miningInfo.get();
     }
 }
