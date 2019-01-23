@@ -32,6 +32,6 @@ task buildJar(dependsOn: shadowJar)
 
 jar {
     manifest {
-        attributes 'Main-Class': 'burst.faucet.Server'
+        attributes 'Main-Class': 'burst.pool.Launcher'
     }
 }
