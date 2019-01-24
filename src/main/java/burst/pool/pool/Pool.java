@@ -2,6 +2,7 @@ package burst.pool.pool;
 
 import burst.kit.burst.BurstCrypto;
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.BurstValue;
 import burst.kit.entity.response.AccountsWithRewardRecipientResponse;
 import burst.kit.entity.response.MiningInfoResponse;
 import burst.kit.entity.response.SubmitNonceResponse;
@@ -49,6 +50,7 @@ public class Pool {
         if (miningInfo.get() == null || !Objects.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
                 || !Objects.equals(miningInfo.get().getHeight(), newMiningInfo.getHeight())) {
             System.out.println("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + newMiningInfo.getGenerationSignature() +", diff " + newMiningInfo.getBaseTarget() + ")");
+            if (miningInfo.get() != null) minerTracker.onBlockWon(miningInfo.get().getHeight(), BurstValue.fromBurst(10000));
             miningInfo.set(newMiningInfo);
             resetRound();
         }
@@ -87,7 +89,7 @@ public class Pool {
             onNewBestDeadline(submission);
         }
 
-        minerTracker.onMinerSubmittedDeadline(miningInfo.get().getHeight(), submission, deadline);
+        minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight());
 
         return deadline;
     }
