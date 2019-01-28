@@ -4,7 +4,6 @@ import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
 
 import java.math.BigDecimal;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -12,8 +11,8 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Miner implements IMiner {
     private static final double GenesisBaseTarget = 18325193796d;
     private static final double[] alphas;
-    private static final int nAvg = 360; // todo config for these
-    private static final int nMin = 1;
+    private static final int nAvg = 10; // todo config for these
+    private static final int nMin = 0;
     private static final int tMin = 20;
 
     private final BurstAddress address;
@@ -45,13 +44,13 @@ public class Miner implements IMiner {
             share.set(0d);
         }
         share.set(estimatedCapacity.get() / poolCapacity);
+        if (Double.isNaN(share.get())) {
+            share.set(0d);
+        }
     }
 
     @Override
     public void increasePending(BurstValue availableReward) {
-        if (Double.isNaN(share.get())) {
-            return;
-        }
         pendingBalance.updateAndGet(pending -> bdtobv(pending.add(availableReward.multiply(BigDecimal.valueOf(share.get())))));
     }
 
@@ -76,8 +75,7 @@ public class Miner implements IMiner {
         if (hitSum == 0) {
             return 0;
         }
-        //return alpha(nConf) * 240d * (nConf-1d) / (hitSum / GenesisBaseTarget);
-        return alpha(nConf) * 240d * (nConf-1d) / (hitSum / GenesisBaseTarget);
+        return alpha(nConf) * 240d * (((double)nConf)-1d) / (hitSum / GenesisBaseTarget);
     }
 
     static {
@@ -134,6 +132,14 @@ public class Miner implements IMiner {
     @Override
     public double getShare() {
         return share.get();
+    }
+
+    public BurstValue getPendingBalance() {
+        return pendingBalance.get();
+    }
+
+    public BurstAddress getAddress() {
+        return address;
     }
 
     @Override
