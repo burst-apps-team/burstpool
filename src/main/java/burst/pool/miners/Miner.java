@@ -142,6 +142,10 @@ public class Miner implements IMiner {
         return address;
     }
 
+    public void zeroBalance() {
+        pendingBalance.set(BurstValue.fromBurst(0));
+    }
+
     @Override
     public String toString() {
         return "Miner{" +
