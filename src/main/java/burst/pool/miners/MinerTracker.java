@@ -43,7 +43,7 @@ public class MinerTracker {
         miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
     }
 
-    public void onBlockWon(long blockHeight, BurstValue reward) { // todo give amount to winner, take fee
+    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue reward) { // todo give amount to winner, take fee
         // Update each miner's effective capacity
         miners.forEach((address, miner) -> miner.recalculateCapacity(blockHeight));
 
@@ -62,7 +62,7 @@ public class MinerTracker {
         System.out.println(miners);
     }
 
-    public void payoutIfNeeded() {
+    private void payoutIfNeeded() {
         Set<IMiner> payableMinersSet = new HashSet<>();
         for (IMiner miner : miners.values()) {
             if (minimumPayout.compareTo(miner.getPending()) <= 0) {

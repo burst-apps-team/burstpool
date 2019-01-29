@@ -2,7 +2,6 @@ package burst.pool.pool;
 
 import burst.kit.burst.BurstCrypto;
 import burst.kit.entity.BurstAddress;
-import burst.kit.entity.BurstValue;
 import burst.kit.entity.response.AccountsWithRewardRecipientResponse;
 import burst.kit.entity.response.MiningInfoResponse;
 import burst.kit.entity.response.SubmitNonceResponse;
@@ -10,6 +9,7 @@ import burst.kit.service.BurstNodeService;
 import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
 import com.google.gson.Gson;
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -22,8 +22,14 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Pool {
     private final BurstNodeService nodeService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
+
+    // config
     private final String passphrase = "a";
     private final long maxDeadline = Long.MAX_VALUE;
+    private final int processLag = 10;
+
+    // storage
+    private long lastProcessedBlock = 0;
 
     private final AtomicReference<Submission> bestDeadline = new AtomicReference<>(); // todo
     private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
@@ -34,9 +40,19 @@ public class Pool {
 
     public Pool(MinerTracker minerTracker) {
         this.minerTracker = minerTracker;
-        this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
+        //this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
+        this.nodeService = BurstNodeService.getInstance("http://10.0.0.200:6876");
         disposables.add(refreshMiningInfoThread());
+        disposables.add(processBlocksThread());
         resetRound();
+    }
+
+    private Disposable processBlocksThread() {
+        return Observable.interval(0, 1, TimeUnit.SECONDS)
+                .filter(l -> miningInfo.get() != null && miningInfo.get().getHeight() > lastProcessedBlock + processLag)
+                .flatMapCompletable(l -> processNextBlock())
+                .doOnError(Throwable::printStackTrace) // todo thread stops on error :(
+                .subscribe();
     }
 
     private Disposable refreshMiningInfoThread() {
@@ -50,10 +66,17 @@ public class Pool {
         if (miningInfo.get() == null || !Objects.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
                 || !Objects.equals(miningInfo.get().getHeight(), newMiningInfo.getHeight())) {
             System.out.println("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + newMiningInfo.getGenerationSignature() +", diff " + newMiningInfo.getBaseTarget() + ")");
-            if (miningInfo.get() != null) minerTracker.onBlockWon(miningInfo.get().getHeight(), BurstValue.fromBurst(10000));
             miningInfo.set(newMiningInfo);
             resetRound();
         }
+    }
+
+    private Completable processNextBlock() {
+        return nodeService.getBlock(lastProcessedBlock)
+                .flatMapCompletable(block -> nodeService.getRewardRecipient(block.getGenerator())
+                        .filter(response -> response.getRewardRecipient() != null && response.getRewardRecipient() == burstCrypto.getBurstAddressFromPassphrase(passphrase))
+                        .flatMapCompletable(response -> Completable.fromAction(() -> minerTracker.onBlockWon(lastProcessedBlock, block.getGenerator(), block.getBlockReward()))))
+                .doOnComplete(() -> lastProcessedBlock++);
     }
 
     private void resetRound() {
@@ -105,10 +128,6 @@ public class Pool {
     }
 
     private void onRewardRecipients(AccountsWithRewardRecipientResponse rewardRecipients) {
-        if (rewardRecipients.hasError()) {
-            System.out.println("ERROR: " + rewardRecipients.getErrorDescription());
-            return;
-        }
         myRewardRecipients.clear();
         myRewardRecipients.addAll(Arrays.asList(rewardRecipients.getAccounts()));
     }
