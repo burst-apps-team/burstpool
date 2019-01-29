@@ -14,7 +14,10 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class MinerTracker {
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
-    private final Map<BurstAddress, Miner> miners = new ConcurrentHashMap<>();
+    private final Map<BurstAddress, IMiner> miners = new ConcurrentHashMap<>();
+    private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
+    private final BurstNodeService nodeService;
+    private final MinerMaths minerMaths;
 
     // cannot be lower than 2
     private int minimumPayoutCount;
@@ -22,12 +25,18 @@ public class MinerTracker {
     private String poolPassphrase;
     private BurstValue transactionFee;
 
+    public MinerTracker(BurstNodeService nodeService, int nAvg, int nMin) {
+        this.nodeService = nodeService;
+        this.minerMaths = new MinerMaths(nAvg, nMin);
+
+    }
+
     public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight) {
-        Miner miner;
+        IMiner miner;
         if (miners.containsKey(minerAddress)) {
             miner = miners.get(minerAddress);
         } else {
-            miner = new Miner(minerAddress, BurstValue.fromBurst(0), 0, 0);
+            miner = new Miner(minerMaths, minerAddress, BurstValue.fromBurst(0), 0, 0);
             miners.put(minerAddress, miner);
         }
 
@@ -54,12 +63,9 @@ public class MinerTracker {
     }
 
     public void payoutIfNeeded() {
-        BurstNodeService nodeService = BurstNodeService.getInstance("");
-        BurstCrypto burstCrypto = BurstCrypto.getInstance();
-
-        Set<Miner> payableMinersSet = new HashSet<>();
-        for (Miner miner : miners.values()) {
-            if (minimumPayout.compareTo(miner.getPendingBalance()) <= 0) {
+        Set<IMiner> payableMinersSet = new HashSet<>();
+        for (IMiner miner : miners.values()) {
+            if (minimumPayout.compareTo(miner.getPending()) <= 0) {
                 payableMinersSet.add(miner);
             }
         }
@@ -68,11 +74,11 @@ public class MinerTracker {
             return;
         }
 
-        Miner[] payableMiners = payableMinersSet.size() <= 64 ? payableMinersSet.toArray(new Miner[0]) : Arrays.copyOfRange(payableMinersSet.toArray(new Miner[0]), 0, 64);
+        IMiner[] payableMiners = payableMinersSet.size() <= 64 ? payableMinersSet.toArray(new IMiner[0]) : Arrays.copyOfRange(payableMinersSet.toArray(new Miner[0]), 0, 64);
 
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
-        for (Miner miner : payableMiners) {
-            recipients.put(miner.getAddress(), miner.getPendingBalance());
+        for (IMiner miner : payableMiners) {
+            recipients.put(miner.getAddress(), miner.getPending());
         }
 
         compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(poolPassphrase), transactionFee, 1440, recipients)
@@ -81,9 +87,9 @@ public class MinerTracker {
                 .subscribe(response -> onPaidOut(response, payableMiners), this::onPayoutError));
     }
 
-    private void onPaidOut(BroadcastTransactionResponse response, Miner[] paidMiners) {
-        for (Miner miner : paidMiners) {
-            miner.zeroBalance();
+    private void onPaidOut(BroadcastTransactionResponse response, IMiner[] paidMiners) {
+        for (IMiner miner : paidMiners) {
+            miner.zeroPending();
         }
         System.out.println("Paid out, transaction id " + response.getTransactionID());
     }

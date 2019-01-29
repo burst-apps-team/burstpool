@@ -9,12 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Miner implements IMiner {
-    private static final double GenesisBaseTarget = 18325193796d;
-    private static final double[] alphas;
     private static final int nAvg = 10; // todo config for these
     private static final int nMin = 0;
     private static final int tMin = 20;
 
+    private final MinerMaths minerMaths;
     private final BurstAddress address;
     private final AtomicReference<BurstValue> pendingBalance;
     private final AtomicReference<Double> estimatedCapacity;
@@ -23,7 +22,8 @@ public class Miner implements IMiner {
     private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
     private final AtomicReference<Double> hitSum = new AtomicReference<>(0d);
 
-    public Miner(BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share) {
+    public Miner(MinerMaths minerMaths, BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share) {
+        this.minerMaths = minerMaths;
         this.address = address;
         this.pendingBalance = new AtomicReference<>(pendingBalance);
         this.estimatedCapacity = new AtomicReference<>(estimatedCapacity);
@@ -35,7 +35,7 @@ public class Miner implements IMiner {
         // Prune older deadlines
         deadlines.entrySet().removeIf(deadline -> isOldDeadline(deadline.getValue(), currentBlockHeight));
         // Calculate estimated capacity
-        estimatedCapacity.set(estimatedEffectivePlotSize(deadlines.size(), hitSum.get()));
+        estimatedCapacity.set(minerMaths.estimatedEffectivePlotSize(deadlines.size(), hitSum.get()));
     }
 
     @Override
@@ -51,11 +51,12 @@ public class Miner implements IMiner {
 
     @Override
     public void increasePending(BurstValue availableReward) {
-        pendingBalance.updateAndGet(pending -> bdtobv(pending.add(availableReward.multiply(BigDecimal.valueOf(share.get())))));
+        pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(availableReward.multiply(BigDecimal.valueOf(share.get())))));
     }
 
-    private static BurstValue bdtobv(BigDecimal bd) {
-        return BurstValue.fromPlanck(bd.multiply(BigDecimal.TEN.pow(8)).toPlainString());
+    @Override
+    public void zeroPending() {
+        pendingBalance.set(BurstValue.fromBurst(0));
     }
 
     private boolean isOldDeadline(Deadline deadline, long blockHeight) {
@@ -69,36 +70,6 @@ public class Miner implements IMiner {
 
     private void adjustHitSum(double adjustBy) {
         hitSum.updateAndGet(value -> value + adjustBy);
-    }
-
-    private static double estimatedEffectivePlotSize(int nConf, double hitSum) {
-        if (hitSum == 0) {
-            return 0;
-        }
-        return alpha(nConf) * 240d * (((double)nConf)-1d) / (hitSum / GenesisBaseTarget);
-    }
-
-    static {
-        alphas = new double[nAvg];
-        for (int i = 0; i < nAvg; i++) {
-            if (i < nMin-1) {
-                alphas[i] = 0d;
-            } else {
-                double nConf = i + 1;
-                alphas[i] = 1d - ((double)nAvg-nConf)/ nConf *Math.log(nAvg/((double)nAvg-nConf));
-            }
-        }
-        alphas[nAvg-1] = 1d;
-    }
-
-    private static double alpha(int nConf) {
-        if (nConf == 0) {
-            return 0d;
-        }
-        if (alphas.length < nConf) {
-            return 1d;
-        }
-        return alphas[nConf-1];
     }
 
     @Override
@@ -130,20 +101,23 @@ public class Miner implements IMiner {
     }
 
     @Override
-    public double getShare() {
-        return share.get();
-    }
-
-    public BurstValue getPendingBalance() {
+    public BurstValue getPending() {
         return pendingBalance.get();
     }
 
+    @Override
     public BurstAddress getAddress() {
         return address;
     }
 
-    public void zeroBalance() {
-        pendingBalance.set(BurstValue.fromBurst(0));
+    @Override
+    public double getShare() {
+        return share.get();
+    }
+
+    @Override
+    public int getNConf() {
+        return deadlines.size();
     }
 
     @Override
