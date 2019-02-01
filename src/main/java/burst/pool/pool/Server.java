@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Server extends NanoHTTPD {
+    private static final String[] allowedFileExtensions = new String[]{".html", ".css", ".js", ".ico"};
+
     private final StorageService storageService;
     private final PropertyService propertyService;
     private final Pool pool;
@@ -110,7 +112,14 @@ public class Server extends NanoHTTPD {
         if (Objects.equals(uri, "") || Objects.equals(uri, "/")) {
             return redirect("/index.html");
         }
-        InputStream inputStream = getClass().getResourceAsStream("/html" + uri); // TODO vulnerabilities?
+        boolean allowedFile = false;
+        for (String fileExtension : allowedFileExtensions) {
+            if (uri.endsWith(fileExtension)) allowedFile = true;
+        }
+        if (!allowedFile) {
+            return NanoHTTPD.newFixedLengthResponse(Response.Status.FORBIDDEN, "text/html", "<h1>Access Forbidden</h1>");
+        }
+        InputStream inputStream = getClass().getResourceAsStream("/html" + uri);
         if (inputStream == null) {
             return redirect("/404.html");
         }
