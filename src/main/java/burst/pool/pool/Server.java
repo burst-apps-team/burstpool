@@ -2,6 +2,8 @@ package burst.pool.pool;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.util.BurstKitUtils;
+import burst.pool.storage.config.PropertyService;
+import burst.pool.storage.config.Props;
 import com.google.gson.Gson;
 import fi.iki.elonen.NanoHTTPD;
 
@@ -13,17 +15,9 @@ public class Server extends NanoHTTPD {
     private final Pool pool;
     private final Gson gson = BurstKitUtils.buildGson().create();
 
-    public Server(Pool pool) {
-        super(8124);
+    public Server(PropertyService propertyService, Pool pool) {
+        super(propertyService.getInt(Props.serverPort));
         this.pool = pool;
-    }
-
-    private BurstAddress parseAddressOrNull(String address) {
-        if (address == null) {
-            return null;
-        } else {
-            return BurstAddress.fromEither(address); // todo make this return null on null input
-        }
     }
 
     @Override
@@ -34,7 +28,7 @@ public class Server extends NanoHTTPD {
             session.parseBody(new HashMap<>());
             params.putAll(session.getParms());
             if (session.getMethod().equals(Method.POST) && session.getUri().contains("/burst") && Objects.equals(params.get("requestType"), "submitNonce")) {
-                Submission submission = new Submission(parseAddressOrNull(params.get("accountId")), params.get("nonce"));
+                Submission submission = new Submission(BurstAddress.fromEither(params.get("accountId")), params.get("nonce"));
                 try {
                     if (submission.getMiner() == null) {
                         throw new SubmissionException("Account ID not set");

@@ -2,6 +2,8 @@ package burst.pool.miners;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
+import burst.pool.storage.config.PropertyService;
+import burst.pool.storage.config.Props;
 
 import java.math.BigDecimal;
 import java.util.Map;
@@ -9,11 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Miner implements IMiner {
-    private static final int nAvg = 10; // todo config for these
-    private static final int nMin = 0;
-    private static final int tMin = 20;
-
     private final MinerMaths minerMaths;
+    private final PropertyService propertyService;
+
     private final BurstAddress address;
     private final AtomicReference<BurstValue> pendingBalance;
     private final AtomicReference<Double> estimatedCapacity;
@@ -22,8 +22,9 @@ public class Miner implements IMiner {
     private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
     private final AtomicReference<Double> hitSum = new AtomicReference<>(0d);
 
-    public Miner(MinerMaths minerMaths, BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share) {
+    public Miner(MinerMaths minerMaths, PropertyService propertyService, BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share) {
         this.minerMaths = minerMaths;
+        this.propertyService = propertyService;
         this.address = address;
         this.pendingBalance = new AtomicReference<>(pendingBalance);
         this.estimatedCapacity = new AtomicReference<>(estimatedCapacity);
@@ -67,7 +68,7 @@ public class Miner implements IMiner {
     }
 
     private boolean isOldDeadline(Deadline deadline, long blockHeight) {
-        if (blockHeight - deadline.getHeight() >= nAvg) {
+        if (blockHeight - deadline.getHeight() >= propertyService.getInt(Props.nAvg)) {
             adjustHitSum(-deadline.calculateHit());
             return true;
         } else {

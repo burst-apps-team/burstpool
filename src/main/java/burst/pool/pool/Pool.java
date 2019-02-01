@@ -8,6 +8,8 @@ import burst.kit.entity.response.SubmitNonceResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
+import burst.pool.storage.config.PropertyService;
+import burst.pool.storage.config.Props;
 import com.google.gson.Gson;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -24,27 +26,26 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Pool {
     private final BurstNodeService nodeService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
-    private final Semaphore processBlockSemaphore = new Semaphore(1);
+    private final PropertyService propertyService;
+    private final MinerTracker minerTracker;
+    private final CompositeDisposable disposables = new CompositeDisposable();
 
-    // config
-    private final String passphrase = "a";
-    private final long maxDeadline = Long.MAX_VALUE;
-    private final int processLag = 10;
+    private final Semaphore processBlockSemaphore = new Semaphore(1);
 
     // storage
     private long lastProcessedBlock = 1;
     private final Map<Long, Submission> bestSubmissionPerBlock = new ConcurrentHashMap<>();
 
-    private final AtomicReference<Submission> bestDeadline = new AtomicReference<>(); // todo
+    // Variables
+    private final AtomicReference<Submission> bestDeadline = new AtomicReference<>();
     private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
 
-    private final MinerTracker minerTracker;
-    private final CompositeDisposable disposables = new CompositeDisposable();
 
-    public Pool(MinerTracker minerTracker) {
+    public Pool(BurstNodeService nodeService, PropertyService propertyService, MinerTracker minerTracker) {
         this.minerTracker = minerTracker;
-        this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
+        this.propertyService = propertyService;
+        this.nodeService = nodeService;
         disposables.add(refreshMiningInfoThread());
         disposables.add(processBlocksThread());
         resetRound();
@@ -79,7 +80,7 @@ public class Pool {
     }
 
     private Completable processNextBlock() {
-        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + processLag) {
+        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + propertyService.getInt(Props.processLag)) {
             return Completable.complete(); // todo ugly repetition
         }
         try {
@@ -87,7 +88,7 @@ public class Pool {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + processLag) {
+        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + propertyService.getInt(Props.processLag)) {
             processBlockSemaphore.release();
             return Completable.complete();
         }
@@ -111,7 +112,7 @@ public class Pool {
 
     private void resetRound() {
         bestDeadline.set(null);
-        disposables.add(nodeService.getAccountsWithRewardRecipient(burstCrypto.getBurstAddressFromPassphrase(passphrase))
+        disposables.add(nodeService.getAccountsWithRewardRecipient(burstCrypto.getBurstAddressFromPassphrase(propertyService.getString(Props.passphrase)))
                 .subscribe(this::onRewardRecipients, this::onRewardRecipientsError));
     }
 
@@ -127,7 +128,7 @@ public class Pool {
         BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
         System.out.println("New submission from " + submission.getMiner() + ", calculated deadline " + deadline.toString() + " seconds.");
 
-        if (deadline.compareTo(BigInteger.valueOf(maxDeadline)) >= 0) {
+        if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");
         }
 
@@ -155,7 +156,7 @@ public class Pool {
     }
 
     private void submitDeadline(Submission submission) {
-        disposables.add(nodeService.submitNonce(passphrase, submission.getNonce(), submission.getMiner().getBurstID())
+        disposables.add(nodeService.submitNonce(propertyService.getString(Props.passphrase), submission.getNonce(), submission.getMiner().getBurstID())
                 .subscribe(this::onNonceSubmitted, this::onSubmitNonceError));
     }
 
