@@ -16,12 +16,15 @@ import io.reactivex.disposables.Disposable;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Pool {
     private final BurstNodeService nodeService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
+    private final Semaphore processBlockSemaphore = new Semaphore(1);
 
     // config
     private final String passphrase = "a";
@@ -29,7 +32,8 @@ public class Pool {
     private final int processLag = 10;
 
     // storage
-    private long lastProcessedBlock = 0;
+    private long lastProcessedBlock = 1;
+    private final Map<Long, Submission> bestSubmissionPerBlock = new ConcurrentHashMap<>();
 
     private final AtomicReference<Submission> bestDeadline = new AtomicReference<>(); // todo
     private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
@@ -40,23 +44,26 @@ public class Pool {
 
     public Pool(MinerTracker minerTracker) {
         this.minerTracker = minerTracker;
-        //this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
-        this.nodeService = BurstNodeService.getInstance("http://10.0.0.200:6876");
+        this.nodeService = BurstNodeService.getInstance("http://localhost:6876");
         disposables.add(refreshMiningInfoThread());
         disposables.add(processBlocksThread());
         resetRound();
     }
 
     private Disposable processBlocksThread() {
-        return Observable.interval(0, 1, TimeUnit.SECONDS)
-                .filter(l -> miningInfo.get() != null && miningInfo.get().getHeight() > lastProcessedBlock + processLag)
+        return Observable.interval(0, 1, TimeUnit.MILLISECONDS)
                 .flatMapCompletable(l -> processNextBlock())
                 .doOnError(Throwable::printStackTrace) // todo thread stops on error :(
-                .subscribe();
+                .subscribe(() -> {}, this::onProcessBlocksError);
+    }
+
+    private void onProcessBlocksError(Throwable throwable) {
+        System.out.println("opbe");
+        throwable.printStackTrace();
     }
 
     private Disposable refreshMiningInfoThread() {
-        return Observable.interval(0, 1, TimeUnit.SECONDS)
+        return Observable.interval(1, TimeUnit.SECONDS)
                 .flatMapSingle(l -> nodeService.getMiningInfo())
                 .doOnError(Throwable::printStackTrace) // todo thread stops on error :(
                 .forEach(this::onMiningInfo);
@@ -72,11 +79,34 @@ public class Pool {
     }
 
     private Completable processNextBlock() {
+        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + processLag) {
+            return Completable.complete(); // todo ugly repetition
+        }
+        try {
+            processBlockSemaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + processLag) {
+            processBlockSemaphore.release();
+            return Completable.complete();
+        }
+        if (!bestSubmissionPerBlock.containsKey(lastProcessedBlock)) {
+            lastProcessedBlock++;
+            processBlockSemaphore.release();
+            return Completable.complete();
+        }
+        System.out.println(lastProcessedBlock);
         return nodeService.getBlock(lastProcessedBlock)
-                .flatMapCompletable(block -> nodeService.getRewardRecipient(block.getGenerator())
-                        .filter(response -> response.getRewardRecipient() != null && response.getRewardRecipient() == burstCrypto.getBurstAddressFromPassphrase(passphrase))
-                        .flatMapCompletable(response -> Completable.fromAction(() -> minerTracker.onBlockWon(lastProcessedBlock, block.getGenerator(), block.getBlockReward()))))
-                .doOnComplete(() -> lastProcessedBlock++);
+                .flatMapCompletable(block -> Completable.fromAction(() -> {
+                    Submission submission = bestSubmissionPerBlock.get(block.getHeight());
+                    if (submission == null || !Objects.equals(block.getGenerator(), submission.getMiner()) || !Objects.equals(block.getNonce(), submission.getNonce())) return;
+                    minerTracker.onBlockWon(lastProcessedBlock, block.getGenerator(), block.getBlockReward());
+                }))
+                .doOnComplete(() -> {
+                    lastProcessedBlock++;
+                    processBlockSemaphore.release(); // todo what if errored?
+                });
     }
 
     private void resetRound() {
@@ -105,11 +135,11 @@ public class Pool {
             System.out.println("Best deadline is " + Generator.calcDeadline(miningInfo.get(), bestDeadline.get()) + ", new deadline is " + deadline);
             if (deadline.compareTo(Generator.calcDeadline(miningInfo.get(), bestDeadline.get())) < 0) {
                 System.out.println("Newer deadline is better! Submitting...");
-                onNewBestDeadline(submission);
+                onNewBestDeadline(miningInfo.get().getHeight(), submission);
             }
         } else {
             System.out.println("This is the first deadline, submitting...");
-            onNewBestDeadline(submission);
+            onNewBestDeadline(miningInfo.get().getHeight(), submission);
         }
 
         minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight());
@@ -117,9 +147,11 @@ public class Pool {
         return deadline;
     }
 
-    private void onNewBestDeadline(Submission submission) {
+    private void onNewBestDeadline(long blockHeight, Submission submission) {
         bestDeadline.set(submission);
         submitDeadline(submission);
+        bestSubmissionPerBlock.remove(blockHeight);
+        bestSubmissionPerBlock.put(blockHeight, submission);
     }
 
     private void submitDeadline(Submission submission) {
@@ -133,6 +165,7 @@ public class Pool {
     }
 
     private void onRewardRecipientsError(Throwable t) {
+        System.out.println("orre");
         t.printStackTrace();
     }
 
@@ -141,6 +174,7 @@ public class Pool {
     }
 
     private void onSubmitNonceError(Throwable t) {
+        System.out.println("osne");
         t.printStackTrace();
     }
 

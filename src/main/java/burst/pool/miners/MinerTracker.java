@@ -7,6 +7,7 @@ import burst.kit.entity.response.BroadcastTransactionResponse;
 import burst.kit.service.BurstNodeService;
 import io.reactivex.disposables.CompositeDisposable;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,18 +21,24 @@ public class MinerTracker {
     private final MinerMaths minerMaths;
 
     // cannot be lower than 2
-    private int minimumPayoutCount;
-    private BurstValue minimumPayout;
-    private String poolPassphrase;
-    private BurstValue transactionFee;
+    private int minimumPayoutCount = 2;
+    private double poolTakePercentage = 0.1;
+    private double winnerTakePercentage = 0.1;
+    private BurstValue minimumPayout = BurstValue.fromBurst(0);
+    private String poolPassphrase = "a";
+    private PoolFeeCollector poolFeeCollector = new PoolFeeCollector(burstCrypto.getBurstAddressFromPassphrase("b"), BurstValue.fromBurst(0));
+    private BurstValue transactionFee = BurstValue.fromBurst(1);
 
     public MinerTracker(BurstNodeService nodeService, int nAvg, int nMin) {
         this.nodeService = nodeService;
         this.minerMaths = new MinerMaths(nAvg, nMin);
-
     }
 
     public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight) {
+        getOrCreate(minerAddress).processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
+    }
+
+    private IMiner getOrCreate(BurstAddress minerAddress) {
         IMiner miner;
         if (miners.containsKey(minerAddress)) {
             miner = miners.get(minerAddress);
@@ -39,11 +46,23 @@ public class MinerTracker {
             miner = new Miner(minerMaths, minerAddress, BurstValue.fromBurst(0), 0, 0);
             miners.put(minerAddress, miner);
         }
-
-        miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
+        return miner;
     }
 
-    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue reward) { // todo give amount to winner, take fee
+    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue reward) {
+        System.out.println("Block won!");
+        BurstValue ogReward = reward;
+
+        // Take pool fee
+        BurstValue poolTake = new BurstValue(reward.multiply(BigDecimal.valueOf(poolTakePercentage)));
+        reward = new BurstValue(reward.subtract(poolTake));
+        poolFeeCollector.increasePending(poolTake);
+
+        // Take winner fee
+        BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(winnerTakePercentage)));
+        reward = new BurstValue(reward.subtract(winnerTake));
+        getOrCreate(winner).increasePending(winnerTake);
+
         // Update each miner's effective capacity
         miners.forEach((address, miner) -> miner.recalculateCapacity(blockHeight));
 
@@ -55,11 +74,14 @@ public class MinerTracker {
         miners.forEach((address, miner) -> miner.recalculateShare(poolCapacity.get()));
 
         // Update each miner's pending
-        miners.forEach((address, miner) -> miner.increasePending(reward));
+        AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
+        BurstValue poolReward = reward;
+        miners.forEach((address, miner) -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
+
+        System.out.println("Reward is " + ogReward + ", pool take is " + poolTake + ", winner take is " + winnerTake + ", amount left is " + reward + ", miners took " + amountTaken.get());
 
         // Payout if needed
         payoutIfNeeded();
-        System.out.println(miners);
     }
 
     private void payoutIfNeeded() {
@@ -70,7 +92,11 @@ public class MinerTracker {
             }
         }
 
-        if (payableMinersSet.size() < minimumPayoutCount && payableMinersSet.size() != miners.size()) {
+        if (minimumPayout.compareTo(poolFeeCollector.getPending()) <= 0) {
+            payableMinersSet.add(poolFeeCollector);
+        }
+
+        if ((payableMinersSet.size() < minimumPayoutCount && payableMinersSet.size() != miners.size()) || payableMinersSet.size() < 2) {
             return;
         }
 

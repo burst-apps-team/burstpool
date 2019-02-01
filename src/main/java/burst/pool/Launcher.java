@@ -8,6 +8,6 @@ import fi.iki.elonen.util.ServerRunner;
 
 public class Launcher {
     public static void main(String[] args) {
-        ServerRunner.executeInstance(new Server(new Pool(new MinerTracker(BurstNodeService.getInstance("http://10.0.0.200:6876"), 360, 1))));
+        ServerRunner.executeInstance(new Server(new Pool(new MinerTracker(BurstNodeService.getInstance("http://localhost:6876"), 360, 1))));
     }
 }

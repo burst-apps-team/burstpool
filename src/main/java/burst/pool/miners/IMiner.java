@@ -7,7 +7,8 @@ public interface IMiner {
     void processNewDeadline(Deadline deadline);
     void recalculateCapacity(long currentBlockHeight);
     void recalculateShare(double poolCapacity);
-    void increasePending(BurstValue availableReward);
+    void increasePending(BurstValue delta);
+    BurstValue takeShare(BurstValue availableReward);
     void zeroPending();
 
     double getCapacity();

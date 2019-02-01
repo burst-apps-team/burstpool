@@ -50,8 +50,15 @@ public class Miner implements IMiner {
     }
 
     @Override
-    public void increasePending(BurstValue availableReward) {
-        pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(availableReward.multiply(BigDecimal.valueOf(share.get())))));
+    public void increasePending(BurstValue delta) {
+        pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(delta)));
+    }
+
+    @Override
+    public BurstValue takeShare(BurstValue availableReward) {
+        BurstValue share = new BurstValue(availableReward.multiply(BigDecimal.valueOf(this.share.get())));
+        pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(share)));
+        return share;
     }
 
     @Override
