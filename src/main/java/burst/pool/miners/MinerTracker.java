@@ -31,7 +31,9 @@ public class MinerTracker {
     }
 
     public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight) {
-        getOrCreate(minerAddress).processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
+        IMiner miner = getOrCreate(minerAddress);
+        miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
+        storageService.setMiner(minerAddress, miner);
     }
 
     private IMiner getOrCreate(BurstAddress minerAddress) {
@@ -57,7 +59,9 @@ public class MinerTracker {
         // Take winner fee
         BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.winnerRewardPercentage))));
         reward = new BurstValue(reward.subtract(winnerTake));
-        getOrCreate(winner).increasePending(winnerTake);
+        IMiner winningMiner = getOrCreate(winner);
+        winningMiner.increasePending(winnerTake);
+        storageService.setMiner(winner, winningMiner);
 
         List<IMiner> miners = storageService.getMiners();
 
@@ -75,6 +79,8 @@ public class MinerTracker {
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
         BurstValue poolReward = reward;
         miners.forEach(miner -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
+
+        storageService.setMiners(miners);
 
         System.out.println("Reward is " + ogReward + ", pool take is " + poolTake + ", winner take is " + winnerTake + ", amount left is " + reward + ", miners took " + amountTaken.get());
 
@@ -117,6 +123,7 @@ public class MinerTracker {
     private void onPaidOut(BroadcastTransactionResponse response, IMiner[] paidMiners) {
         for (IMiner miner : paidMiners) {
             miner.zeroPending();
+            storageService.setMiner(miner.getAddress(), miner);
         }
         System.out.println("Paid out, transaction id " + response.getTransactionID());
     }

@@ -11,7 +11,7 @@ public interface StorageService {
     int getMinerCount();
     List<IMiner> getMiners();
     IMiner getMiner(BurstAddress address);
-    void setMiners(IMiner[] miners);
+    void setMiners(List<IMiner> miners);
     void setMiner(BurstAddress address, IMiner miner);
 
     PoolFeeRecipient getPoolFeeRecipient();

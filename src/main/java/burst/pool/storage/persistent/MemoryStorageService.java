@@ -50,7 +50,7 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
-    public void setMiners(IMiner[] miners) {
+    public void setMiners(List<IMiner> miners) {
         synchronized (this.miners) {
             this.miners.entrySet().removeIf(a -> true);
             for (IMiner miner : miners) {
