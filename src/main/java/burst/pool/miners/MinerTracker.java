@@ -102,12 +102,14 @@ public class MinerTracker {
 
         IMiner[] payableMiners = payableMinersSet.size() <= 64 ? payableMinersSet.toArray(new IMiner[0]) : Arrays.copyOfRange(payableMinersSet.toArray(new IMiner[0]), 0, 64);
 
+        BurstValue transactionFee = BurstValue.fromBurst(propertyService.getFloat(Props.transactionFee));
+        BurstValue transactionFeePaidPerMiner = new BurstValue(transactionFee.divide(BigDecimal.valueOf(payableMiners.length), BigDecimal.ROUND_CEILING));
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
         for (IMiner miner : payableMiners) {
-            recipients.put(miner.getAddress(), miner.getPending());
+            recipients.put(miner.getAddress(), new BurstValue(miner.getPending().subtract(transactionFeePaidPerMiner)));
         }
 
-        compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), BurstValue.fromBurst(propertyService.getFloat(Props.transactionFee)), 1440, recipients)
+        compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), transactionFee, 1440, recipients)
                 .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
                 .flatMap(nodeService::broadcastTransaction)
                 .subscribe(response -> onPaidOut(response, payableMiners), this::onPayoutError));
