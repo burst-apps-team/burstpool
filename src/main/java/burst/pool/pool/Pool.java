@@ -82,7 +82,7 @@ public class Pool {
     }
 
     private Completable processNextBlock() {
-        if (miningInfo.get() == null || miningInfo.get().getHeight() <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
+        if (miningInfo.get() == null || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
             return Completable.complete();
         }
 
@@ -92,7 +92,7 @@ public class Pool {
             Thread.currentThread().interrupt();
         }
 
-        if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock()) == null) {
+        if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock() + 1) == null) {
             storageService.incrementLastProcessedBlock();
             processBlockSemaphore.release();
             return Completable.complete();
@@ -187,9 +187,11 @@ public class Pool {
     public JsonObject getCurrentRoundInfo(Gson gson) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("roundStart", roundStartTime.get().getEpochSecond());
+        jsonObject.addProperty("roundElapsed", Instant.now().getEpochSecond() - roundStartTime.get().getEpochSecond());
         if (bestDeadline.get() != null) {
             JsonObject bestDeadlineJson = new JsonObject();
             bestDeadlineJson.addProperty("miner", bestDeadline.get().getMiner().getID());
+            bestDeadlineJson.addProperty("minerRS", bestDeadline.get().getMiner().getFullAddress());
             bestDeadlineJson.addProperty("nonce", bestDeadline.get().getNonce());
             try {
                 bestDeadlineJson.addProperty("deadline", Generator.calcDeadline(miningInfo.get(), bestDeadline.get()));

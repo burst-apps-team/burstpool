@@ -14,6 +14,7 @@ import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,18 +78,21 @@ public class Server extends NanoHTTPD {
 
     private String handleApiCall(IHTTPSession session, Map<String, String> params) {
         if (session.getUri().startsWith("/api/getMiners")) {
-            JsonArray jsonArray = new JsonArray();
+            JsonArray minersJson = new JsonArray();
             List<IMiner> miners = storageService.getMiners();
             miners.forEach(miner -> {
                 JsonObject minerJson = new JsonObject();
                 minerJson.addProperty("address", miner.getAddress().getID());
-                minerJson.addProperty("pending", miner.getPending().toUnformattedString());
+                minerJson.addProperty("addressRS", miner.getAddress().getFullAddress());
+                minerJson.addProperty("pendingBalance", miner.getPending().toFormattedString());
                 minerJson.addProperty("estimatedCapacity", miner.getCapacity());
                 minerJson.addProperty("nConf", miner.getNConf());
                 minerJson.addProperty("share", miner.getShare());
-                jsonArray.add(minerJson);
+                minersJson.add(minerJson);
             });
-            return jsonArray.toString();
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.add("miners", minersJson);
+            return jsonObject.toString();
         } else if (session.getUri().startsWith("/api/getConfig")) {
             JsonObject response = new JsonObject();
             response.addProperty(Props.nAvg.getName(), propertyService.getInt(Props.nAvg));
@@ -110,18 +114,17 @@ public class Server extends NanoHTTPD {
     }
 
     private Response handleCall(IHTTPSession session, Map<String, String> params) throws IOException {
-        String uri = session.getUri();
-        if (Objects.equals(uri, "") || Objects.equals(uri, "/")) {
+        if (Objects.equals(session.getUri(), "") || Objects.equals(session.getUri(), "/")) {
             return redirect("/index.html");
         }
         boolean allowedFile = false;
-        for (String fileExtension : allowedFileExtensions) {
-            if (uri.endsWith(fileExtension)) allowedFile = true;
+        for (String extension : allowedFileExtensions) {
+            if (session.getUri().endsWith(extension)) allowedFile = true;
         }
         if (!allowedFile) {
             return NanoHTTPD.newFixedLengthResponse(Response.Status.FORBIDDEN, "text/html", "<h1>Access Forbidden</h1>");
         }
-        InputStream inputStream = getClass().getResourceAsStream("/html" + uri);
+        InputStream inputStream = getClass().getResourceAsStream("/html" + session.getUri());
         if (inputStream == null) {
             return redirect("/404.html");
         }
@@ -131,7 +134,7 @@ public class Server extends NanoHTTPD {
         while ((len = inputStream.read(buffer)) != -1) {
             stringWriter.write(new String(buffer), 0, len);
         }
-        return NanoHTTPD.newFixedLengthResponse(stringWriter.toString());
+        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), stringWriter.toString());
     }
 
     private Response redirect(String redirectTo) {

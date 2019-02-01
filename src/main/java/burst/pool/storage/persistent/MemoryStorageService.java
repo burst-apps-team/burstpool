@@ -12,11 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MemoryStorageService implements StorageService {
-    private final PropertyService propertyService;
 
     private final Map<BurstAddress, IMiner> miners = new HashMap<>();
     private final Map<Long, Submission> bestSubmissionForBlock = new HashMap<>();
@@ -24,7 +22,7 @@ public class MemoryStorageService implements StorageService {
     private final AtomicInteger lastProcessedBlock = new AtomicInteger(0);
 
     public MemoryStorageService(PropertyService propertyService) {
-        this.propertyService = propertyService;
+        PropertyService propertyService1 = propertyService;
         poolFeeRecipient.set(new PoolFeeRecipient(propertyService, BurstValue.fromBurst(0)));
     }
 

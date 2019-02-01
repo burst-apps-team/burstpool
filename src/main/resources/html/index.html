@@ -1,10 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+<link>
     <meta charset="UTF-8">
-    <title>Burst Pool</title>
+    <title>Burstcoin Pool</title>
+<link type="text/css" rel="stylesheet" href="css/main.css"/>
+    <script type="text/javascript" rel="script" src="js/index.js"></script>
 </head>
 <body>
-<p>(Insert Burstcoin Pool here)</p>
+<h1>Burstcoin Pool</h1>
+<p>Current Round Elapsed: <span id="currentRoundElapsed">Loading...</span></p>
+<p>Best Deadline: <span id="bestDeadline">Loading...</span></p>
+<p>Best Deadline Mined By: <span id="bestMiner">Loading...</span></p>
+<p>Best Deadline Nonce: <span id="bestNonce">Loading...</span></p>
+<p>Block Height: <span id="blockHeight">Loading...</span></p>
+<p>Base Target: <span id="baseTarget">Loading...</span></p>
+<table id="miners" class="miners">
+    <tr>
+        <th>Miner</th>
+        <th>Pending Balance</th>
+        <th>Effective Capacity</th>
+        <th>nConf (Last (nAvg + processLag) rounds)</th>
+        <th>Share</th>
+    </tr>
+    <tr>
+        <td colspan="5">Loading...</td>
+    </tr>
+</table>
 </body>
 </html>

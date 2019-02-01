@@ -66,6 +66,7 @@ public class Miner implements IMiner {
     @Override
     public void zeroPending() {
         pendingBalance.set(BurstValue.fromBurst(0));
+        System.err.println("zero pending");
     }
 
     private boolean isOldDeadline(Deadline deadline, long blockHeight) {
