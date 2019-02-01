@@ -7,7 +7,8 @@ import burst.pool.pool.Server;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.PropertyServiceImpl;
 import burst.pool.storage.config.Props;
-import burst.pool.storage.db.StorageService;
+import burst.pool.storage.persistent.MemoryStorageService;
+import burst.pool.storage.persistent.StorageService;
 import fi.iki.elonen.util.ServerRunner;
 
 public class Launcher {
@@ -17,11 +18,11 @@ public class Launcher {
             propertiesFileName = args[0];
         }
         PropertyService propertyService = new PropertyServiceImpl(propertiesFileName);
-        StorageService storageService = null;
+        StorageService storageService = new MemoryStorageService(propertyService);
         BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress));
         MinerTracker minerTracker = new MinerTracker(nodeService, storageService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);
-        Server server = new Server(propertyService, pool);
+        Server server = new Server(storageService, propertyService, pool);
         ServerRunner.executeInstance(server);
     }
 }

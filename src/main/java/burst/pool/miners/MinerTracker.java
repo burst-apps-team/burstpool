@@ -7,7 +7,7 @@ import burst.kit.entity.response.BroadcastTransactionResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
-import burst.pool.storage.db.StorageService;
+import burst.pool.storage.persistent.StorageService;
 import io.reactivex.disposables.CompositeDisposable;
 
 import java.math.BigDecimal;
@@ -59,7 +59,7 @@ public class MinerTracker {
         reward = new BurstValue(reward.subtract(winnerTake));
         getOrCreate(winner).increasePending(winnerTake);
 
-        List<Miner> miners = storageService.getMiners();
+        List<IMiner> miners = storageService.getMiners();
 
         // Update each miner's effective capacity
         miners.forEach(miner -> miner.recalculateCapacity(blockHeight));

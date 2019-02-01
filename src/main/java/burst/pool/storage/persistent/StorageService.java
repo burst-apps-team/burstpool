@@ -1,8 +1,7 @@
-package burst.pool.storage.db;
+package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.pool.miners.IMiner;
-import burst.pool.miners.Miner;
 import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.Submission;
 
@@ -10,7 +9,7 @@ import java.util.List;
 
 public interface StorageService {
     int getMinerCount();
-    List<Miner> getMiners();
+    List<IMiner> getMiners();
     IMiner getMiner(BurstAddress address);
     void setMiners(IMiner[] miners);
     void setMiner(BurstAddress address, IMiner miner);

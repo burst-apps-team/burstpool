@@ -4,10 +4,10 @@ import burst.kit.entity.BurstAddress;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
+import burst.pool.storage.persistent.StorageService;
 import com.google.gson.Gson;
 import fi.iki.elonen.NanoHTTPD;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -16,11 +16,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Server extends NanoHTTPD {
+    private final StorageService storageService;
     private final Pool pool;
     private final Gson gson = BurstKitUtils.buildGson().create();
 
-    public Server(PropertyService propertyService, Pool pool) {
+    public Server(StorageService storageService, PropertyService propertyService, Pool pool) {
         super(propertyService.getInt(Props.serverPort));
+        this.storageService = storageService;
         this.pool = pool;
     }
 

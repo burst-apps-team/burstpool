@@ -10,7 +10,7 @@ import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
-import burst.pool.storage.db.StorageService;
+import burst.pool.storage.persistent.StorageService;
 import com.google.gson.Gson;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
