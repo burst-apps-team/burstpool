@@ -12,12 +12,15 @@ import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
 import com.google.gson.Gson;
+import com.google.gson.JsonNull;
+import com.google.gson.JsonObject;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -34,6 +37,7 @@ public class Pool {
     private final Semaphore processBlockSemaphore = new Semaphore(1);
 
     // Variables
+    private final AtomicReference<Instant> roundStartTime = new AtomicReference<>();
     private final AtomicReference<Submission> bestDeadline = new AtomicReference<>();
     private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
@@ -111,6 +115,7 @@ public class Pool {
         bestDeadline.set(null);
         disposables.add(nodeService.getAccountsWithRewardRecipient(burstCrypto.getBurstAddressFromPassphrase(propertyService.getString(Props.passphrase)))
                 .subscribe(this::onRewardRecipients, this::onRewardRecipientsError));
+        roundStartTime.set(Instant.now());
     }
 
     BigInteger checkNewSubmission(Submission submission) throws SubmissionException {
@@ -177,5 +182,24 @@ public class Pool {
 
     MiningInfoResponse getMiningInfo() {
         return miningInfo.get();
+    }
+
+    public JsonObject getCurrentRoundInfo(Gson gson) {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("roundStart", roundStartTime.get().getEpochSecond());
+        if (bestDeadline.get() != null) {
+            JsonObject bestDeadlineJson = new JsonObject();
+            bestDeadlineJson.addProperty("miner", bestDeadline.get().getMiner().getID());
+            bestDeadlineJson.addProperty("nonce", bestDeadline.get().getNonce());
+            try {
+                bestDeadlineJson.addProperty("deadline", Generator.calcDeadline(miningInfo.get(), bestDeadline.get()));
+            } catch (SubmissionException ignored) {
+            }
+            jsonObject.add("bestDeadline", bestDeadlineJson);
+        } else {
+            jsonObject.add("bestDeadline", JsonNull.INSTANCE);
+        }
+        jsonObject.add("miningInfo", gson.toJsonTree(miningInfo.get()));
+        return jsonObject;
     }
 }

@@ -102,6 +102,8 @@ public class Server extends NanoHTTPD {
             response.addProperty(Props.minPayoutsPerTransaction.getName(), propertyService.getInt(Props.minPayoutsPerTransaction));
             response.addProperty(Props.transactionFee.getName(), propertyService.getFloat(Props.transactionFee));
             return response.toString();
+        } else if (session.getUri().startsWith("/api/getCurrentRound")) {
+            return pool.getCurrentRoundInfo(gson).toString();
         } else {
             return "404 not found";
         }
