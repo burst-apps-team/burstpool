@@ -2,15 +2,17 @@ package burst.pool.miners;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
+import burst.pool.storage.config.PropertyService;
+import burst.pool.storage.config.Props;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class PoolFeeCollector implements IMiner {
-    private final BurstAddress address;
+public class PoolFeeRecipient implements IMiner {
+    private final PropertyService propertyService;
     private final AtomicReference<BurstValue> pending;
 
-    public PoolFeeCollector(BurstAddress address, BurstValue pending) {
-        this.address = address;
+    public PoolFeeRecipient(PropertyService propertyService, BurstValue pending) {
+        this.propertyService = propertyService;
         this.pending = new AtomicReference<>(pending);
     }
 
@@ -53,7 +55,7 @@ public class PoolFeeCollector implements IMiner {
 
     @Override
     public BurstAddress getAddress() {
-        return address;
+        return propertyService.getBurstAddress(Props.feeRecipient);
     }
 
     @Override

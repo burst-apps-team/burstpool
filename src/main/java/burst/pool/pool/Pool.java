@@ -10,6 +10,7 @@ import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
+import burst.pool.storage.db.StorageService;
 import com.google.gson.Gson;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -18,7 +19,6 @@ import io.reactivex.disposables.Disposable;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,15 +26,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class Pool {
     private final BurstNodeService nodeService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
+    private final StorageService storageService;
     private final PropertyService propertyService;
     private final MinerTracker minerTracker;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final Semaphore processBlockSemaphore = new Semaphore(1);
-
-    // storage
-    private long lastProcessedBlock = 1;
-    private final Map<Long, Submission> bestSubmissionPerBlock = new ConcurrentHashMap<>();
 
     // Variables
     private final AtomicReference<Submission> bestDeadline = new AtomicReference<>();
@@ -42,7 +39,8 @@ public class Pool {
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
 
 
-    public Pool(BurstNodeService nodeService, PropertyService propertyService, MinerTracker minerTracker) {
+    public Pool(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService, MinerTracker minerTracker) {
+        this.storageService = storageService;
         this.minerTracker = minerTracker;
         this.propertyService = propertyService;
         this.nodeService = nodeService;
@@ -80,32 +78,31 @@ public class Pool {
     }
 
     private Completable processNextBlock() {
-        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + propertyService.getInt(Props.processLag)) {
-            return Completable.complete(); // todo ugly repetition
+        if (miningInfo.get() == null || miningInfo.get().getHeight() <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
+            return Completable.complete();
         }
+
         try {
             processBlockSemaphore.acquire();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        if (miningInfo.get() == null || miningInfo.get().getHeight() <= lastProcessedBlock + propertyService.getInt(Props.processLag)) {
+
+        if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock()) == null) {
+            storageService.incrementLastProcessedBlock();
             processBlockSemaphore.release();
             return Completable.complete();
         }
-        if (!bestSubmissionPerBlock.containsKey(lastProcessedBlock)) {
-            lastProcessedBlock++;
-            processBlockSemaphore.release();
-            return Completable.complete();
-        }
-        System.out.println(lastProcessedBlock);
-        return nodeService.getBlock(lastProcessedBlock)
+
+        System.out.println(storageService.getLastProcessedBlock() + 1);
+        return nodeService.getBlock(storageService.getLastProcessedBlock() + 1)
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
-                    Submission submission = bestSubmissionPerBlock.get(block.getHeight());
+                    Submission submission = storageService.getBestSubmissionForBlock(block.getHeight());
                     if (submission == null || !Objects.equals(block.getGenerator(), submission.getMiner()) || !Objects.equals(block.getNonce(), submission.getNonce())) return;
-                    minerTracker.onBlockWon(lastProcessedBlock, block.getGenerator(), block.getBlockReward());
+                    minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), block.getBlockReward());
                 }))
                 .doOnComplete(() -> {
-                    lastProcessedBlock++;
+                    storageService.incrementLastProcessedBlock();
                     processBlockSemaphore.release(); // todo what if errored?
                 });
     }
@@ -151,8 +148,7 @@ public class Pool {
     private void onNewBestDeadline(long blockHeight, Submission submission) {
         bestDeadline.set(submission);
         submitDeadline(submission);
-        bestSubmissionPerBlock.remove(blockHeight);
-        bestSubmissionPerBlock.put(blockHeight, submission);
+        storageService.setBestSubmissionForBlock(blockHeight, submission);
     }
 
     private void submitDeadline(Submission submission) {

@@ -19,6 +19,7 @@ public class Miner implements IMiner {
     private final AtomicReference<Double> estimatedCapacity;
     private final AtomicReference<Double> share;
 
+    // storage
     private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
     private final AtomicReference<Double> hitSum = new AtomicReference<>(0d);
 

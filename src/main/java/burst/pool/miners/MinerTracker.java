@@ -7,31 +7,27 @@ import burst.kit.entity.response.BroadcastTransactionResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
+import burst.pool.storage.db.StorageService;
 import io.reactivex.disposables.CompositeDisposable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MinerTracker {
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
+    private final StorageService storageService;
     private final PropertyService propertyService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final BurstNodeService nodeService;
     private final MinerMaths minerMaths;
 
-    // storage
-    private final Map<BurstAddress, IMiner> miners = new ConcurrentHashMap<>();
-    private PoolFeeCollector poolFeeCollector;
-
-    public MinerTracker(BurstNodeService nodeService, PropertyService propertyService) {
+    public MinerTracker(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService) {
         this.nodeService = nodeService;
+        this.storageService = storageService;
         this.propertyService = propertyService;
         this.minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
-
-        this.poolFeeCollector = new PoolFeeCollector(propertyService.getBurstAddress(Props.feeRecipient), BurstValue.fromBurst(0));
     }
 
     public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight) {
@@ -39,12 +35,10 @@ public class MinerTracker {
     }
 
     private IMiner getOrCreate(BurstAddress minerAddress) {
-        IMiner miner;
-        if (miners.containsKey(minerAddress)) {
-            miner = miners.get(minerAddress);
-        } else {
+        IMiner miner = storageService.getMiner(minerAddress);
+        if (miner == null) {
             miner = new Miner(minerMaths, propertyService, minerAddress, BurstValue.fromBurst(0), 0, 0);
-            miners.put(minerAddress, miner);
+            storageService.setMiner(minerAddress, miner);
         }
         return miner;
     }
@@ -56,27 +50,31 @@ public class MinerTracker {
         // Take pool fee
         BurstValue poolTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.poolFeePercentage))));
         reward = new BurstValue(reward.subtract(poolTake));
-        poolFeeCollector.increasePending(poolTake);
+        PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
+        poolFeeRecipient.increasePending(poolTake);
+        storageService.setPoolFeeRecipient(poolFeeRecipient);
 
         // Take winner fee
         BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.winnerRewardPercentage))));
         reward = new BurstValue(reward.subtract(winnerTake));
         getOrCreate(winner).increasePending(winnerTake);
 
+        List<Miner> miners = storageService.getMiners();
+
         // Update each miner's effective capacity
-        miners.forEach((address, miner) -> miner.recalculateCapacity(blockHeight));
+        miners.forEach(miner -> miner.recalculateCapacity(blockHeight));
 
         // Calculate pool capacity
         AtomicReference<Double> poolCapacity = new AtomicReference<>(0d);
-        miners.forEach((address, miner) -> poolCapacity.updateAndGet(v -> (double) (v + miner.getCapacity())));
+        miners.forEach(miner -> poolCapacity.updateAndGet(v -> (double) (v + miner.getCapacity())));
 
         // Update each miner's share
-        miners.forEach((address, miner) -> miner.recalculateShare(poolCapacity.get()));
+        miners.forEach(miner -> miner.recalculateShare(poolCapacity.get()));
 
         // Update each miner's pending
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
         BurstValue poolReward = reward;
-        miners.forEach((address, miner) -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
+        miners.forEach(miner -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
 
         System.out.println("Reward is " + ogReward + ", pool take is " + poolTake + ", winner take is " + winnerTake + ", amount left is " + reward + ", miners took " + amountTaken.get());
 
@@ -86,17 +84,18 @@ public class MinerTracker {
 
     private void payoutIfNeeded() {
         Set<IMiner> payableMinersSet = new HashSet<>();
-        for (IMiner miner : miners.values()) {
+        for (IMiner miner : storageService.getMiners()) {
             if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(miner.getPending()) <= 0) {
                 payableMinersSet.add(miner);
             }
         }
 
-        if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(poolFeeCollector.getPending()) <= 0) {
-            payableMinersSet.add(poolFeeCollector);
+        PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
+        if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(poolFeeRecipient.getPending()) <= 0) {
+            payableMinersSet.add(poolFeeRecipient);
         }
 
-        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() != miners.size())) {
+        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() != storageService.getMinerCount())) {
             return;
         }
 

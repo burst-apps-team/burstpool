@@ -25,8 +25,8 @@ public class Props {
 
     public static void validateProperties(PropertyService propertyService) {
         int serverPort = propertyService.getInt(Props.serverPort);
-        if (serverPort <= 0 || serverPort >= (2^16)) {
-            throw new IllegalArgumentException("Illegal server port: " + serverPort + " (Must be > 0, < 2^16)");
+        if (serverPort <= 0 || serverPort >= Math.pow(2, 16)) {
+            throw new IllegalArgumentException("Illegal server port: " + serverPort + " (Must be 0-2^16 exclusive)");
         }
 
         String nodeAddress = propertyService.getString(Props.nodeAddress);
