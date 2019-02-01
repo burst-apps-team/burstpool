@@ -17,7 +17,7 @@ public class PropertyServiceImpl implements PropertyService {
             System.err.println("Could not load properties from " + fileName); // todo logger
             e.printStackTrace();
         }
-        Props.validateProperties(this);
+        //Props.validateProperties(this);
     }
 
     private <T> String valueOrDefault(Prop<T> prop) {
