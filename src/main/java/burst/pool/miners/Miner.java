@@ -57,16 +57,15 @@ public class Miner implements IMiner {
     }
 
     @Override
+    public void decreasePending(BurstValue delta) {
+        pendingBalance.updateAndGet(pending -> new BurstValue(pending.subtract(delta)));
+    }
+
+    @Override
     public BurstValue takeShare(BurstValue availableReward) {
         BurstValue share = new BurstValue(availableReward.multiply(BigDecimal.valueOf(this.share.get())));
         pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(share)));
         return share;
-    }
-
-    @Override
-    public void zeroPending() {
-        pendingBalance.set(BurstValue.fromBurst(0));
-        System.err.println("zero pending");
     }
 
     private boolean isOldDeadline(Deadline deadline, long blockHeight) {

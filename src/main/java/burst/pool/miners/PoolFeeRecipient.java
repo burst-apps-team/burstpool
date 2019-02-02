@@ -34,13 +34,13 @@ public class PoolFeeRecipient implements IMiner {
     }
 
     @Override
-    public BurstValue takeShare(BurstValue availableReward) {
-        return BurstValue.fromBurst(0);
+    public void decreasePending(BurstValue delta) {
+        pending.updateAndGet(pending -> new BurstValue(pending.subtract(delta)));
     }
 
     @Override
-    public void zeroPending() {
-        pending.set(BurstValue.fromBurst(0));
+    public BurstValue takeShare(BurstValue availableReward) {
+        return BurstValue.fromBurst(0);
     }
 
     @Override

@@ -13,6 +13,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MinerTracker {
@@ -22,6 +23,8 @@ public class MinerTracker {
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final BurstNodeService nodeService;
     private final MinerMaths minerMaths;
+
+    private final Semaphore payoutSemaphore = new Semaphore(1);
 
     public MinerTracker(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService) {
         this.nodeService = nodeService;
@@ -89,6 +92,17 @@ public class MinerTracker {
     }
 
     private void payoutIfNeeded() {
+        if (payoutSemaphore.availablePermits() == 0) {
+            System.out.println("Cannot payout, payout is in progress!");
+            return;
+        }
+
+        try {
+            payoutSemaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
         Set<IMiner> payableMinersSet = new HashSet<>();
         for (IMiner miner : storageService.getMiners()) {
             if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(miner.getPending()) <= 0) {
@@ -101,7 +115,8 @@ public class MinerTracker {
             payableMinersSet.add(poolFeeRecipient);
         }
 
-        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() != storageService.getMinerCount())) {
+        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() < storageService.getMinerCount())) {
+            payoutSemaphore.release();
             return;
         }
 
@@ -109,26 +124,35 @@ public class MinerTracker {
 
         BurstValue transactionFee = BurstValue.fromBurst(propertyService.getFloat(Props.transactionFee));
         BurstValue transactionFeePaidPerMiner = new BurstValue(transactionFee.divide(BigDecimal.valueOf(payableMiners.length), BigDecimal.ROUND_CEILING));
+        Map<BurstAddress, BurstValue> payouts = new HashMap<>(); // Does not have subtracted transaction fee
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
         for (IMiner miner : payableMiners) {
+            payouts.put(miner.getAddress(), miner.getPending());
             recipients.put(miner.getAddress(), new BurstValue(miner.getPending().subtract(transactionFeePaidPerMiner)));
         }
 
         compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), transactionFee, 1440, recipients)
                 .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
                 .flatMap(nodeService::broadcastTransaction)
-                .subscribe(response -> onPaidOut(response, payableMiners), this::onPayoutError));
+                .subscribe(response -> onPaidOut(response, payouts), this::onPayoutError));
     }
 
-    private void onPaidOut(BroadcastTransactionResponse response, IMiner[] paidMiners) {
-        for (IMiner miner : paidMiners) {
-            miner.zeroPending();
-            storageService.setMiner(miner.getAddress(), miner);
+    private void onPaidOut(BroadcastTransactionResponse response, Map<BurstAddress, BurstValue> paidMiners) {
+        BurstAddress feeRecipientAddress = propertyService.getBurstAddress(Props.feeRecipient);
+        for (Map.Entry<BurstAddress, BurstValue> payment : paidMiners.entrySet()) {
+            boolean isFeeRecipient = Objects.equals(feeRecipientAddress, payment.getKey());
+            IMiner miner = isFeeRecipient ? storageService.getPoolFeeRecipient() : storageService.getMiner(payment.getKey());
+            miner.decreasePending(payment.getValue());
+            if (!isFeeRecipient) {
+                storageService.setMiner(miner.getAddress(), miner);
+            }
         }
         System.out.println("Paid out, transaction id " + response.getTransactionID());
+        payoutSemaphore.release();
     }
 
     private void onPayoutError(Throwable throwable) {
         throwable.printStackTrace();
+        payoutSemaphore.release();
     }
 }

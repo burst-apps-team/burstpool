@@ -8,8 +8,8 @@ public interface IMiner {
     void recalculateCapacity(long currentBlockHeight);
     void recalculateShare(double poolCapacity);
     void increasePending(BurstValue delta);
+    void decreasePending(BurstValue delta);
     BurstValue takeShare(BurstValue availableReward);
-    void zeroPending();
 
     double getCapacity();
     BurstValue getPending();
