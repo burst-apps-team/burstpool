@@ -27,9 +27,14 @@ function getMiners() {
             let miner = response.miners[i];
             let minerAddress = miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")";
             let userAgent = miner.userAgent == null? "Unknown" : miner.userAgent;
-            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+miner.estimatedCapacity+" TB</td><td>"+miner.nConf+"</td><td>"+parseFloat(miner.share)*100+"%</td><td>"+userAgent+"</td></tr>";
+            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+parseFloat(miner.share)*100+"%</td><td>"+userAgent+"</td></tr>";
         }
+        document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
     });
+}
+
+function formatCapacity(capacity) {
+    return parseFloat(capacity).toFixed(3);
 }
 
 getCurrentRound();

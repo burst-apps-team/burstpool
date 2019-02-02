@@ -12,6 +12,7 @@ import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.math.BigDecimal;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
@@ -83,6 +84,11 @@ public class Server extends NanoHTTPD {
             miners.forEach(miner -> minersJson.add(minerToJson(miner)));
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("miners", minersJson);
+            double poolCapacity = 0;
+            for (IMiner miner : storageService.getMiners()) {
+                poolCapacity += miner.getCapacity();
+            }
+            jsonObject.addProperty("poolCapacity", poolCapacity);
             return jsonObject.toString();
         } else if (session.getUri().startsWith("/api/getMiner/")) {
             BurstAddress minerAddress = BurstAddress.fromEither(session.getUri().substring(14));
