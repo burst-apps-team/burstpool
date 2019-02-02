@@ -82,7 +82,7 @@ public class Pool {
     }
 
     private Completable processNextBlock() {
-        if (miningInfo.get() == null || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
+        if (miningInfo.get() == null || processBlockSemaphore.availablePermits() == 0 || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + 1 + propertyService.getInt(Props.processLag)) {
             return Completable.complete();
         }
 
