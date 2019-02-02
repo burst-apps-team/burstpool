@@ -6,9 +6,7 @@ import burst.pool.miners.IMiner;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import fi.iki.elonen.NanoHTTPD;
 
 import java.io.IOException;
@@ -80,19 +78,13 @@ public class Server extends NanoHTTPD {
         if (session.getUri().startsWith("/api/getMiners")) {
             JsonArray minersJson = new JsonArray();
             List<IMiner> miners = storageService.getMiners();
-            miners.forEach(miner -> {
-                JsonObject minerJson = new JsonObject();
-                minerJson.addProperty("address", miner.getAddress().getID());
-                minerJson.addProperty("addressRS", miner.getAddress().getFullAddress());
-                minerJson.addProperty("pendingBalance", miner.getPending().toFormattedString());
-                minerJson.addProperty("estimatedCapacity", miner.getCapacity());
-                minerJson.addProperty("nConf", miner.getNConf());
-                minerJson.addProperty("share", miner.getShare());
-                minersJson.add(minerJson);
-            });
+            miners.forEach(miner -> minersJson.add(minerToJson(miner)));
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("miners", minersJson);
             return jsonObject.toString();
+        } else if (session.getUri().startsWith("/api/getMiner/")) {
+            BurstAddress minerAddress = BurstAddress.fromEither(session.getUri().substring(14));
+            return minerToJson(storageService.getMiner(minerAddress)).toString();
         } else if (session.getUri().startsWith("/api/getConfig")) {
             JsonObject response = new JsonObject();
             response.addProperty(Props.nAvg.getName(), propertyService.getInt(Props.nAvg));
@@ -141,6 +133,18 @@ public class Server extends NanoHTTPD {
         Response r = newFixedLengthResponse(Response.Status.REDIRECT, MIME_HTML, "");
         r.addHeader("Location", redirectTo);
         return r;
+    }
+
+    private JsonElement minerToJson(IMiner miner) {
+        if (miner == null) return JsonNull.INSTANCE;
+        JsonObject minerJson = new JsonObject();
+        minerJson.addProperty("address", miner.getAddress().getID());
+        minerJson.addProperty("addressRS", miner.getAddress().getFullAddress());
+        minerJson.addProperty("pendingBalance", miner.getPending().toFormattedString());
+        minerJson.addProperty("estimatedCapacity", miner.getCapacity());
+        minerJson.addProperty("nConf", miner.getNConf());
+        minerJson.addProperty("share", miner.getShare());
+        return minerJson;
     }
 
     private static Map<String, String> queryToMap(String query) {
