@@ -10,10 +10,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public class PoolFeeRecipient implements IMiner {
     private final PropertyService propertyService;
     private final AtomicReference<BurstValue> pending;
+    private final AtomicReference<String> name;
 
-    public PoolFeeRecipient(PropertyService propertyService, BurstValue pending) {
+    public PoolFeeRecipient(PropertyService propertyService, BurstValue pending, String name) {
         this.propertyService = propertyService;
         this.pending = new AtomicReference<>(pending);
+        this.name = new AtomicReference<>(name);
     }
 
     @Override
@@ -66,5 +68,24 @@ public class PoolFeeRecipient implements IMiner {
     @Override
     public int getNConf() {
         return 0;
+    }
+
+    @Override
+    public String getName() {
+        return name.get();
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name.set(name);
+    }
+
+    @Override
+    public String getUserAgent() {
+        return "Pool Fee Recipient";
+    }
+
+    @Override
+    public void setUserAgent(String userAgent) {
     }
 }

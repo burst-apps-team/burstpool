@@ -53,6 +53,7 @@ public class Server extends NanoHTTPD {
     }
 
     private String handleBurstApiCall(IHTTPSession session, Map<String, String> params) {
+        System.out.println(session.getHeaders());
         if (session.getMethod().equals(Method.POST) && Objects.equals(params.get("requestType"), "submitNonce")) {
             Submission submission = new Submission(BurstAddress.fromEither(params.get("accountId")), params.get("nonce"));
             try {
@@ -62,8 +63,9 @@ public class Server extends NanoHTTPD {
                 if (submission.getNonce() == null) {
                     throw new SubmissionException("Nonce not set");
                 }
-
-                return gson.toJson(new NonceSubmissionResponse("success", pool.checkNewSubmission(submission).toString()));
+                String userAgent = session.getHeaders().get("user-agent");
+                if (userAgent == null) userAgent = "";
+                return gson.toJson(new NonceSubmissionResponse("success", pool.checkNewSubmission(submission, userAgent).toString()));
             } catch (SubmissionException e) {
                 return gson.toJson(new NonceSubmissionResponse(e.getMessage(), null));
             }
@@ -144,6 +146,12 @@ public class Server extends NanoHTTPD {
         minerJson.addProperty("estimatedCapacity", miner.getCapacity());
         minerJson.addProperty("nConf", miner.getNConf());
         minerJson.addProperty("share", miner.getShare());
+        if (!Objects.equals(miner.getName(), "")) {
+            minerJson.addProperty("name", miner.getName());
+        }
+        if (!Objects.equals(miner.getUserAgent(), "")) {
+            minerJson.addProperty("userAgent", miner.getUserAgent());
+        }
         return minerJson;
     }
 

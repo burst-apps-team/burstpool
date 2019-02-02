@@ -119,7 +119,7 @@ public class Pool {
         roundStartTime.set(Instant.now());
     }
 
-    BigInteger checkNewSubmission(Submission submission) throws SubmissionException {
+    BigInteger checkNewSubmission(Submission submission, String userAgent) throws SubmissionException {
         if (miningInfo.get() == null) {
             throw new SubmissionException("Pool does not have mining info");
         }
@@ -146,7 +146,7 @@ public class Pool {
             onNewBestDeadline(miningInfo.get().getHeight(), submission);
         }
 
-        minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight());
+        minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
 
         return deadline;
     }

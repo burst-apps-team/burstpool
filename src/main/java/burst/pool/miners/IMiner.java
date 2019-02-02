@@ -10,12 +10,13 @@ public interface IMiner {
     void increasePending(BurstValue delta);
     void decreasePending(BurstValue delta);
     BurstValue takeShare(BurstValue availableReward);
-
     double getCapacity();
     BurstValue getPending();
     BurstAddress getAddress();
-
-    // Needed for API only.
     double getShare();
     int getNConf();
+    String getName();
+    void setName(String name);
+    String getUserAgent();
+    void setUserAgent(String userAgent);
 }

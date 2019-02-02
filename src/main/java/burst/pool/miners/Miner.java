@@ -18,18 +18,20 @@ public class Miner implements IMiner {
     private final AtomicReference<BurstValue> pendingBalance;
     private final AtomicReference<Double> estimatedCapacity;
     private final AtomicReference<Double> share;
-
-    // storage
     private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
-    private final AtomicReference<Double> hitSum = new AtomicReference<>(0d);
+    private final AtomicReference<Double> hitSum = new AtomicReference<>(0d); // todo store
+    private final AtomicReference<String> name;
+    private final AtomicReference<String> userAgent;
 
-    public Miner(MinerMaths minerMaths, PropertyService propertyService, BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share) {
+    public Miner(MinerMaths minerMaths, PropertyService propertyService, BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share, String name, String userAgent) {
         this.minerMaths = minerMaths;
         this.propertyService = propertyService;
         this.address = address;
         this.pendingBalance = new AtomicReference<>(pendingBalance);
         this.estimatedCapacity = new AtomicReference<>(estimatedCapacity);
         this.share = new AtomicReference<>(share);
+        this.name = new AtomicReference<>(name);
+        this.userAgent = new AtomicReference<>(userAgent);
     }
 
     @Override
@@ -127,6 +129,26 @@ public class Miner implements IMiner {
     @Override
     public int getNConf() {
         return deadlines.size();
+    }
+
+    @Override
+    public String getName() {
+        return name.get();
+    }
+
+    @Override
+    public void setName(String name) {
+        this.name.set(name);
+    }
+
+    @Override
+    public String getUserAgent() {
+        return userAgent.get();
+    }
+
+    @Override
+    public void setUserAgent(String userAgent) {
+        this.userAgent.set(userAgent);
     }
 
     @Override

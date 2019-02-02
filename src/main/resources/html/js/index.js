@@ -22,10 +22,12 @@ function getMiners() {
         return http.json();
     }).then(response => {
         let table = document.getElementById("miners");
-        table.innerHTML = "<tr><th>Miner</th><th>Pending Balance</th><th>Effective Capacity</th><th>nConf (Last (nAvg + processLag) rounds)</th><th>Share</th></tr>";
+        table.innerHTML = "<tr><th>Miner</th><th>Pending Balance</th><th>Effective Capacity</th><th>nConf (Last (nAvg + processLag) rounds)</th><th>Share</th><th>Software</th></tr>";
         for (let i = 0; i < response.miners.length; i++) {
             let miner = response.miners[i];
-            table.innerHTML += "<tr><td>"+miner.addressRS+"</td><td>"+miner.pendingBalance+"</td><td>"+miner.estimatedCapacity+" TB</td><td>"+miner.nConf+"</td><td>"+parseFloat(miner.share)*100+"%</td></tr>";
+            let minerAddress = miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")";
+            let userAgent = miner.userAgent == null? "Unknown" : miner.userAgent;
+            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+miner.estimatedCapacity+" TB</td><td>"+miner.nConf+"</td><td>"+parseFloat(miner.share)*100+"%</td><td>"+userAgent+"</td></tr>";
         }
     });
 }

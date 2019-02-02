@@ -3,6 +3,7 @@ package burst.pool.miners;
 import burst.kit.burst.BurstCrypto;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
+import burst.kit.entity.response.AccountResponse;
 import burst.kit.entity.response.BroadcastTransactionResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.storage.config.PropertyService;
@@ -33,16 +34,18 @@ public class MinerTracker {
         this.minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
     }
 
-    public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight) {
+    public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight, String userAgent) {
         IMiner miner = getOrCreate(minerAddress);
         miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
+        miner.setUserAgent(userAgent);
         storageService.setMiner(minerAddress, miner);
+        compositeDisposable.add(nodeService.getAccount(minerAddress).subscribe(this::onMinerAccount, this::onMinerAccountError));
     }
 
     private IMiner getOrCreate(BurstAddress minerAddress) {
         IMiner miner = storageService.getMiner(minerAddress);
         if (miner == null) {
-            miner = new Miner(minerMaths, propertyService, minerAddress, BurstValue.fromBurst(0), 0, 0);
+            miner = new Miner(minerMaths, propertyService, minerAddress, BurstValue.fromBurst(0), 0, 0, "", "");
             storageService.setMiner(minerAddress, miner);
         }
         return miner;
@@ -142,8 +145,11 @@ public class MinerTracker {
         for (Map.Entry<BurstAddress, BurstValue> payment : paidMiners.entrySet()) {
             boolean isFeeRecipient = Objects.equals(feeRecipientAddress, payment.getKey());
             IMiner miner = isFeeRecipient ? storageService.getPoolFeeRecipient() : storageService.getMiner(payment.getKey());
+            if (miner == null) return;
             miner.decreasePending(payment.getValue());
-            if (!isFeeRecipient) {
+            if (isFeeRecipient) {
+                storageService.setPoolFeeRecipient((PoolFeeRecipient) miner);
+            } else {
                 storageService.setMiner(miner.getAddress(), miner);
             }
         }
@@ -154,5 +160,24 @@ public class MinerTracker {
     private void onPayoutError(Throwable throwable) {
         throwable.printStackTrace();
         payoutSemaphore.release();
+    }
+
+
+    private void onMinerAccount(AccountResponse accountResponse) {
+        BurstAddress feeRecipientAddress = propertyService.getBurstAddress(Props.feeRecipient);
+        boolean isFeeRecipient = Objects.equals(feeRecipientAddress, accountResponse.getAccount());
+        IMiner miner = isFeeRecipient ? storageService.getPoolFeeRecipient() : storageService.getMiner(accountResponse.getAccount());
+        if (miner == null) return;
+        if (accountResponse.getName() == null) return;
+        miner.setName(accountResponse.getName());
+        if (isFeeRecipient) {
+            storageService.setPoolFeeRecipient((PoolFeeRecipient) miner);
+        } else {
+            storageService.setMiner(miner.getAddress(), miner);
+        }
+    }
+
+    private void onMinerAccountError(Throwable throwable) {
+        throwable.printStackTrace();
     }
 }

@@ -22,8 +22,7 @@ public class MemoryStorageService implements StorageService {
     private final AtomicInteger lastProcessedBlock = new AtomicInteger(0);
 
     public MemoryStorageService(PropertyService propertyService) {
-        PropertyService propertyService1 = propertyService;
-        poolFeeRecipient.set(new PoolFeeRecipient(propertyService, BurstValue.fromBurst(0)));
+        poolFeeRecipient.set(new PoolFeeRecipient(propertyService, BurstValue.fromBurst(0), ""));
     }
 
     @Override
