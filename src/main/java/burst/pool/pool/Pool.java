@@ -2,6 +2,7 @@ package burst.pool.pool;
 
 import burst.kit.burst.BurstCrypto;
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.BurstValue;
 import burst.kit.entity.response.AccountsWithRewardRecipientResponse;
 import burst.kit.entity.response.MiningInfoResponse;
 import burst.kit.entity.response.SubmitNonceResponse;
@@ -103,7 +104,7 @@ public class Pool {
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
                     Submission submission = storageService.getBestSubmissionForBlock(block.getHeight());
                     if (submission == null || !Objects.equals(block.getGenerator(), submission.getMiner()) || !Objects.equals(block.getNonce(), submission.getNonce())) return;
-                    minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), block.getBlockReward());
+                    minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())));
                 }))
                 .doOnComplete(() -> {
                     storageService.incrementLastProcessedBlock();
