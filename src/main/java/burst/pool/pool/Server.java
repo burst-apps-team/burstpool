@@ -4,6 +4,7 @@ import burst.kit.entity.BurstAddress;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.Constants;
 import burst.pool.miners.IMiner;
+import burst.pool.miners.Miner;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
@@ -80,7 +81,7 @@ public class Server extends NanoHTTPD {
     private String handleApiCall(IHTTPSession session, Map<String, String> params) {
         if (session.getUri().startsWith("/api/getMiners")) {
             JsonArray minersJson = new JsonArray();
-            List<IMiner> miners = storageService.getMiners();
+            List<Miner> miners = storageService.getMiners();
             miners.forEach(miner -> minersJson.add(minerToJson(miner)));
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("miners", minersJson);
@@ -149,7 +150,7 @@ public class Server extends NanoHTTPD {
         return r;
     }
 
-    private JsonElement minerToJson(IMiner miner) {
+    private JsonElement minerToJson(Miner miner) {
         if (miner == null) return JsonNull.INSTANCE;
         JsonObject minerJson = new JsonObject();
         minerJson.addProperty("address", miner.getAddress().getID());

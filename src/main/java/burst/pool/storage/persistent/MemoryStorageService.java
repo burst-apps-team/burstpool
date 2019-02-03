@@ -2,7 +2,7 @@ package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
-import burst.pool.miners.IMiner;
+import burst.pool.miners.Miner;
 import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class MemoryStorageService implements StorageService {
 
-    private final Map<BurstAddress, IMiner> miners = new HashMap<>();
+    private final Map<BurstAddress, Miner> miners = new HashMap<>();
     private final Map<Long, Submission> bestSubmissionForBlock = new HashMap<>();
     private final AtomicReference<PoolFeeRecipient> poolFeeRecipient = new AtomicReference<>();
     private final AtomicInteger lastProcessedBlock = new AtomicInteger(0);
@@ -33,31 +33,31 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
-    public List<IMiner> getMiners() {
+    public List<Miner> getMiners() {
         synchronized (miners) {
             return new ArrayList<>(miners.values());
         }
     }
 
     @Override
-    public IMiner getMiner(BurstAddress address) {
+    public Miner getMiner(BurstAddress address) {
         synchronized (miners) {
             return miners.get(address);
         }
     }
 
     @Override
-    public void setMiners(List<IMiner> miners) {
+    public void setMiners(List<Miner> miners) {
         synchronized (this.miners) {
             this.miners.entrySet().removeIf(a -> true);
-            for (IMiner miner : miners) {
+            for (Miner miner : miners) {
                 this.miners.put(miner.getAddress(), miner);
             }
         }
     }
 
     @Override
-    public void setMiner(BurstAddress address, IMiner miner) {
+    public void setMiner(BurstAddress address, Miner miner) {
         synchronized (miners) {
             miners.put(address, miner);
         }

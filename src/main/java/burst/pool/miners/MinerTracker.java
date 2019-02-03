@@ -35,15 +35,15 @@ public class MinerTracker {
     }
 
     public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight, String userAgent) {
-        IMiner miner = getOrCreate(minerAddress);
+        Miner miner = getOrCreate(minerAddress);
         miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
         miner.setUserAgent(userAgent);
         storageService.setMiner(minerAddress, miner);
         compositeDisposable.add(nodeService.getAccount(minerAddress).subscribe(this::onMinerAccount, this::onMinerAccountError));
     }
 
-    private IMiner getOrCreate(BurstAddress minerAddress) {
-        IMiner miner = storageService.getMiner(minerAddress);
+    private Miner getOrCreate(BurstAddress minerAddress) {
+        Miner miner = storageService.getMiner(minerAddress);
         if (miner == null) {
             miner = new Miner(minerMaths, propertyService, minerAddress, BurstValue.fromBurst(0), 0, 0, "", "");
             storageService.setMiner(minerAddress, miner);
@@ -65,11 +65,11 @@ public class MinerTracker {
         // Take winner fee
         BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.winnerRewardPercentage))));
         reward = new BurstValue(reward.subtract(winnerTake));
-        IMiner winningMiner = getOrCreate(winner);
+        Miner winningMiner = getOrCreate(winner);
         winningMiner.increasePending(winnerTake);
         storageService.setMiner(winner, winningMiner);
 
-        List<IMiner> miners = storageService.getMiners();
+        List<Miner> miners = storageService.getMiners();
 
         // Update each miner's effective capacity
         miners.forEach(miner -> miner.recalculateCapacity(blockHeight));
@@ -150,7 +150,7 @@ public class MinerTracker {
             if (isFeeRecipient) {
                 storageService.setPoolFeeRecipient((PoolFeeRecipient) miner);
             } else {
-                storageService.setMiner(miner.getAddress(), miner);
+                storageService.setMiner(miner.getAddress(), (Miner) miner);
             }
         }
         // todo store
@@ -165,17 +165,11 @@ public class MinerTracker {
 
 
     private void onMinerAccount(AccountResponse accountResponse) {
-        BurstAddress feeRecipientAddress = propertyService.getBurstAddress(Props.feeRecipient);
-        boolean isFeeRecipient = Objects.equals(feeRecipientAddress, accountResponse.getAccount());
-        IMiner miner = isFeeRecipient ? storageService.getPoolFeeRecipient() : storageService.getMiner(accountResponse.getAccount());
+        Miner miner = storageService.getMiner(accountResponse.getAccount());
         if (miner == null) return;
         if (accountResponse.getName() == null) return;
         miner.setName(accountResponse.getName());
-        if (isFeeRecipient) {
-            storageService.setPoolFeeRecipient((PoolFeeRecipient) miner);
-        } else {
-            storageService.setMiner(miner.getAddress(), miner);
-        }
+        storageService.setMiner(miner.getAddress(), miner);
     }
 
     private void onMinerAccountError(Throwable throwable) {
