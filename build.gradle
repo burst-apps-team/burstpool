@@ -49,7 +49,7 @@ dependencies {
 flyway {
     url = "${dburl}"
     user = "${dbusername}"
-    schemas = ["public"]
+    //schemas = ["public"]
     locations = ["filesystem:src/main/resources/db/migration"]
 }
 
@@ -68,11 +68,11 @@ jooq {
             }
             database {
                 includes = ".*"
-                inputSchema = "public"
+                //inputSchema = "public"
             }
             target {
                 packageName = "burst.pool.db"
-                directory = "build/generated/source/jooq/main/java"
+                directory = "src/main/java"
             }
         }
     }
@@ -85,13 +85,5 @@ task buildJar(dependsOn: shadowJar)
 jar {
     manifest {
         attributes 'Main-Class': 'burst.pool.Launcher'
-    }
-}
-
-sourceSets {
-    main {
-        java {
-            srcDirs "build/generated/source/jooq/main/java"
-        }
     }
 }
