@@ -1,10 +1,10 @@
 package burst.pool.miners;
 
-class MinerMaths {
+public class MinerMaths {
     private static final double GenesisBaseTarget = 18325193796d;
     private final double[] alphas;
 
-    MinerMaths(int nAvg, int nMin) {
+    public MinerMaths(int nAvg, int nMin) {
         alphas = new double[nAvg];
         for (int i = 0; i < nAvg; i++) {
             if (i < nMin-1) {
@@ -17,7 +17,7 @@ class MinerMaths {
         alphas[nAvg-1] = 1d;
     }
 
-    double estimatedEffectivePlotSize(int nConf, double hitSum) {
+    public double estimatedEffectivePlotSize(int nConf, double hitSum) {
         if (hitSum == 0) {
             return 0;
         }

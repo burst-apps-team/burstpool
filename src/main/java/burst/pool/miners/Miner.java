@@ -4,8 +4,10 @@ import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
+import burst.pool.storage.persistent.MinerStore;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -15,58 +17,51 @@ public class Miner implements IMiner {
     private final PropertyService propertyService;
 
     private final BurstAddress address;
-    private final AtomicReference<BurstValue> pendingBalance;
-    private final AtomicReference<Double> estimatedCapacity;
-    private final AtomicReference<Double> share;
-    private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
-    private final AtomicReference<Double> hitSum = new AtomicReference<>(0d); // todo store
-    private final AtomicReference<String> name;
-    private final AtomicReference<String> userAgent;
+    private final MinerStore store;
 
-    public Miner(MinerMaths minerMaths, PropertyService propertyService, BurstAddress address, BurstValue pendingBalance, double estimatedCapacity, double share, String name, String userAgent) {
+    public Miner(MinerMaths minerMaths, PropertyService propertyService, BurstAddress address, MinerStore store) {
         this.minerMaths = minerMaths;
         this.propertyService = propertyService;
         this.address = address;
-        this.pendingBalance = new AtomicReference<>(pendingBalance);
-        this.estimatedCapacity = new AtomicReference<>(estimatedCapacity);
-        this.share = new AtomicReference<>(share);
-        this.name = new AtomicReference<>(name);
-        this.userAgent = new AtomicReference<>(userAgent);
+        this.store = store;
     }
 
     @Override
     public void recalculateCapacity(long currentBlockHeight) {
         // Prune older deadlines
-        deadlines.entrySet().removeIf(deadline -> isOldDeadline(deadline.getValue(), currentBlockHeight));
+        store.getDeadlines().forEach(deadline -> {
+            if (isOldDeadline(deadline, currentBlockHeight)) {
+                store.removeDeadline(deadline.getHeight());
+            }
+        });
         // Calculate estimated capacity
-        estimatedCapacity.set(minerMaths.estimatedEffectivePlotSize(deadlines.size(), hitSum.get()));
+        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(store.getDeadlineCount(), store.getHitSum()));
     }
 
     @Override
     public void recalculateShare(double poolCapacity) {
         if (poolCapacity == 0d) {
-            share.set(0d);
+            store.setShare(0d);
         }
-        share.set(estimatedCapacity.get() / poolCapacity);
-        if (Double.isNaN(share.get())) {
-            share.set(0d);
-        }
+        double newShare = store.getEstimatedCapacity() / poolCapacity;
+        if (Double.isNaN(newShare)) newShare = 0d;
+        store.setShare(newShare);
     }
 
     @Override
     public void increasePending(BurstValue delta) {
-        pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(delta)));
+        store.setPendingBalance(store.getPendingBalance() + Double.parseDouble(delta.toPlainString())); // TODO workaround for but in burstkit4j
     }
 
     @Override
     public void decreasePending(BurstValue delta) {
-        pendingBalance.updateAndGet(pending -> new BurstValue(pending.subtract(delta)));
+        store.setPendingBalance(store.getPendingBalance() - Double.parseDouble(delta.toPlainString())); // TODO workaround for but in burstkit4j
     }
 
     @Override
     public BurstValue takeShare(BurstValue availableReward) {
-        BurstValue share = new BurstValue(availableReward.multiply(BigDecimal.valueOf(this.share.get())));
-        pendingBalance.updateAndGet(pending -> new BurstValue(pending.add(share)));
+        BurstValue share = new BurstValue(availableReward.multiply(BigDecimal.valueOf(store.getShare())));
+        increasePending(share);
         return share;
     }
 
@@ -79,41 +74,43 @@ public class Miner implements IMiner {
         }
     }
 
-    private void adjustHitSum(double adjustBy) {
-        hitSum.updateAndGet(value -> value + adjustBy);
+    private void adjustHitSum(double delta) {
+        store.setHitSum(store.getHitSum() + delta);
     }
 
     @Override
     public void processNewDeadline(Deadline deadline) {
         // Check if deadline is for an older block
-        for (Map.Entry<Long, Deadline> entry : deadlines.entrySet()) {
-            if (entry.getKey() > deadline.getHeight()) return;
+        List<Deadline> deadlines = store.getDeadlines();
+        boolean previousDeadlineExists = false;
+        for (Deadline existingDeadline : deadlines) {
+            if (existingDeadline.getHeight() > deadline.getHeight()) return;
+            if (existingDeadline.getHeight() == deadline.getHeight()) previousDeadlineExists = true;
         }
 
-        if (deadlines.containsKey(deadline.getHeight())) {
-            Deadline previousDeadline = deadlines.get(deadline.getHeight());
-            if (deadline.getDeadline().compareTo(previousDeadline.getDeadline()) >= 0) {
-                Deadline oldDeadline = deadlines.replace(deadline.getHeight(), deadline);
-                if (oldDeadline != null) {
-                    adjustHitSum(-oldDeadline.calculateHit());
-                }
+        if (previousDeadlineExists) {
+            Deadline previousDeadline = store.getDeadline(deadline.getHeight());
+            if (deadline.getDeadline().compareTo(previousDeadline.getDeadline()) >= 0) { // If new deadline is better
+                store.removeDeadline(previousDeadline.getHeight());
+                store.setDeadline(deadline.getHeight(), deadline);
+                adjustHitSum(-previousDeadline.calculateHit());
             } else {
                 return;
             }
         } else {
-            deadlines.put(deadline.getHeight(), deadline);
+            store.setDeadline(deadline.getHeight(), deadline);
         }
         adjustHitSum(deadline.calculateHit());
     }
 
     @Override
     public double getCapacity() {
-        return estimatedCapacity.get();
+        return store.getEstimatedCapacity();
     }
 
     @Override
     public BurstValue getPending() {
-        return pendingBalance.get();
+        return BurstValue.fromBurst(store.getPendingBalance());
     }
 
     @Override
@@ -123,43 +120,31 @@ public class Miner implements IMiner {
 
     @Override
     public double getShare() {
-        return share.get();
+        return store.getShare();
     }
 
     @Override
     public int getNConf() {
-        return deadlines.size();
+        return store.getDeadlineCount();
     }
 
     @Override
     public String getName() {
-        return name.get();
+        return store.getName();
     }
 
     @Override
     public void setName(String name) {
-        this.name.set(name);
+        store.setName(name);
     }
 
     @Override
     public String getUserAgent() {
-        return userAgent.get();
+        return store.getUserAgent();
     }
 
     @Override
     public void setUserAgent(String userAgent) {
-        this.userAgent.set(userAgent);
-    }
-
-    @Override
-    public String toString() {
-        return "Miner{" +
-                "address=" + address +
-                ", pendingBalance=" + pendingBalance +
-                ", estimatedCapacity=" + estimatedCapacity +
-                ", share=" + share +
-                ", deadlines=" + deadlines.size() +
-                ", hitSum=" + hitSum +
-                '}';
+        store.setUserAgent(userAgent);
     }
 }

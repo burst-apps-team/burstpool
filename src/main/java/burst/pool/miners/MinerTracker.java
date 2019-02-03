@@ -23,7 +23,6 @@ public class MinerTracker {
     private final PropertyService propertyService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final BurstNodeService nodeService;
-    private final MinerMaths minerMaths;
 
     private final Semaphore payoutSemaphore = new Semaphore(1);
 
@@ -31,22 +30,19 @@ public class MinerTracker {
         this.nodeService = nodeService;
         this.storageService = storageService;
         this.propertyService = propertyService;
-        this.minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
     }
 
     public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight, String userAgent) {
         Miner miner = getOrCreate(minerAddress);
         miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
         miner.setUserAgent(userAgent);
-        storageService.setMiner(minerAddress, miner);
         compositeDisposable.add(nodeService.getAccount(minerAddress).subscribe(this::onMinerAccount, this::onMinerAccountError));
     }
 
     private Miner getOrCreate(BurstAddress minerAddress) {
         Miner miner = storageService.getMiner(minerAddress);
         if (miner == null) {
-            miner = new Miner(minerMaths, propertyService, minerAddress, BurstValue.fromBurst(0), 0, 0, "", "");
-            storageService.setMiner(minerAddress, miner);
+            miner = storageService.newMiner(minerAddress);
         }
         return miner;
     }
@@ -67,7 +63,6 @@ public class MinerTracker {
         reward = new BurstValue(reward.subtract(winnerTake));
         Miner winningMiner = getOrCreate(winner);
         winningMiner.increasePending(winnerTake);
-        storageService.setMiner(winner, winningMiner);
 
         List<Miner> miners = storageService.getMiners();
 
@@ -85,8 +80,6 @@ public class MinerTracker {
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
         BurstValue poolReward = reward;
         miners.forEach(miner -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
-
-        storageService.setMiners(miners);
 
         System.out.println("Reward is " + ogReward + ", pool take is " + poolTake + ", winner take is " + winnerTake + ", amount left is " + reward + ", miners took " + amountTaken.get());
 
@@ -149,8 +142,6 @@ public class MinerTracker {
             miner.decreasePending(payment.getValue());
             if (isFeeRecipient) {
                 storageService.setPoolFeeRecipient((PoolFeeRecipient) miner);
-            } else {
-                storageService.setMiner(miner.getAddress(), (Miner) miner);
             }
         }
         // todo store
@@ -169,7 +160,6 @@ public class MinerTracker {
         if (miner == null) return;
         if (accountResponse.getName() == null) return;
         miner.setName(accountResponse.getName());
-        storageService.setMiner(miner.getAddress(), miner);
     }
 
     private void onMinerAccountError(Throwable throwable) {

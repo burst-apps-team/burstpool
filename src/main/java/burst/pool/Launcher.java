@@ -1,6 +1,7 @@
 package burst.pool;
 
 import burst.kit.service.BurstNodeService;
+import burst.pool.miners.MinerMaths;
 import burst.pool.miners.MinerTracker;
 import burst.pool.pool.Pool;
 import burst.pool.pool.Server;
@@ -18,7 +19,8 @@ public class Launcher {
             propertiesFileName = args[0];
         }
         PropertyService propertyService = new PropertyServiceImpl(propertiesFileName);
-        StorageService storageService = new MemoryStorageService(propertyService);
+        MinerMaths minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
+        StorageService storageService = new MemoryStorageService(propertyService, minerMaths);
         BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress));
         MinerTracker minerTracker = new MinerTracker(nodeService, storageService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);
