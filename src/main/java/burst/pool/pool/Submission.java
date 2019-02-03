@@ -6,7 +6,7 @@ public class Submission {
     private final BurstAddress miner;
     private final String nonce;
 
-    Submission(BurstAddress miner, String nonce) {
+    public Submission(BurstAddress miner, String nonce) {
         this.miner = miner;
         this.nonce = nonce;
     }

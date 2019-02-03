@@ -3,7 +3,6 @@ package burst.pool.pool;
 import burst.kit.entity.BurstAddress;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.Constants;
-import burst.pool.miners.IMiner;
 import burst.pool.miners.Miner;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
@@ -14,7 +13,6 @@ import fi.iki.elonen.NanoHTTPD;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.math.BigDecimal;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
@@ -86,7 +84,7 @@ public class Server extends NanoHTTPD {
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("miners", minersJson);
             double poolCapacity = 0;
-            for (IMiner miner : storageService.getMiners()) {
+            for (Miner miner : storageService.getMiners()) {
                 poolCapacity += miner.getCapacity();
             }
             jsonObject.addProperty("poolCapacity", poolCapacity);

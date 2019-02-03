@@ -4,40 +4,25 @@ import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
+import burst.pool.storage.persistent.MinerStore;
 
-import java.util.concurrent.atomic.AtomicReference;
-
-public class PoolFeeRecipient implements IMiner {
+public class PoolFeeRecipient implements Payable {
     private final PropertyService propertyService;
-    private final AtomicReference<BurstValue> pending;
-    private final AtomicReference<String> name;
+    private final MinerStore.FeeRecipientStore store;
 
-    public PoolFeeRecipient(PropertyService propertyService, BurstValue pending, String name) {
+    public PoolFeeRecipient(PropertyService propertyService, MinerStore.FeeRecipientStore store) {
         this.propertyService = propertyService;
-        this.pending = new AtomicReference<>(pending);
-        this.name = new AtomicReference<>(name);
-    }
-
-    @Override
-    public void processNewDeadline(Deadline deadline) {
-    }
-
-    @Override
-    public void recalculateCapacity(long currentBlockHeight) {
-    }
-
-    @Override
-    public void recalculateShare(double poolCapacity) {
+        this.store = store;
     }
 
     @Override
     public void increasePending(BurstValue delta) {
-        pending.updateAndGet(pending -> new BurstValue(pending.add(delta)));
+        store.setPendingBalance(store.getPendingBalance() + Double.parseDouble(delta.toPlainString())); // TODO workaround for but in burstkit4j
     }
 
     @Override
     public void decreasePending(BurstValue delta) {
-        pending.updateAndGet(pending -> new BurstValue(pending.subtract(delta)));
+        store.setPendingBalance(store.getPendingBalance() - Double.parseDouble(delta.toPlainString())); // TODO workaround for but in burstkit4j
     }
 
     @Override
@@ -46,46 +31,12 @@ public class PoolFeeRecipient implements IMiner {
     }
 
     @Override
-    public double getCapacity() {
-        return 0;
-    }
-
-    @Override
     public BurstValue getPending() {
-        return pending.get();
+        return BurstValue.fromBurst(store.getPendingBalance());
     }
 
     @Override
     public BurstAddress getAddress() {
         return propertyService.getBurstAddress(Props.feeRecipient);
-    }
-
-    @Override
-    public double getShare() {
-        return 0;
-    }
-
-    @Override
-    public int getNConf() {
-        return 0;
-    }
-
-    @Override
-    public String getName() {
-        return name.get();
-    }
-
-    @Override
-    public void setName(String name) {
-        this.name.set(name);
-    }
-
-    @Override
-    public String getUserAgent() {
-        return "Pool Fee Recipient";
-    }
-
-    @Override
-    public void setUserAgent(String userAgent) {
     }
 }

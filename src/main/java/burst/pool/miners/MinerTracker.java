@@ -56,7 +56,6 @@ public class MinerTracker {
         reward = new BurstValue(reward.subtract(poolTake));
         PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
         poolFeeRecipient.increasePending(poolTake);
-        storageService.setPoolFeeRecipient(poolFeeRecipient);
 
         // Take winner fee
         BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.winnerRewardPercentage))));
@@ -99,8 +98,8 @@ public class MinerTracker {
             Thread.currentThread().interrupt();
         }
 
-        Set<IMiner> payableMinersSet = new HashSet<>();
-        for (IMiner miner : storageService.getMiners()) {
+        Set<Payable> payableMinersSet = new HashSet<>();
+        for (Payable miner : storageService.getMiners()) {
             if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(miner.getPending()) <= 0) {
                 payableMinersSet.add(miner);
             }
@@ -116,33 +115,26 @@ public class MinerTracker {
             return;
         }
 
-        IMiner[] payableMiners = payableMinersSet.size() <= 64 ? payableMinersSet.toArray(new IMiner[0]) : Arrays.copyOfRange(payableMinersSet.toArray(new IMiner[0]), 0, 64);
+        Payable[] payableMiners = payableMinersSet.size() <= 64 ? payableMinersSet.toArray(new Payable[0]) : Arrays.copyOfRange(payableMinersSet.toArray(new Payable[0]), 0, 64);
 
         BurstValue transactionFee = BurstValue.fromBurst(propertyService.getFloat(Props.transactionFee));
         BurstValue transactionFeePaidPerMiner = new BurstValue(transactionFee.divide(BigDecimal.valueOf(payableMiners.length), BigDecimal.ROUND_CEILING));
-        Map<BurstAddress, BurstValue> payouts = new HashMap<>(); // Does not have subtracted transaction fee
+        Map<Payable, BurstValue> payees = new HashMap<>(); // Does not have subtracted transaction fee
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
-        for (IMiner miner : payableMiners) {
-            payouts.put(miner.getAddress(), miner.getPending());
+        for (Payable miner : payableMiners) {
+            payees.put(miner, miner.getPending());
             recipients.put(miner.getAddress(), new BurstValue(miner.getPending().subtract(transactionFeePaidPerMiner)));
         }
 
         compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), transactionFee, 1440, recipients)
                 .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
                 .flatMap(nodeService::broadcastTransaction)
-                .subscribe(response -> onPaidOut(response, payouts), this::onPayoutError));
+                .subscribe(response -> onPaidOut(response, payees), this::onPayoutError));
     }
 
-    private void onPaidOut(BroadcastTransactionResponse response, Map<BurstAddress, BurstValue> paidMiners) {
-        BurstAddress feeRecipientAddress = propertyService.getBurstAddress(Props.feeRecipient);
-        for (Map.Entry<BurstAddress, BurstValue> payment : paidMiners.entrySet()) {
-            boolean isFeeRecipient = Objects.equals(feeRecipientAddress, payment.getKey());
-            IMiner miner = isFeeRecipient ? storageService.getPoolFeeRecipient() : storageService.getMiner(payment.getKey());
-            if (miner == null) return;
-            miner.decreasePending(payment.getValue());
-            if (isFeeRecipient) {
-                storageService.setPoolFeeRecipient((PoolFeeRecipient) miner);
-            }
+    private void onPaidOut(BroadcastTransactionResponse response, Map<Payable, BurstValue> paidMiners) {
+        for (Map.Entry<Payable, BurstValue> payment : paidMiners.entrySet()) {
+            payment.getKey().decreasePending(payment.getValue());
         }
         // todo store
         System.out.println("Paid out, transaction id " + response.getTransactionID());

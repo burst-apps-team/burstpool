@@ -28,4 +28,9 @@ public interface MinerStore {
     void removeDeadline(long height);
     Deadline getDeadline(long height);
     void setDeadline(long height, Deadline deadline);
+
+    interface FeeRecipientStore {
+        double getPendingBalance();
+        void setPendingBalance(double pending);
+    }
 }

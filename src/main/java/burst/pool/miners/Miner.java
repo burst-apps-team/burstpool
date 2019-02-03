@@ -8,11 +8,8 @@ import burst.pool.storage.persistent.MinerStore;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class Miner implements IMiner {
+public class Miner implements Payable {
     private final MinerMaths minerMaths;
     private final PropertyService propertyService;
 
@@ -26,7 +23,6 @@ public class Miner implements IMiner {
         this.store = store;
     }
 
-    @Override
     public void recalculateCapacity(long currentBlockHeight) {
         // Prune older deadlines
         store.getDeadlines().forEach(deadline -> {
@@ -38,7 +34,6 @@ public class Miner implements IMiner {
         store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(store.getDeadlineCount(), store.getHitSum()));
     }
 
-    @Override
     public void recalculateShare(double poolCapacity) {
         if (poolCapacity == 0d) {
             store.setShare(0d);
@@ -78,7 +73,6 @@ public class Miner implements IMiner {
         store.setHitSum(store.getHitSum() + delta);
     }
 
-    @Override
     public void processNewDeadline(Deadline deadline) {
         // Check if deadline is for an older block
         List<Deadline> deadlines = store.getDeadlines();
@@ -103,7 +97,6 @@ public class Miner implements IMiner {
         adjustHitSum(deadline.calculateHit());
     }
 
-    @Override
     public double getCapacity() {
         return store.getEstimatedCapacity();
     }
@@ -118,32 +111,26 @@ public class Miner implements IMiner {
         return address;
     }
 
-    @Override
     public double getShare() {
         return store.getShare();
     }
 
-    @Override
     public int getNConf() {
         return store.getDeadlineCount();
     }
 
-    @Override
     public String getName() {
         return store.getName();
     }
 
-    @Override
     public void setName(String name) {
         store.setName(name);
     }
 
-    @Override
     public String getUserAgent() {
         return store.getUserAgent();
     }
 
-    @Override
     public void setUserAgent(String userAgent) {
         store.setUserAgent(userAgent);
     }

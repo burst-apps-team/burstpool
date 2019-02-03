@@ -154,6 +154,7 @@ public class Pool {
     private void onNewBestDeadline(long blockHeight, Submission submission) {
         bestDeadline.set(submission);
         submitDeadline(submission);
+        storageService.removeBestSubmissionForBlock(blockHeight);
         storageService.setBestSubmissionForBlock(blockHeight, submission);
     }
 

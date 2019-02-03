@@ -30,7 +30,7 @@ public class MemoryStorageService implements StorageService {
     public MemoryStorageService(PropertyService propertyService, MinerMaths minerMaths) {
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
-        poolFeeRecipient.set(new PoolFeeRecipient(propertyService, BurstValue.fromBurst(0), ""));
+        poolFeeRecipient.set(new PoolFeeRecipient(propertyService, new MemoryFeeRecipientStore()));
     }
 
     @Override
@@ -69,13 +69,6 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
-    public void setPoolFeeRecipient(PoolFeeRecipient poolFeeRecipient) {
-        synchronized (this.poolFeeRecipient) {
-            this.poolFeeRecipient.set(poolFeeRecipient);
-        }
-    }
-
-    @Override
     public int getLastProcessedBlock() {
         synchronized (lastProcessedBlock) {
             return lastProcessedBlock.get();
@@ -93,6 +86,13 @@ public class MemoryStorageService implements StorageService {
     public Submission getBestSubmissionForBlock(long blockHeight) {
         synchronized (bestSubmissionForBlock) {
             return bestSubmissionForBlock.get(blockHeight);
+        }
+    }
+
+    @Override
+    public void removeBestSubmissionForBlock(long blockHeight) {
+        synchronized (bestSubmissionForBlock) {
+            bestSubmissionForBlock.remove(blockHeight);
         }
     }
 
@@ -195,6 +195,20 @@ public class MemoryStorageService implements StorageService {
         @Override
         public void setDeadline(long height, Deadline deadline) {
             deadlines.put(height, deadline);
+        }
+    }
+
+    private static class MemoryFeeRecipientStore implements MinerStore.FeeRecipientStore {
+        private AtomicReference<Double> pending = new AtomicReference<>(0d);
+
+        @Override
+        public double getPendingBalance() {
+            return pending.get();
+        }
+
+        @Override
+        public void setPendingBalance(double pending) {
+            this.pending.set(pending);
         }
     }
 }

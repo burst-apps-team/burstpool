@@ -40,6 +40,7 @@ dependencies {
     implementation "org.jooq:jooq"
     implementation "org.jooq:jooq-meta"
     implementation "org.jooq:jooq-codegen"
+    implementation "org.flywaydb:flyway-core:2.5.4"
     //jooqRuntime 'org.hsqldb:hsqldb:2.4.1'
     compile "com.h2database:h2:1.4.197"
     jooqRuntime "com.h2database:h2:1.4.197"

@@ -28,8 +28,7 @@ CREATE TABLE bestSubmissions (
 );
 
 CREATE TABLE poolState (
-  db_id BIGINT AUTO_INCREMENT,
-  key TEXT,
+  key VARCHAR(50),
   value TEXT,
-  PRIMARY KEY (db_id)
+  PRIMARY KEY (key)
 );

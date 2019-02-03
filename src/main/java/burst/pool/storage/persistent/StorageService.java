@@ -14,11 +14,11 @@ public interface StorageService {
     Miner newMiner(BurstAddress address);
 
     PoolFeeRecipient getPoolFeeRecipient();
-    void setPoolFeeRecipient(PoolFeeRecipient poolFeeRecipient);
 
     int getLastProcessedBlock();
     void incrementLastProcessedBlock();
 
     Submission getBestSubmissionForBlock(long blockHeight);
+    void removeBestSubmissionForBlock(long blockHeight);
     void setBestSubmissionForBlock(long blockHeight, Submission submission);
 }
