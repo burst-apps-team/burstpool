@@ -205,4 +205,8 @@ public class Pool {
         jsonObject.add("miningInfo", gson.toJsonTree(miningInfo.get()));
         return jsonObject;
     }
+
+    public BurstAddress getAccount() {
+        return burstCrypto.getBurstAddressFromPassphrase(propertyService.getString(Props.passphrase));
+    }
 }

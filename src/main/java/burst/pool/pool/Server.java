@@ -2,6 +2,7 @@ package burst.pool.pool;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.util.BurstKitUtils;
+import burst.pool.Constants;
 import burst.pool.miners.IMiner;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
@@ -94,7 +95,10 @@ public class Server extends NanoHTTPD {
             return minerToJson(storageService.getMiner(minerAddress)).toString();
         } else if (session.getUri().startsWith("/api/getConfig")) {
             JsonObject response = new JsonObject();
+            response.addProperty("version", Constants.VERSION);
             response.addProperty(Props.poolName.getName(), propertyService.getString(Props.poolName));
+            response.addProperty("poolAccount", pool.getAccount().getID());
+            response.addProperty("poolAccountRS", pool.getAccount().getFullAddress());
             response.addProperty(Props.nAvg.getName(), propertyService.getInt(Props.nAvg));
             response.addProperty(Props.nMin.getName(), propertyService.getInt(Props.nMin));
             response.addProperty(Props.maxDeadline.getName(), propertyService.getLong(Props.maxDeadline));

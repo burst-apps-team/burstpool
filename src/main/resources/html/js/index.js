@@ -24,6 +24,7 @@ function getPoolInfo() {
         document.getElementById("poolNameTitle").innerText = response.poolName;
         document.title = "Burst Pool (" + response.poolName + ")";
         document.getElementById("poolName").innerText = response.poolName;
+        document.getElementById("poolAccount").innerText = response.poolAccountRS + " (" + response.poolAccount + ")";
         document.getElementById("nAvg").innerText = response.nAvg;
         document.getElementById("nMin").innerText = response.nMin;
         document.getElementById("maxDeadline").innerText = response.maxDeadline;
@@ -34,6 +35,7 @@ function getPoolInfo() {
         document.getElementById("minimumPayout").innerText = response.minimumPayout + " BURST";
         document.getElementById("minPayoutsAtOnce").innerText = response.minPayoutsPerTransaction;
         document.getElementById("payoutTxFee").innerText = response.transactionFee + " BURST";
+        document.getElementById("poolVersion").innerText = response.version;
     });
 }
 
