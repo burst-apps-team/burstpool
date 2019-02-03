@@ -1,4 +1,4 @@
-let poolInfo = null;
+let miners = new Array(0);
 
 let colors = new Array(11);
 
@@ -21,9 +21,19 @@ function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
         return http.json();
     }).then(response => {
-        poolInfo = response;
-        document.getElementById("poolName").innerText = response.poolName;
+        document.getElementById("poolNameTitle").innerText = response.poolName;
         document.title = "Burst Pool (" + response.poolName + ")";
+        document.getElementById("poolName").innerText = response.poolName;
+        document.getElementById("nAvg").innerText = response.nAvg;
+        document.getElementById("nMin").innerText = response.nMin;
+        document.getElementById("maxDeadline").innerText = response.maxDeadline;
+        document.getElementById("processLag").innerText = response.processLag + " Blocks";
+        document.getElementById("feeRecipient").innerText = response.feeRecipientRS;
+        document.getElementById("poolFee").innerText = (parseFloat(response.poolFeePercentage)*100).toFixed(3) + "%";
+        document.getElementById("winnerReward").innerText = (parseFloat(response.winnerRewardPercentage)*100).toFixed(3) + "%";
+        document.getElementById("minimumPayout").innerText = response.minimumPayout + " BURST";
+        document.getElementById("minPayoutsAtOnce").innerText = response.minPayoutsPerTransaction;
+        document.getElementById("payoutTxFee").innerText = response.transactionFee + " BURST";
     });
 }
 
@@ -56,8 +66,9 @@ function getMiners() {
             let miner = response.miners[i];
             let minerAddress = miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")";
             let userAgent = miner.userAgent == null? "Unknown" : miner.userAgent;
-            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+parseFloat(miner.share)*100+"%</td><td>"+userAgent+"</td></tr>";
+            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+(parseFloat(miner.share)*100).toFixed(3)+"%</td><td>"+userAgent+"</td></tr>";
         }
+        document.getElementById("minerCount").innerText = response.miners.length;
         document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
         let topTenMiners = response.miners.sort((a,b) => parseFloat(a.share) - parseFloat(b.share)).slice(0, 10);
         let minerShares = topTenMiners.map(miner => parseFloat(miner.share));
@@ -67,9 +78,6 @@ function getMiners() {
         minerShares.forEach(share => other -= share);
         minerShares.push(other);
         minerNames.push("Others");
-        console.log(minerShares);
-        console.log(minerNames);
-        console.log(minerColors);
         let chart = document.getElementById("sharesChart"), newChart = htmlToElement("<canvas id=\"sharesChart\" class=\"w-100 h-100\"></canvas>");
         chart.parentNode.replaceChild(newChart, chart);
         new Chart(newChart, {
@@ -91,11 +99,64 @@ function getMiners() {
                 }
             }
         });
+        miners = response.miners;
     });
+}
+
+function prepareMinerInfo(address) {
+    let minerAddress = document.getElementById("minerAddress");
+    let minerName = document.getElementById("minerName");
+    let minerPending = document.getElementById("minerPending");
+    let minerCapacity = document.getElementById("minerCapacity");
+    let minerNConf = document.getElementById("minerNConf");
+    let minerShare = document.getElementById("minerShare");
+    let minerSoftware = document.getElementById("minerSoftware");
+    
+    minerAddress.innerText = address;
+    minerName.innerText = "Loading...";
+    minerPending.innerText = "Loading...";
+    minerCapacity.innerText = "Loading...";
+    minerNConf.innerText = "Loading...";
+    minerShare.innerText = "Loading...";
+    minerSoftware.innerText = "Loading...";
+
+    let miner = null;
+    miners.forEach(aMiner => {
+        if (aMiner.addressRS == address || aMiner.address == address) {
+            miner = aMiner;
+        }
+    });
+
+    if (miner == null) {
+        minerName.innerText = "Miner not found";
+        minerPending.innerText = "Miner not found";
+        minerCapacity.innerText = "Miner not found";
+        minerNConf.innerText = "Miner not found";
+        minerShare.innerText = "Miner not found";
+        minerSoftware.innerText = "Miner not found";
+        return;
+    }
+
+    let name = miner.name == null ? "Not Set" : miner.name;
+    let userAgent = miner.userAgent == null ? "Unknown" : miner.userAgent;
+
+    minerAddress.innerText = miner.addressRS;
+    minerName.innerText = name;
+    minerPending.innerText = miner.pendingBalance;
+    minerCapacity.innerText = formatCapacity(miner.estimatedCapacity);
+    minerNConf.innerText = miner.nConf;
+    minerShare.innerText = (parseFloat(miner.share)*100).toFixed(3) + "%";
+    minerSoftware.innerText = userAgent;
 }
 
 function formatCapacity(capacity) {
     return parseFloat(capacity).toFixed(3);
+}
+
+function onPageLoad() {
+    $('#minerInfoModal').on('show.bs.modal', function (event) {
+        prepareMinerInfo(document.getElementById("addressInput").value);
+    });
 }
 
 getPoolInfo();

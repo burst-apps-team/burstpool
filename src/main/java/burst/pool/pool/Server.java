@@ -100,6 +100,7 @@ public class Server extends NanoHTTPD {
             response.addProperty(Props.maxDeadline.getName(), propertyService.getLong(Props.maxDeadline));
             response.addProperty(Props.processLag.getName(), propertyService.getInt(Props.processLag));
             response.addProperty(Props.feeRecipient.getName(), propertyService.getBurstAddress(Props.feeRecipient).getID());
+            response.addProperty(Props.feeRecipient.getName() + "RS", propertyService.getBurstAddress(Props.feeRecipient).getFullAddress());
             response.addProperty(Props.poolFeePercentage.getName(), propertyService.getFloat(Props.poolFeePercentage));
             response.addProperty(Props.winnerRewardPercentage.getName(), propertyService.getFloat(Props.winnerRewardPercentage));
             response.addProperty(Props.minimumPayout.getName(), propertyService.getFloat(Props.minimumPayout));
@@ -134,7 +135,8 @@ public class Server extends NanoHTTPD {
         while ((len = inputStream.read(buffer)) != -1) {
             stringWriter.write(new String(buffer), 0, len);
         }
-        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), stringWriter.toString());
+        String response = stringWriter.toString().replace("\n", "").replace("    ", "");
+        return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), response);
     }
 
     private Response redirect(String redirectTo) {

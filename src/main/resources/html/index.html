@@ -5,14 +5,15 @@
     <title>Burstcoin Pool</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link type="text/css" rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+    <script src="js/jquery.min.js"></script>
     <script src="bootstrap/js/bootstrap.min.js"></script>
     <script src="js/Chart.bundle.min.js"></script>
     <link type="text/css" rel="stylesheet" href="css/main.css"/>
     <script type="text/javascript" rel="script" src="js/index.js"></script>
 </head>
-<body onload="thing();">
+<body onload="onPageLoad();">
 <div class="p-3 bg-light">
-    <h1>Burstcoin Pool (<span id="poolName"></span>)</h1>
+    <h1>Burstcoin Pool (<span id="poolNameTitle"></span>)</h1>
 </div>
 <div class="container-fluid">
     <div class="row">
@@ -36,7 +37,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6 p-3">
                     <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
-                        <p class="d-inline">Mined by:</p>
+                        <p class="d-inline">Miner</p>
                     </div>
                     <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="bestMiner">Loading...</p>
@@ -44,7 +45,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6 p-3">
                     <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
-                        <p class="d-inline">Deadline Nonce</p>
+                        <p class="d-inline">Nonce</p>
                     </div>
                     <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="bestNonce">Loading...</p>
@@ -68,7 +69,7 @@
                 </div>
                 <div class="col-lg-3 col-md-6 p-3">
                     <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
-                        <p class="d-inline">Number of Miners</p>
+                        <p class="d-inline">No. of Miners</p>
                     </div>
                     <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="minerCount">Loading...</p>
@@ -80,6 +81,19 @@
                     </div>
                     <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="poolCapacity">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-xl-12">
+                    <div class="row">
+                        <div class="col-xl-8 col-lg-6 col-md-8 p-3">
+                            <input type="text" id="addressInput" class="form-control" placeholder="BURST-XXXX-XXXX-XXXX-XXXXX">
+                        </div>
+                        <div class="col-xl-2 col-lg-3 col-md-2 col-6 overflow-auto text-nowrap p-3">
+                            <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#minerInfoModal">Get Miner</button>
+                        </div>
+                        <div class="col-xl-2 col-lg-3 col-md-2 col-6 overflow-auto text-nowrap p-3">
+                            <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#poolInfoModal">Pool Info</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -104,6 +118,104 @@
             <td colspan="6">Loading...</td>
         </tr>
     </table>
+</div>
+
+<!-- Modals -->
+<div class="modal fade" id="minerInfoModal" tabindex="-1" role="dialog" aria-labelledby="minerInfoTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="minerInfoTitle">Miner Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive w-100">
+                    <table class="table table-striped">
+                        <tr>
+                            <td>Miner Address</td><td><span id="minerAddress">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Miner Name</td><td><span id="minerName">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Pending Balance</td><td><span id="minerPending">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Estimated Capacity</td><td><span id="minerCapacity">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>nConf (Last (nAvg + processLag) rounds)</td><td><span id="minerNConf">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Share</td><td><span id="minerShare">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Software</td><td><span id="minerSoftware">Loading...</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="poolInfoModal" tabindex="-1" role="dialog" aria-labelledby="poolInfoTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="poolInfoTitle">Pool Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive w-100">
+                    <table class="table table-striped">
+                        <tr>
+                            <td>Pool Name</td><td><span id="poolName">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>nAvg</td><td><span id="nAvg">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>nMin</td><td><span id="nMin">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Max Deadline</td><td><span id="maxDeadline">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Process Lag</td><td><span id="processLag">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Fee Recipient</td><td><span id="feeRecipient">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Pool Fee</td><td><span id="poolFee">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Winner Reward</td><td><span id="winnerReward">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Minimum Payout</td><td><span id="minimumPayout">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Min payouts at once</td><td><span id="minPayoutsAtOnce">Loading...</span></td>
+                        </tr>
+                        <tr>
+                            <td>Payout Transaction Fee</td><td><span id="payoutTxFee">Loading...</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
