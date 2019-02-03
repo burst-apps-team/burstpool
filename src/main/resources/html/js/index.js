@@ -122,7 +122,7 @@ function prepareMinerInfo(address) {
 
     let miner = null;
     miners.forEach(aMiner => {
-        if (aMiner.addressRS == address || aMiner.address == address) {
+        if (aMiner.addressRS === address || aMiner.address.toString() === address || aMiner.name === address) {
             miner = aMiner;
         }
     });
@@ -157,6 +157,12 @@ function onPageLoad() {
     $('#minerInfoModal').on('show.bs.modal', function (event) {
         prepareMinerInfo(document.getElementById("addressInput").value);
     });
+    document.getElementById("addressInput").addEventListener("keyup", function (event) {
+        if (event.keyCode === 13) {
+            event.preventDefault();
+            document.getElementById("getMinerButton").click();
+        }
+    })
 }
 
 getPoolInfo();
