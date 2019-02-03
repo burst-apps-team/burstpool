@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <title>Burstcoin Pool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link type="text/css" rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
     <script src="bootstrap/js/bootstrap.min.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <script src="js/Chart.bundle.min.js"></script>
     <link type="text/css" rel="stylesheet" href="css/main.css"/>
     <script type="text/javascript" rel="script" src="js/index.js"></script>
 </head>
-<body>
-<div class="p-3">
+<body onload="thing();">
+<div class="p-3 bg-light">
     <h1>Burstcoin Pool (<span id="poolName"></span>)</h1>
 </div>
 <div class="container-fluid">
@@ -83,7 +84,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-6 chart"><h1>Chart</h1></div>
+        <div class="col-lg-6">
+            <canvas id="sharesChart" class="w-100 h-100"></canvas>
+        </div>
     </div>
 </div>
 <br />

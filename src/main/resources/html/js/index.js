@@ -1,5 +1,22 @@
 let poolInfo = null;
 
+let colors = new Array(11);
+
+for (let i = 0; i < colors.length; i++) {
+    colors[i] = generateColour();
+}
+
+function generateColour() {
+    return "rgb(" + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + ")";
+}
+
+function htmlToElement(html) {
+    let template = document.createElement('template');
+    html = html.trim();
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
+
 function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
         return http.json();
@@ -42,6 +59,38 @@ function getMiners() {
             table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+parseFloat(miner.share)*100+"%</td><td>"+userAgent+"</td></tr>";
         }
         document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
+        let topTenMiners = response.miners.sort((a,b) => parseFloat(a.share) - parseFloat(b.share)).slice(0, 10);
+        let minerShares = topTenMiners.map(miner => parseFloat(miner.share));
+        let minerNames = topTenMiners.map(miner => miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")");
+        let minerColors = colors.slice(0, topTenMiners.length + 1);
+        let other = 1;
+        minerShares.forEach(share => other -= share);
+        minerShares.push(other);
+        minerNames.push("Others");
+        console.log(minerShares);
+        console.log(minerNames);
+        console.log(minerColors);
+        let chart = document.getElementById("sharesChart"), newChart = htmlToElement("<canvas id=\"sharesChart\" class=\"w-100 h-100\"></canvas>");
+        chart.parentNode.replaceChild(newChart, chart);
+        new Chart(newChart, {
+            type: "pie",
+            data: {
+                datasets: [{
+                    data: minerShares,
+                    backgroundColor: minerColors
+                }],
+                labels: minerNames
+            },
+            options: {
+                animation: {
+                    duration: 0
+                },
+                title: {
+                    display: true,
+                    text: "Pool Shares"
+                }
+            }
+        });
     });
 }
 
