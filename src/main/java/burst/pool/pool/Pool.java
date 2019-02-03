@@ -129,7 +129,7 @@ public class Pool {
         }
 
         BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
-        System.out.println("New submission from " + submission.getMiner() + ", calculated deadline " + deadline.toString() + " seconds.");
+        System.out.println("New submission from " + submission.getMiner() + " of nonce " + submission.getNonce() + ", calculated deadline " + deadline.toString() + " seconds.");
 
         if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");

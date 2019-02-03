@@ -54,7 +54,6 @@ public class Server extends NanoHTTPD {
     }
 
     private String handleBurstApiCall(IHTTPSession session, Map<String, String> params) {
-        System.out.println(session.getHeaders());
         if (session.getMethod().equals(Method.POST) && Objects.equals(params.get("requestType"), "submitNonce")) {
             Submission submission = new Submission(BurstAddress.fromEither(params.get("accountId")), params.get("nonce"));
             try {
@@ -95,6 +94,7 @@ public class Server extends NanoHTTPD {
             return minerToJson(storageService.getMiner(minerAddress)).toString();
         } else if (session.getUri().startsWith("/api/getConfig")) {
             JsonObject response = new JsonObject();
+            response.addProperty(Props.poolName.getName(), propertyService.getString(Props.poolName));
             response.addProperty(Props.nAvg.getName(), propertyService.getInt(Props.nAvg));
             response.addProperty(Props.nMin.getName(), propertyService.getInt(Props.nMin));
             response.addProperty(Props.maxDeadline.getName(), propertyService.getLong(Props.maxDeadline));

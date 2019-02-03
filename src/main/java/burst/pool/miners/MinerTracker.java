@@ -153,6 +153,7 @@ public class MinerTracker {
                 storageService.setMiner(miner.getAddress(), miner);
             }
         }
+        // todo store
         System.out.println("Paid out, transaction id " + response.getTransactionID());
         payoutSemaphore.release();
     }

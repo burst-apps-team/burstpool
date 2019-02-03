@@ -7,6 +7,7 @@ import java.util.Objects;
 public class Props {
     public static final Prop<Integer> serverPort = new Prop<>("serverPort", 8124); // Must be > 0, < 2^16
     public static final Prop<String> nodeAddress = new Prop<>("nodeAddress", ""); // Must be non-empty
+    public static final Prop<String> poolName = new Prop<>("poolName", "");
 
     public static final Prop<String> passphrase = new Prop<>("passphrase", ""); // Must be non-empty
 
@@ -32,6 +33,11 @@ public class Props {
         String nodeAddress = propertyService.getString(Props.nodeAddress);
         if (nodeAddress == null || Objects.equals(nodeAddress, "")) {
             throw new IllegalArgumentException("Illegal node address (empty)");
+        }
+
+        String poolName = propertyService.getString(Props.poolName);
+        if (poolName == null || Objects.equals(poolName, "")) {
+            throw new IllegalArgumentException("Illegal pool name (empty)");
         }
 
         String passphrase = propertyService.getString(Props.passphrase);

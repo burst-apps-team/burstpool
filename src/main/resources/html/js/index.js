@@ -1,3 +1,15 @@
+let poolInfo = null;
+
+function getPoolInfo() {
+    fetch("/api/getConfig").then(http => {
+        return http.json();
+    }).then(response => {
+        poolInfo = response;
+        document.getElementById("poolName").innerText = response.poolName;
+        document.title = "Burst Pool (" + response.poolName + ")";
+    });
+}
+
 function getCurrentRound() {
     fetch("/api/getCurrentRound").then(http => {
         return http.json();
@@ -37,6 +49,7 @@ function formatCapacity(capacity) {
     return parseFloat(capacity).toFixed(3);
 }
 
+getPoolInfo();
 getCurrentRound();
 getMiners();
 

@@ -3,81 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <title>Burstcoin Pool</title>
-    <link type="text/css" rel="stylesheet" href="bootstrap/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" />
-    <script src="bootstrap/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"></script>
+    <link type="text/css" rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+    <script src="bootstrap/js/bootstrap.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link type="text/css" rel="stylesheet" href="css/main.css"/>
     <script type="text/javascript" rel="script" src="js/index.js"></script>
 </head>
 <body>
 <div class="p-3">
-    <h1>Burstcoin Pool</h1>
+    <h1>Burstcoin Pool (<span id="poolName"></span>)</h1>
 </div>
 <div class="container-fluid">
     <div class="row">
-        <div class="col-lg-6">
+        <div class="col-lg-6 text-center">
             <div class="row">
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Elapsed</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="currentRoundElapsed">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Best Deadline</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="bestDeadline">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Mined by:</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="bestMiner">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Deadline Nonce</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="bestNonce">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Block Height</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="blockHeight">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Base Target</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="baseTarget">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Number of Miners</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="minerCount">Loading...</p>
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
-                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                <div class="col-lg-3 col-md-6 p-3">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2 overflow-auto">
                         <p class="d-inline">Pool Capacity</p>
                     </div>
-                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2 overflow-auto">
                         <p class="d-inline" id="poolCapacity">Loading...</p>
                     </div>
                 </div>
