@@ -1,32 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-<link>
+<head>
     <meta charset="UTF-8">
     <title>Burstcoin Pool</title>
-<link type="text/css" rel="stylesheet" href="css/main.css"/>
+    <link type="text/css" rel="stylesheet" href="bootstrap/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" />
+    <script src="bootstrap/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link type="text/css" rel="stylesheet" href="css/main.css"/>
     <script type="text/javascript" rel="script" src="js/index.js"></script>
 </head>
 <body>
-<h1>Burstcoin Pool</h1>
-<p>Current Round Elapsed: <span id="currentRoundElapsed">Loading...</span></p>
-<p>Best Deadline: <span id="bestDeadline">Loading...</span></p>
-<p>Best Deadline Mined By: <span id="bestMiner">Loading...</span></p>
-<p>Best Deadline Nonce: <span id="bestNonce">Loading...</span></p>
-<p>Block Height: <span id="blockHeight">Loading...</span></p>
-<p>Base Target: <span id="baseTarget">Loading...</span></p>
-<p>Pool Capacity: <span id="poolCapacity">Loading...</span></p>
-<table id="miners" class="miners">
-    <tr>
-        <th>Miner</th>
-        <th>Pending Balance</th>
-        <th>Effective Capacity</th>
-        <th>nConf (Last (nAvg + processLag) rounds)</th>
-        <th>Share</th>
-        <th>Software</th>
-    </tr>
-    <tr>
-        <td colspan="6">Loading...</td>
-    </tr>
-</table>
+<div class="p-3">
+    <h1>Burstcoin Pool</h1>
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Elapsed</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="currentRoundElapsed">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Best Deadline</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="bestDeadline">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Mined by:</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="bestMiner">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Deadline Nonce</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="bestNonce">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Block Height</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="blockHeight">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Base Target</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="baseTarget">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Number of Miners</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="minerCount">Loading...</p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 infoContainer p-3 text-center">
+                    <div class="col-xl-12 bg-light border-top border-right border-left rounded-top p-2">
+                        <p class="d-inline">Pool Capacity</p>
+                    </div>
+                    <div class="col-xl-12 border-bottom border-right border-left rounded-bottom p-2">
+                        <p class="d-inline" id="poolCapacity">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6 chart"><h1>Chart</h1></div>
+    </div>
+</div>
+<br />
+<div class="table-responsive p-lg-3 w-100">
+    <table id="miners" class="table table-striped table-bordered">
+        <tr>
+            <th>Miner</th>
+            <th>Pending Balance</th>
+            <th>Effective Capacity</th>
+            <th>nConf (Last (nAvg + processLag) rounds)</th>
+            <th>Share</th>
+            <th>Software</th>
+        </tr>
+        <tr>
+            <td colspan="6">Loading...</td>
+        </tr>
+    </table>
+</div>
 </body>
 </html>
