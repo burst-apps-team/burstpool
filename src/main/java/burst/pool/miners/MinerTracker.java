@@ -111,13 +111,13 @@ public class MinerTracker {
 
         Set<Payable> payableMinersSet = new HashSet<>();
         for (Payable miner : storageService.getMiners()) {
-            if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(miner.getPending()) <= 0) {
+            if (miner.getMinimumPayout().compareTo(miner.getPending()) <= 0) {
                 payableMinersSet.add(miner);
             }
         }
 
         PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
-        if (BurstValue.fromBurst(propertyService.getFloat(Props.minimumPayout)).compareTo(poolFeeRecipient.getPending()) <= 0) {
+        if (poolFeeRecipient.getMinimumPayout().compareTo(poolFeeRecipient.getPending()) <= 0) {
             payableMinersSet.add(poolFeeRecipient);
         }
 

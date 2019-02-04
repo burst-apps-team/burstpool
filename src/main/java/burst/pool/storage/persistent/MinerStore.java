@@ -16,6 +16,9 @@ public interface MinerStore {
     
     double getHitSum();
     void setHitSum(double hitSum);
+
+    double getMinimumPayout();
+    void setMinimumPayout(double minimumPayout);
     
     String getName();
     void setName(String name);

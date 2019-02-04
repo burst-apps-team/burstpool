@@ -8,6 +8,7 @@ import burst.pool.miners.MinerMaths;
 import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
+import burst.pool.storage.config.Props;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,11 +104,12 @@ public class MemoryStorageService implements StorageService {
         }
     }
 
-    private static class MemoryMinerStore implements MinerStore {
+    private class MemoryMinerStore implements MinerStore {
         private volatile double pendingBalance;
         private volatile double estimatedCapacity;
         private volatile double share;
         private volatile double hitSum;
+        private volatile double minimumPayout = propertyService.getFloat(Props.defaultMinimumPayout);
         private volatile String name;
         private volatile String userAgent;
         private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
@@ -150,6 +152,16 @@ public class MemoryStorageService implements StorageService {
         @Override
         public void setHitSum(double hitSum) {
             this.hitSum = hitSum;
+        }
+
+        @Override
+        public double getMinimumPayout() {
+            return minimumPayout;
+        }
+
+        @Override
+        public void setMinimumPayout(double minimumPayout) {
+            this.minimumPayout = minimumPayout;
         }
 
         @Override

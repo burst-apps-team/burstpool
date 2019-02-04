@@ -9,6 +9,7 @@ import burst.pool.miners.MinerMaths;
 import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
+import burst.pool.storage.config.Props;
 import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
@@ -76,8 +77,8 @@ public class DbStorageService implements StorageService {
 
     @Override
     public Miner newMiner(BurstAddress address) {
-        context.insertInto(MINERS, MINERS.ACCOUNT_ID, MINERS.PENDING_BALANCE, MINERS.ESTIMATED_CAPACITY, MINERS.SHARE, MINERS.HITSUM, MINERS.NAME, MINERS.USER_AGENT)
-                .values(address.getBurstID().getSignedLongId(), 0d, 0d, 0d, 0d, "", "")
+        context.insertInto(MINERS, MINERS.ACCOUNT_ID, MINERS.PENDING_BALANCE, MINERS.ESTIMATED_CAPACITY, MINERS.SHARE, MINERS.HITSUM, MINERS.MINIMUM_PAYOUT, MINERS.NAME, MINERS.USER_AGENT)
+                .values(address.getBurstID().getSignedLongId(), 0d, 0d, 0d, 0d, (double) propertyService.getFloat(Props.defaultMinimumPayout), "", "")
                 .execute();
         return getMiner(address);
     }
@@ -210,6 +211,23 @@ public class DbStorageService implements StorageService {
         public void setHitSum(double hitSum) {
             context.update(MINERS)
                     .set(MINERS.HITSUM, hitSum)
+                    .where(MINERS.ACCOUNT_ID.eq(accountId))
+                    .execute();
+        }
+
+        @Override
+        public double getMinimumPayout() {
+            return context.select(MINERS.MINIMUM_PAYOUT)
+                    .from(MINERS)
+                    .where(MINERS.ACCOUNT_ID.eq(accountId))
+                    .fetchOne()
+                    .get(MINERS.MINIMUM_PAYOUT);
+        }
+
+        @Override
+        public void setMinimumPayout(double minimumPayout) {
+            context.update(MINERS)
+                    .set(MINERS.MINIMUM_PAYOUT, minimumPayout)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
         }

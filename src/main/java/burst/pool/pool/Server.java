@@ -105,7 +105,8 @@ public class Server extends NanoHTTPD {
             response.addProperty(Props.feeRecipient.getName() + "RS", propertyService.getBurstAddress(Props.feeRecipient).getFullAddress());
             response.addProperty(Props.poolFeePercentage.getName(), propertyService.getFloat(Props.poolFeePercentage));
             response.addProperty(Props.winnerRewardPercentage.getName(), propertyService.getFloat(Props.winnerRewardPercentage));
-            response.addProperty(Props.minimumPayout.getName(), propertyService.getFloat(Props.minimumPayout));
+            response.addProperty(Props.defaultMinimumPayout.getName(), propertyService.getFloat(Props.defaultMinimumPayout));
+            response.addProperty(Props.minimumMinimumPayout.getName(), propertyService.getFloat(Props.minimumMinimumPayout));
             response.addProperty(Props.minPayoutsPerTransaction.getName(), propertyService.getInt(Props.minPayoutsPerTransaction));
             response.addProperty(Props.transactionFee.getName(), propertyService.getFloat(Props.transactionFee));
             return response.toString();

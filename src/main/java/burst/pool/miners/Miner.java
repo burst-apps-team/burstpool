@@ -54,6 +54,11 @@ public class Miner implements Payable {
     }
 
     @Override
+    public BurstValue getMinimumPayout() {
+        return BurstValue.fromBurst(store.getMinimumPayout());
+    }
+
+    @Override
     public BurstValue takeShare(BurstValue availableReward) {
         BurstValue share = new BurstValue(availableReward.multiply(BigDecimal.valueOf(store.getShare())));
         increasePending(share);

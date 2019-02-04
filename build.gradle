@@ -41,6 +41,8 @@ dependencies {
     implementation "org.jooq:jooq-meta"
     implementation "org.jooq:jooq-codegen"
     implementation "org.flywaydb:flyway-core:2.5.4"
+    implementation "org.slf4j:slf4j-api:1.7.25"
+    implementation "org.slf4j:slf4j-jdk14:1.7.25"
     //jooqRuntime 'org.hsqldb:hsqldb:2.4.1'
     compile "com.h2database:h2:1.4.197"
     jooqRuntime "com.h2database:h2:1.4.197"
@@ -49,7 +51,6 @@ dependencies {
 flyway {
     url = "${dburl}"
     user = "${dbusername}"
-    //schemas = ["public"]
     locations = ["filesystem:src/main/resources/db/migration"]
 }
 
@@ -68,7 +69,6 @@ jooq {
             }
             database {
                 includes = ".*"
-                //inputSchema = "public"
             }
             target {
                 packageName = "burst.pool.db"

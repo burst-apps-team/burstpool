@@ -26,6 +26,11 @@ public class PoolFeeRecipient implements Payable {
     }
 
     @Override
+    public BurstValue getMinimumPayout() {
+        return BurstValue.fromBurst(propertyService.getFloat(Props.defaultMinimumPayout));
+    }
+
+    @Override
     public BurstValue takeShare(BurstValue availableReward) {
         return BurstValue.fromBurst(0);
     }

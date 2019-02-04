@@ -20,7 +20,8 @@ public class Props {
     public static final Prop<Float> poolFeePercentage = new Prop<>("poolFeePercentage", 0f); // Must be 0-1
     public static final Prop<Float> winnerRewardPercentage = new Prop<>("winnerRewardPercentage", 0f); // Must be 0-1
 
-    public static final Prop<Float> minimumPayout = new Prop<>("minimumPayout", 100f); // Must be > 0
+    public static final Prop<Float> defaultMinimumPayout = new Prop<>("defaultMinimumPayout", 100f); // Must be > 0
+    public static final Prop<Float> minimumMinimumPayout = new Prop<>("minimumMinimumPayout", 100f); // Must be > 0
     public static final Prop<Integer> minPayoutsPerTransaction = new Prop<>("minPayoutsPerTransaction", 10); // Must be 2-64
     public static final Prop<Float> transactionFee = new Prop<>("transactionFee", 0.1f); // Must be > 0.00735
 
@@ -76,9 +77,14 @@ public class Props {
             throw new IllegalArgumentException("Illegal winnerRewardPercentage: " + winnerRewardPercentage + " (Must be 0-1)");
         }
 
-        float minimumPayout = propertyService.getFloat(Props.minimumPayout);
-        if (minimumPayout <= 0) {
-            throw new IllegalArgumentException("Illegal minimumPayout: " + processLag + " (Must be > 0)");
+        float minimumMinimumPayout = propertyService.getFloat(Props.minimumMinimumPayout);
+        if (minimumMinimumPayout <= 0) {
+            throw new IllegalArgumentException("Illegal minimumMinimumPayout: " + processLag + " (Must be > 0)");
+        }
+
+        float defaultMinimumPayout = propertyService.getFloat(Props.defaultMinimumPayout);
+        if (defaultMinimumPayout < minimumMinimumPayout) {
+            throw new IllegalArgumentException("Illegal defaultMinimumPayout: " + processLag + " (Must be > minimumMinimumPayout)");
         }
 
         int minPayoutsPerTransaction = propertyService.getInt(Props.minPayoutsPerTransaction);

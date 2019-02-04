@@ -7,6 +7,7 @@ CREATE TABLE BurstPool.miners (
   estimated_capacity DOUBLE,
   share DOUBLE,
   hitSum DOUBLE,
+  minimum_payout DOUBLE,
   name TEXT,
   user_agent TEXT,
   PRIMARY KEY (db_id)
