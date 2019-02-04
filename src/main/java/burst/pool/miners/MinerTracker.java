@@ -10,6 +10,8 @@ import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
 import io.reactivex.disposables.CompositeDisposable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -19,6 +21,8 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MinerTracker {
+    private static final Logger logger = LoggerFactory.getLogger(MinerTracker.class);
+
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
     private final StorageService storageService;
     private final PropertyService propertyService;
@@ -48,9 +52,9 @@ public class MinerTracker {
         return miner;
     }
 
-    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue reward) {
-        System.out.println("Block won!");
-        BurstValue ogReward = reward;
+    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue blockReward) {
+        logger.info("Block won! Block height: " + blockHeight + ", forger: " + winner.getFullAddress());
+        BurstValue reward = blockReward;
 
         // Take pool fee
         BurstValue poolTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.poolFeePercentage))));
@@ -88,15 +92,14 @@ public class MinerTracker {
             miners.forEach(miner -> miner.increasePending(amountRemainingEach));
         }
 
-        System.out.println("Reward is " + ogReward + ", pool take is " + poolTake + ", winner take is " + winnerTake + ", amount left is " + reward + ", miners took " + amountTaken.get());
+        logger.info("Finished processing winnings for block " + blockHeight + ". Reward ( + fees) is " + blockReward + ", pool fee is " + poolTake + ", forger take is " + winnerTake + ", miners took " + amountTaken.get());
 
-        // Payout if needed
         payoutIfNeeded();
     }
 
     private void payoutIfNeeded() {
         if (payoutSemaphore.availablePermits() == 0) {
-            System.out.println("Cannot payout, payout is in progress!");
+            logger.info("Cannot payout - payout is already in progress.");
             return;
         }
 
@@ -129,10 +132,14 @@ public class MinerTracker {
         BurstValue transactionFeePaidPerMiner = new BurstValue(transactionFee.divide(BigDecimal.valueOf(payableMiners.length), BigDecimal.ROUND_CEILING));
         Map<Payable, BurstValue> payees = new HashMap<>(); // Does not have subtracted transaction fee
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
-        for (Payable miner : payableMiners) {
-            payees.put(miner, miner.getPending());
-            recipients.put(miner.getAddress(), new BurstValue(miner.getPending().subtract(transactionFeePaidPerMiner)));
+        StringBuilder logMessage = new StringBuilder("Paying out to miners");
+        for (Payable payable : payableMiners) {
+            payees.put(payable, payable.getPending());
+            BurstValue actualPayout = new BurstValue(payable.getPending().subtract(transactionFeePaidPerMiner));
+            recipients.put(payable.getAddress(), actualPayout);
+            logMessage.append(", ").append(payable.getPending()).append("(").append(actualPayout).append(")");
         }
+        logger.info(logMessage.toString());
 
         compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), transactionFee, 1440, recipients)
                 .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
@@ -145,12 +152,12 @@ public class MinerTracker {
             payment.getKey().decreasePending(payment.getValue());
         }
         // todo store
-        System.out.println("Paid out, transaction id " + response.getTransactionID());
+        logger.info("Paid out, transaction id " + response.getTransactionID());
         payoutSemaphore.release();
     }
 
     private void onPayoutError(Throwable throwable) {
-        throwable.printStackTrace();
+        logger.error("Error occurred whilst paying out", throwable);
         payoutSemaphore.release();
     }
 
@@ -163,6 +170,6 @@ public class MinerTracker {
     }
 
     private void onMinerAccountError(Throwable throwable) {
-        throwable.printStackTrace();
+        logger.warn("Error obtaining miner account info", throwable);
     }
 }

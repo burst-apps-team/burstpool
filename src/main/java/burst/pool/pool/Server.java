@@ -48,7 +48,6 @@ public class Server extends NanoHTTPD {
                 return handleCall(session, params);
             }
         } catch (Throwable t) {
-            t.printStackTrace();
             return NanoHTTPD.newFixedLengthResponse(t.getMessage());
         }
     }

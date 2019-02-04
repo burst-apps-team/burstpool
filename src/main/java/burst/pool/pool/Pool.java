@@ -16,9 +16,12 @@ import com.google.gson.Gson;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import io.reactivex.Completable;
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.time.Instant;
@@ -28,6 +31,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Pool {
+    private static final Logger logger = LoggerFactory.getLogger(Pool.class);
+
     private final BurstNodeService nodeService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final StorageService storageService;
@@ -43,7 +48,6 @@ public class Pool {
     private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
 
-
     public Pool(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService, MinerTracker minerTracker) {
         this.storageService = storageService;
         this.minerTracker = minerTracker;
@@ -56,29 +60,45 @@ public class Pool {
 
     private Disposable processBlocksThread() {
         return Observable.interval(0, 1, TimeUnit.MILLISECONDS)
-                .flatMapCompletable(l -> processNextBlock())
-                .doOnError(Throwable::printStackTrace) // todo thread stops on error :(
-                .subscribe(() -> {}, this::onProcessBlocksError);
+                .flatMapCompletable(l -> processNextBlock().onErrorComplete(e -> {
+                    onProcessBlocksError(e, false);
+                    return true;
+                }))
+                .subscribe(() -> {}, e -> onProcessBlocksError(e, true));
     }
 
-    private void onProcessBlocksError(Throwable throwable) {
-        System.out.println("opbe");
-        throwable.printStackTrace();
+    private void onProcessBlocksError(Throwable throwable, boolean fatal) {
+        if (fatal) {
+            logger.error("Fatal error processing blocks (Thread now shutdown)", throwable);
+        } else {
+            logger.warn("Non-fatal error processing blocks", throwable);
+        }
     }
 
     private Disposable refreshMiningInfoThread() {
         return Observable.interval(1, TimeUnit.SECONDS)
                 .flatMapSingle(l -> nodeService.getMiningInfo())
-                .doOnError(Throwable::printStackTrace) // todo thread stops on error :(
-                .forEach(this::onMiningInfo);
+                .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
+                    onMiningInfoError(throwable, false);
+                    return Observable.timer(1, TimeUnit.SECONDS);
+                }))
+                .subscribe(this::onMiningInfo, e -> onMiningInfoError(e, true));
     }
 
     private void onMiningInfo(MiningInfoResponse newMiningInfo) {
         if (miningInfo.get() == null || !Objects.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
                 || !Objects.equals(miningInfo.get().getHeight(), newMiningInfo.getHeight())) {
-            System.out.println("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + newMiningInfo.getGenerationSignature() +", diff " + newMiningInfo.getBaseTarget() + ")");
+            logger.info("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + newMiningInfo.getGenerationSignature() +", diff " + newMiningInfo.getBaseTarget() + ")");
             miningInfo.set(newMiningInfo);
             resetRound();
+        }
+    }
+
+    private void onMiningInfoError(Throwable throwable, boolean fatal) {
+        if (fatal) {
+            logger.error("Fatal error fetching mining info (Thread now shutdown)", throwable);
+        } else {
+            logger.warn("Non-fatal error fetching mining info", throwable);
         }
     }
 
@@ -99,7 +119,6 @@ public class Pool {
             return Completable.complete();
         }
 
-        System.out.println(storageService.getLastProcessedBlock() + 1);
         return nodeService.getBlock(storageService.getLastProcessedBlock() + 1)
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
                     Submission submission = storageService.getBestSubmissionForBlock(block.getHeight());
@@ -129,20 +148,20 @@ public class Pool {
         }
 
         BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
-        System.out.println("New submission from " + submission.getMiner() + " of nonce " + submission.getNonce() + ", calculated deadline " + deadline.toString() + " seconds.");
+        logger.debug("New submission from " + submission.getMiner() + " of nonce " + submission.getNonce() + ", calculated deadline " + deadline.toString() + " seconds.");
 
         if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");
         }
 
         if (bestDeadline.get() != null) {
-            System.out.println("Best deadline is " + Generator.calcDeadline(miningInfo.get(), bestDeadline.get()) + ", new deadline is " + deadline);
+            logger.debug("Best deadline is " + Generator.calcDeadline(miningInfo.get(), bestDeadline.get()) + ", new deadline is " + deadline);
             if (deadline.compareTo(Generator.calcDeadline(miningInfo.get(), bestDeadline.get())) < 0) {
-                System.out.println("Newer deadline is better! Submitting...");
+                logger.debug("Newer deadline is better! Submitting...");
                 onNewBestDeadline(miningInfo.get().getHeight(), submission);
             }
         } else {
-            System.out.println("This is the first deadline, submitting...");
+            logger.debug("This is the first deadline, submitting...");
             onNewBestDeadline(miningInfo.get().getHeight(), submission);
         }
 
@@ -169,17 +188,15 @@ public class Pool {
     }
 
     private void onRewardRecipientsError(Throwable t) {
-        System.out.println("orre");
-        t.printStackTrace();
+        logger.error("Error fetching pool's reward recipients", t);
     }
 
     private void onNonceSubmitted(SubmitNonceResponse response) {
-        System.out.println(new Gson().toJson(response));
+        logger.debug("Submitted nonce to node. Result is \"" + response.getResult() + "\", deadline is " + Long.toUnsignedString(response.getDeadline()));
     }
 
     private void onSubmitNonceError(Throwable t) {
-        System.out.println("osne");
-        t.printStackTrace();
+        logger.error("Error submitting nonce to node", t);
     }
 
     MiningInfoResponse getMiningInfo() {

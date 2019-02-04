@@ -1,12 +1,16 @@
 package burst.pool.storage.config;
 
 import burst.kit.entity.BurstAddress;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
 public class PropertyServiceImpl implements PropertyService {
+    private static final Logger logger = LoggerFactory.getLogger(PropertyServiceImpl.class);
+
     private final Properties properties;
 
     public PropertyServiceImpl(String fileName) {
@@ -14,10 +18,9 @@ public class PropertyServiceImpl implements PropertyService {
         try {
             properties.load(new FileInputStream(fileName));
         } catch (IOException e) {
-            System.err.println("Could not load properties from " + fileName); // todo logger
-            e.printStackTrace();
+            logger.error("Could not load properties from " +  fileName, e);
         }
-        //Props.validateProperties(this);
+        Props.validateProperties(this);
     }
 
     private <T> String valueOrDefault(Prop<T> prop) {
