@@ -23,7 +23,7 @@ public class Launcher {
         }
         PropertyService propertyService = new PropertyServiceImpl(propertiesFileName);
         MinerMaths minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
-        StorageService storageService = new DbStorageService(propertyService, minerMaths, "jdbc:h2:./db", "sa", "sa");
+        StorageService storageService = new DbStorageService(propertyService, minerMaths);
         BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress));
         MinerTracker minerTracker = new MinerTracker(nodeService, storageService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);

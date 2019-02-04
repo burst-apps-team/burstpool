@@ -15,6 +15,7 @@ import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
+import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -38,13 +39,25 @@ public class DbStorageService implements StorageService {
     private final Connection conn;
     private final DSLContext context;
 
-    public DbStorageService(PropertyService propertyService, MinerMaths minerMaths, String url, String username, String password) throws SQLException {
+    public DbStorageService(PropertyService propertyService, MinerMaths minerMaths) throws SQLException {
+        String url = propertyService.getString(Props.dbUrl);
+        String username = propertyService.getString(Props.dbUsername);
+        String password = propertyService.getString(Props.dbPassword);
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
+
+        String driverClass = JDBCUtils.driver(url);
+        SQLDialect dialect = JDBCUtils.dialect(url);
+        try {
+            Class.forName(driverClass);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Could not find SQL driver: " + driverClass + ". If you want to use this Database type, please check if it is supported by JDBC and jOOQ, and then add the driver to the classpath.");
+        }
+
         Flyway flyway = Flyway.configure().dataSource(url, username, password).load();
         flyway.migrate();
         conn = DriverManager.getConnection(url, username, password);
-        context = DSL.using(conn, SQLDialect.H2); // todo close, abstract
+        context = DSL.using(conn, dialect); // todo close
     }
 
     private Miner minerFromRecord(MinersRecord record) {

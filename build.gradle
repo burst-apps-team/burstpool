@@ -43,7 +43,7 @@ dependencies {
     implementation "org.flywaydb:flyway-core:2.5.4"
     implementation "org.slf4j:slf4j-api:1.7.25"
     implementation "org.slf4j:slf4j-jdk14:1.7.25"
-    //jooqRuntime 'org.hsqldb:hsqldb:2.4.1'
+    // Needed for build script so "compile" needed
     compile "com.h2database:h2:1.4.197"
     jooqRuntime "com.h2database:h2:1.4.197"
 }
