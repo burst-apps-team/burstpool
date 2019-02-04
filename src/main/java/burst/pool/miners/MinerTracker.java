@@ -13,6 +13,7 @@ import io.reactivex.disposables.CompositeDisposable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
@@ -79,6 +80,13 @@ public class MinerTracker {
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
         BurstValue poolReward = reward;
         miners.forEach(miner -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
+
+        // Evenly share result. This makes sure that poolReward is taken, even if the amountTaken was greater than poolReward
+        // Essentially prevents the pool from overpaying or underpaying. Even if it gave out too much to the fee recipient and reward recipient, it will now take the extra from the pending of miners.
+        if (miners.size() > 0) {
+            BurstValue amountRemainingEach = new BurstValue(poolReward.subtract(amountTaken.get()).divide(BigDecimal.valueOf(miners.size()), RoundingMode.DOWN));
+            miners.forEach(miner -> miner.increasePending(amountRemainingEach));
+        }
 
         System.out.println("Reward is " + ogReward + ", pool take is " + poolTake + ", winner take is " + winnerTake + ", amount left is " + reward + ", miners took " + amountTaken.get());
 
