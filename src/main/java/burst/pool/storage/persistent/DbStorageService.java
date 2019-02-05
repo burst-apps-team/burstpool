@@ -159,7 +159,8 @@ public class DbStorageService implements StorageService {
             context.update(BESTSUBMISSIONS)
                     .set(BESTSUBMISSIONS.ACCOUNTID, submission.getMiner().getBurstID().getSignedLongId())
                     .set(BESTSUBMISSIONS.NONCE, submission.getNonce())
-                    .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight));
+                    .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
+                    .execute();
         } else {
             context.insertInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE)
                     .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce())
