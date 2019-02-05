@@ -9,10 +9,12 @@ import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
 import com.google.gson.*;
 import fi.iki.elonen.NanoHTTPD;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +50,7 @@ public class Server extends NanoHTTPD {
                 return handleCall(session, params);
             }
         } catch (Throwable t) {
+            LoggerFactory.getLogger(Server.class).error("Error getting response", t);
             return NanoHTTPD.newFixedLengthResponse(t.getMessage());
         }
     }
@@ -64,7 +67,7 @@ public class Server extends NanoHTTPD {
                 }
                 String userAgent = session.getHeaders().get("user-agent");
                 if (userAgent == null) userAgent = "";
-                return gson.toJson(new NonceSubmissionResponse("success", pool.checkNewSubmission(submission, userAgent).toString()));
+                return gson.toJson(new NonceSubmissionResponse("success", pool.checkNewSubmission(submission, userAgent)));
             } catch (SubmissionException e) {
                 return gson.toJson(new NonceSubmissionResponse(e.getMessage(), null));
             }

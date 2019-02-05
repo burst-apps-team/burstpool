@@ -1,7 +1,10 @@
 package burst.pool.miners;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+
 public class MinerMaths {
-    private static final double GenesisBaseTarget = 18325193796d;
+    private static final long GenesisBaseTarget = 18325193796L;
     private final double[] alphas;
 
     public MinerMaths(int nAvg, int nMin) {
@@ -17,11 +20,11 @@ public class MinerMaths {
         alphas[nAvg-1] = 1d;
     }
 
-    public double estimatedEffectivePlotSize(int nConf, double hitSum) {
-        if (hitSum == 0) {
+    public double estimatedEffectivePlotSize(int nConf, BigInteger hitSum) {
+        if (hitSum.compareTo(BigInteger.ZERO) == 0) {
             return 0;
         }
-        return alpha(nConf) * 240d * (((double)nConf)-1d) / (hitSum / GenesisBaseTarget);
+        return alpha(nConf) * 240d * (((double)nConf)-1d) / (hitSum.divide(BigInteger.valueOf(GenesisBaseTarget)).longValue());
     }
 
     private double alpha(int nConf) {

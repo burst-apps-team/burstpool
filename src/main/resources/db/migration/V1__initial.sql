@@ -6,7 +6,6 @@ CREATE TABLE BurstPool.miners (
   pending_balance DOUBLE,
   estimated_capacity DOUBLE,
   share DOUBLE,
-  hitSum DOUBLE,
   minimum_payout DOUBLE,
   name TEXT,
   user_agent TEXT,

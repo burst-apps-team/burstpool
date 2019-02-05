@@ -12,8 +12,8 @@ public class Props {
     public static final Prop<String> passphrase = new Prop<>("passphrase", ""); // Must be non-empty
 
     public static final Prop<String> dbUrl = new Prop<>("dbUrl", "");
-    public static final Prop<String> dbUsername = new Prop<>("dbUrl", "");
-    public static final Prop<String> dbPassword = new Prop<>("dbUrl", "");
+    public static final Prop<String> dbUsername = new Prop<>("dbUsername", "");
+    public static final Prop<String> dbPassword = new Prop<>("dbPassword", "");
 
     public static final Prop<Integer> nAvg = new Prop<>("nAvg", 360); // Must be ?
     public static final Prop<Integer> nMin = new Prop<>("nMin", 1); // Must be ?

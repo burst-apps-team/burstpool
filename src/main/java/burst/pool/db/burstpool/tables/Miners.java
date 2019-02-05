@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Miners extends TableImpl<MinersRecord> {
 
-    private static final long serialVersionUID = 1529150527;
+    private static final long serialVersionUID = 38762909;
 
     /**
      * The reference instance of <code>BURSTPOOL.MINERS</code>
@@ -80,11 +80,6 @@ public class Miners extends TableImpl<MinersRecord> {
      * The column <code>BURSTPOOL.MINERS.SHARE</code>.
      */
     public final TableField<MinersRecord, Double> SHARE = createField("SHARE", org.jooq.impl.SQLDataType.DOUBLE, this, "");
-
-    /**
-     * The column <code>BURSTPOOL.MINERS.HITSUM</code>.
-     */
-    public final TableField<MinersRecord, Double> HITSUM = createField("HITSUM", org.jooq.impl.SQLDataType.DOUBLE, this, "");
 
     /**
      * The column <code>BURSTPOOL.MINERS.MINIMUM_PAYOUT</code>.

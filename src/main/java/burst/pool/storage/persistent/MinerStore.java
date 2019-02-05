@@ -2,6 +2,7 @@ package burst.pool.storage.persistent;
 
 import burst.pool.miners.Deadline;
 
+import java.math.BigInteger;
 import java.util.List;
 
 public interface MinerStore {
@@ -13,9 +14,6 @@ public interface MinerStore {
     
     double getShare();
     void setShare(double share);
-    
-    double getHitSum();
-    void setHitSum(double hitSum);
 
     double getMinimumPayout();
     void setMinimumPayout(double minimumPayout);
@@ -30,7 +28,7 @@ public interface MinerStore {
     int getDeadlineCount();
     void removeDeadline(long height);
     Deadline getDeadline(long height);
-    void setDeadline(long height, Deadline deadline);
+    void setOrUpdateDeadline(long height, Deadline deadline);
 
     interface FeeRecipientStore {
         double getPendingBalance();

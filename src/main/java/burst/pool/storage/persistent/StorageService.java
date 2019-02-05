@@ -19,6 +19,5 @@ public interface StorageService {
     void incrementLastProcessedBlock();
 
     Submission getBestSubmissionForBlock(long blockHeight);
-    void removeBestSubmissionForBlock(long blockHeight);
-    void setBestSubmissionForBlock(long blockHeight, Submission submission);
+    void setOrUpdateBestSubmissionForBlock(long blockHeight, Submission submission);
 }

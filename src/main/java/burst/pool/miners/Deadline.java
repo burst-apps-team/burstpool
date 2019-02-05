@@ -25,7 +25,7 @@ public class Deadline {
         return height;
     }
 
-    public double calculateHit() {
-        return baseTarget.multiply(deadline).doubleValue();
+    public BigInteger calculateHit() {
+        return baseTarget.multiply(deadline);
     }
 }

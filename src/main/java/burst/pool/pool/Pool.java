@@ -103,7 +103,7 @@ public class Pool {
     }
 
     private Completable processNextBlock() {
-        if (miningInfo.get() == null || processBlockSemaphore.availablePermits() == 0 || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + 1 + propertyService.getInt(Props.processLag)) {
+        if (miningInfo.get() == null || processBlockSemaphore.availablePermits() == 0 || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
             return Completable.complete();
         }
 
@@ -173,8 +173,7 @@ public class Pool {
     private void onNewBestDeadline(long blockHeight, Submission submission) {
         bestDeadline.set(submission);
         submitDeadline(submission);
-        storageService.removeBestSubmissionForBlock(blockHeight);
-        storageService.setBestSubmissionForBlock(blockHeight, submission);
+        storageService.setOrUpdateBestSubmissionForBlock(blockHeight, submission);
     }
 
     private void submitDeadline(Submission submission) {

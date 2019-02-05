@@ -137,7 +137,7 @@ public class MinerTracker {
             payees.put(payable, payable.getPending());
             BurstValue actualPayout = new BurstValue(payable.getPending().subtract(transactionFeePaidPerMiner));
             recipients.put(payable.getAddress(), actualPayout);
-            logMessage.append(", ").append(payable.getPending()).append("(").append(actualPayout).append(")");
+            logMessage.append(", ").append(payable.getAddress().getFullAddress()).append("(").append(actualPayout).append(")");
         }
         logger.info(logMessage.toString());
 

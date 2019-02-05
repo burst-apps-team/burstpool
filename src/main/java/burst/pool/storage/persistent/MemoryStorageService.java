@@ -10,6 +10,7 @@ import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -91,14 +92,7 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
-    public void removeBestSubmissionForBlock(long blockHeight) {
-        synchronized (bestSubmissionForBlock) {
-            bestSubmissionForBlock.remove(blockHeight);
-        }
-    }
-
-    @Override
-    public void setBestSubmissionForBlock(long blockHeight, Submission submission) {
+    public void setOrUpdateBestSubmissionForBlock(long blockHeight, Submission submission) {
         synchronized (bestSubmissionForBlock) {
             bestSubmissionForBlock.put(blockHeight, submission);
         }
@@ -108,7 +102,6 @@ public class MemoryStorageService implements StorageService {
         private volatile double pendingBalance;
         private volatile double estimatedCapacity;
         private volatile double share;
-        private volatile double hitSum;
         private volatile double minimumPayout = propertyService.getFloat(Props.defaultMinimumPayout);
         private volatile String name;
         private volatile String userAgent;
@@ -142,16 +135,6 @@ public class MemoryStorageService implements StorageService {
         @Override
         public void setShare(double share) {
             this.share = share;
-        }
-
-        @Override
-        public double getHitSum() {
-            return hitSum;
-        }
-
-        @Override
-        public void setHitSum(double hitSum) {
-            this.hitSum = hitSum;
         }
 
         @Override
@@ -205,7 +188,7 @@ public class MemoryStorageService implements StorageService {
         }
 
         @Override
-        public void setDeadline(long height, Deadline deadline) {
+        public void setOrUpdateDeadline(long height, Deadline deadline) {
             deadlines.put(height, deadline);
         }
     }

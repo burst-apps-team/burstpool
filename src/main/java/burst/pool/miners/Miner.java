@@ -7,11 +7,15 @@ import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.MinerStore;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Miner implements Payable {
     private final MinerMaths minerMaths;
     private final PropertyService propertyService;
+
+    private final Object processDeadlineLock = new Object();
 
     private final BurstAddress address;
     private final MinerStore store;
@@ -26,12 +30,15 @@ public class Miner implements Payable {
     public void recalculateCapacity(long currentBlockHeight) {
         // Prune older deadlines
         store.getDeadlines().forEach(deadline -> {
-            if (isOldDeadline(deadline, currentBlockHeight)) {
+            if (currentBlockHeight - deadline.getHeight() >= propertyService.getInt(Props.nAvg)) {
                 store.removeDeadline(deadline.getHeight());
             }
         });
+        // Calculate hitSum
+        AtomicReference<BigInteger> hitSum = new AtomicReference<>(BigInteger.ZERO);
+        store.getDeadlines().forEach(deadline -> hitSum.set(hitSum.get().add(deadline.calculateHit())));
         // Calculate estimated capacity
-        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(store.getDeadlineCount(), store.getHitSum()));
+        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(store.getDeadlineCount(), hitSum.get()));
     }
 
     public void recalculateShare(double poolCapacity) {
@@ -45,12 +52,12 @@ public class Miner implements Payable {
 
     @Override
     public void increasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance() + Double.parseDouble(delta.toPlainString())); // TODO workaround for but in burstkit4j
+        store.setPendingBalance(store.getPendingBalance() + Double.parseDouble(delta.toPlainString())); // TODO workaround for bug in burstkit4j
     }
 
     @Override
     public void decreasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance() - Double.parseDouble(delta.toPlainString())); // TODO workaround for but in burstkit4j
+        store.setPendingBalance(store.getPendingBalance() - Double.parseDouble(delta.toPlainString())); // TODO workaround for bug in burstkit4j
     }
 
     @Override
@@ -65,41 +72,25 @@ public class Miner implements Payable {
         return share;
     }
 
-    private boolean isOldDeadline(Deadline deadline, long blockHeight) {
-        if (blockHeight - deadline.getHeight() >= propertyService.getInt(Props.nAvg)) {
-            adjustHitSum(-deadline.calculateHit());
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private void adjustHitSum(double delta) {
-        store.setHitSum(store.getHitSum() + delta);
-    }
-
     public void processNewDeadline(Deadline deadline) {
-        // Check if deadline is for an older block
-        List<Deadline> deadlines = store.getDeadlines();
-        boolean previousDeadlineExists = false;
-        for (Deadline existingDeadline : deadlines) {
-            if (existingDeadline.getHeight() > deadline.getHeight()) return;
-            if (existingDeadline.getHeight() == deadline.getHeight()) previousDeadlineExists = true;
-        }
-
-        if (previousDeadlineExists) {
-            Deadline previousDeadline = store.getDeadline(deadline.getHeight());
-            if (deadline.getDeadline().compareTo(previousDeadline.getDeadline()) >= 0) { // If new deadline is better
-                store.removeDeadline(previousDeadline.getHeight());
-                store.setDeadline(deadline.getHeight(), deadline);
-                adjustHitSum(-previousDeadline.calculateHit());
-            } else {
-                return;
+        synchronized (processDeadlineLock) {
+            // Check if deadline is for an older block
+            List<Deadline> deadlines = store.getDeadlines();
+            boolean previousDeadlineExists = false;
+            for (Deadline existingDeadline : deadlines) {
+                if (existingDeadline.getHeight() > deadline.getHeight()) return;
+                if (existingDeadline.getHeight() == deadline.getHeight()) previousDeadlineExists = true;
             }
-        } else {
-            store.setDeadline(deadline.getHeight(), deadline);
+
+            if (previousDeadlineExists) {
+                Deadline previousDeadline = store.getDeadline(deadline.getHeight());
+                if (previousDeadline == null || deadline.getDeadline().compareTo(previousDeadline.getDeadline()) < 0) { // If new deadline is better
+                    store.setOrUpdateDeadline(deadline.getHeight(), deadline);
+                }
+            } else {
+                store.setOrUpdateDeadline(deadline.getHeight(), deadline);
+            }
         }
-        adjustHitSum(deadline.calculateHit());
     }
 
     public double getCapacity() {

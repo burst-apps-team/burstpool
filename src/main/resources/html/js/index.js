@@ -32,7 +32,7 @@ function getPoolInfo() {
         document.getElementById("feeRecipient").innerText = response.feeRecipientRS;
         document.getElementById("poolFee").innerText = (parseFloat(response.poolFeePercentage)*100).toFixed(3) + "%";
         document.getElementById("winnerReward").innerText = (parseFloat(response.winnerRewardPercentage)*100).toFixed(3) + "%";
-        document.getElementById("minimumMinimumPayout").innerText = response.minimumPayout + " BURST";
+        document.getElementById("minimumPayout").innerText = response.defaultMinimumPayout + " BURST";
         document.getElementById("minPayoutsAtOnce").innerText = response.minPayoutsPerTransaction;
         document.getElementById("payoutTxFee").innerText = response.transactionFee + " BURST";
         document.getElementById("poolVersion").innerText = response.version;
