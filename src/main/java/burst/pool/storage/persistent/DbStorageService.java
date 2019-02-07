@@ -2,6 +2,7 @@ package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
+import burst.pool.db.burstpool.tables.records.BestsubmissionsRecord;
 import burst.pool.db.burstpool.tables.records.MinersRecord;
 import burst.pool.miners.Deadline;
 import burst.pool.miners.Miner;
@@ -143,10 +144,9 @@ public class DbStorageService implements StorageService {
 
     @Override
     public Map<Long, StoredSubmission> getBestSubmissions() {
-        return context.select(BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE)
-                .from(BESTSUBMISSIONS)
+        return context.selectFrom(BESTSUBMISSIONS)
                 .fetch()
-                .intoMap(BESTSUBMISSIONS.HEIGHT, record -> new StoredSubmission(BurstAddress.fromId(new BurstID(record.get(BESTSUBMISSIONS.ACCOUNTID))), record.get(BESTSUBMISSIONS.NONCE), record.get(BESTSUBMISSIONS.DEADLINE)));
+                .intoMap(BestsubmissionsRecord::getAccountid, record -> new StoredSubmission(BurstAddress.fromId(new BurstID(record.getAccountid())), record.getNonce(), record.getDeadline()));
     }
 
     @Override
