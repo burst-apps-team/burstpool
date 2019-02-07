@@ -146,7 +146,7 @@ public class DbStorageService implements StorageService {
     public Map<Long, StoredSubmission> getBestSubmissions() {
         return context.selectFrom(BESTSUBMISSIONS)
                 .fetch()
-                .intoMap(BestsubmissionsRecord::getAccountid, record -> new StoredSubmission(BurstAddress.fromId(new BurstID(record.getAccountid())), record.getNonce(), record.getDeadline()));
+                .intoMap(BestsubmissionsRecord::getHeight, record -> new StoredSubmission(BurstAddress.fromId(new BurstID(record.getAccountid())), record.getNonce(), record.getDeadline()));
     }
 
     @Override
