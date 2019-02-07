@@ -52,7 +52,7 @@ public class MinerTracker {
         return miner;
     }
 
-    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue blockReward) {
+    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
         logger.info("Block won! Block height: " + blockHeight + ", forger: " + winner.getFullAddress());
         BurstValue reward = blockReward;
 
@@ -70,7 +70,7 @@ public class MinerTracker {
 
         List<Miner> miners = storageService.getMiners();
 
-        updateMiners(miners, blockHeight);
+        updateMiners(miners, blockHeight, fastBlocks);
 
         // Update each miner's pending
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
@@ -89,13 +89,13 @@ public class MinerTracker {
         payoutIfNeeded();
     }
 
-    public void onBlockNotWon(long blockHeight) {
-        updateMiners(storageService.getMiners(), blockHeight);
+    public void onBlockNotWon(long blockHeight, List<Long> fastBlocks) {
+        updateMiners(storageService.getMiners(), blockHeight, fastBlocks);
     }
 
-    private void updateMiners(List<Miner> miners, long blockHeight) {
+    private void updateMiners(List<Miner> miners, long blockHeight, List<Long> fastBlocks) {
         // Update each miner's effective capacity
-        miners.forEach(miner -> miner.recalculateCapacity(blockHeight));
+        miners.forEach(miner -> miner.recalculateCapacity(blockHeight, fastBlocks));
 
         // Calculate pool capacity
         AtomicReference<Double> poolCapacity = new AtomicReference<>(0d);

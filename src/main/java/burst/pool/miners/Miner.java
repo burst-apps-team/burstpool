@@ -9,6 +9,7 @@ import burst.pool.storage.persistent.MinerStore;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Miner implements Payable {
@@ -27,7 +28,7 @@ public class Miner implements Payable {
         this.store = store;
     }
 
-    public void recalculateCapacity(long currentBlockHeight) {
+    public void recalculateCapacity(long currentBlockHeight, List<Long> fastBlocks) {
         // Prune older deadlines
         store.getDeadlines().forEach(deadline -> {
             if (currentBlockHeight - deadline.getHeight() >= propertyService.getInt(Props.nAvg)) {
@@ -36,9 +37,16 @@ public class Miner implements Payable {
         });
         // Calculate hitSum
         AtomicReference<BigInteger> hitSum = new AtomicReference<>(BigInteger.ZERO);
-        store.getDeadlines().forEach(deadline -> hitSum.set(hitSum.get().add(deadline.calculateHit())));
+        AtomicInteger deadlineCount = new AtomicInteger(store.getDeadlineCount());
+        store.getDeadlines().forEach(deadline -> {
+            if (fastBlocks.contains(deadline.getHeight())) {
+                deadlineCount.getAndDecrement();
+            } else {
+                hitSum.set(hitSum.get().add(deadline.calculateHit()));
+            }
+        });
         // Calculate estimated capacity
-        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(store.getDeadlineCount(), hitSum.get()));
+        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(deadlineCount.get(), hitSum.get()));
     }
 
     public void recalculateShare(double poolCapacity) {

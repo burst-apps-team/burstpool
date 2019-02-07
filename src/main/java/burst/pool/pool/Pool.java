@@ -112,8 +112,10 @@ public class Pool {
             Thread.currentThread().interrupt();
         }
 
+        List<Long> fastBlocks = new ArrayList<>(); // todo
+
         if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock() + 1) == null) {
-            minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1);
+            minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1, fastBlocks);
             storageService.incrementLastProcessedBlock();
             processBlockSemaphore.release();
             return Completable.complete();
@@ -123,9 +125,9 @@ public class Pool {
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
                     Submission submission = storageService.getBestSubmissionForBlock(block.getHeight());
                     if (submission != null && Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
-                        minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())));
+                        minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())), fastBlocks);
                     } else {
-                        minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1);
+                        minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1, fastBlocks);
                     }
                 }))
                 .doOnComplete(() -> {
