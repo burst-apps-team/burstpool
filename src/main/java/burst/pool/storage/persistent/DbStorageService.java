@@ -169,11 +169,12 @@ public class DbStorageService implements StorageService {
             context.update(BESTSUBMISSIONS)
                     .set(BESTSUBMISSIONS.ACCOUNTID, submission.getMiner().getBurstID().getSignedLongId())
                     .set(BESTSUBMISSIONS.NONCE, submission.getNonce())
+                    .set(BESTSUBMISSIONS.DEADLINE, submission.getDeadline())
                     .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
                     .execute();
         } else {
-            context.insertInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE)
-                    .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce())
+            context.insertInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE, BESTSUBMISSIONS.DEADLINE)
+                    .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce(), submission.getDeadline())
                     .execute();
         }
     }
