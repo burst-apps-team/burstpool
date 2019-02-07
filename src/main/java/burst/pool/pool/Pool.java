@@ -16,7 +16,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import io.reactivex.Completable;
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
@@ -114,6 +113,7 @@ public class Pool {
         }
 
         if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock() + 1) == null) {
+            minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1);
             storageService.incrementLastProcessedBlock();
             processBlockSemaphore.release();
             return Completable.complete();
@@ -122,12 +122,20 @@ public class Pool {
         return nodeService.getBlock(storageService.getLastProcessedBlock() + 1)
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
                     Submission submission = storageService.getBestSubmissionForBlock(block.getHeight());
-                    if (submission == null || !Objects.equals(block.getGenerator(), submission.getMiner()) || !Objects.equals(block.getNonce(), submission.getNonce())) return;
-                    minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())));
+                    if (submission != null && Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
+                        minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())));
+                    } else {
+                        minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1);
+                    }
                 }))
                 .doOnComplete(() -> {
                     storageService.incrementLastProcessedBlock();
-                    processBlockSemaphore.release(); // todo what if errored?
+                    processBlockSemaphore.release();
+                })
+                .onErrorComplete(t -> {
+                    logger.warn("Error processing block " + storageService.getLastProcessedBlock() + 1, t);
+                    processBlockSemaphore.release();
+                    return true;
                 });
     }
 

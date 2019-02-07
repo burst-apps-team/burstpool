@@ -70,15 +70,7 @@ public class MinerTracker {
 
         List<Miner> miners = storageService.getMiners();
 
-        // Update each miner's effective capacity
-        miners.forEach(miner -> miner.recalculateCapacity(blockHeight));
-
-        // Calculate pool capacity
-        AtomicReference<Double> poolCapacity = new AtomicReference<>(0d);
-        miners.forEach(miner -> poolCapacity.updateAndGet(v -> (double) (v + miner.getCapacity())));
-
-        // Update each miner's share
-        miners.forEach(miner -> miner.recalculateShare(poolCapacity.get()));
+        updateMiners(miners, blockHeight);
 
         // Update each miner's pending
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
@@ -95,6 +87,22 @@ public class MinerTracker {
         logger.info("Finished processing winnings for block " + blockHeight + ". Reward ( + fees) is " + blockReward + ", pool fee is " + poolTake + ", forger take is " + winnerTake + ", miners took " + amountTaken.get());
 
         payoutIfNeeded();
+    }
+
+    public void onBlockNotWon(long blockHeight) {
+        updateMiners(storageService.getMiners(), blockHeight);
+    }
+
+    private void updateMiners(List<Miner> miners, long blockHeight) {
+        // Update each miner's effective capacity
+        miners.forEach(miner -> miner.recalculateCapacity(blockHeight));
+
+        // Calculate pool capacity
+        AtomicReference<Double> poolCapacity = new AtomicReference<>(0d);
+        miners.forEach(miner -> poolCapacity.updateAndGet(v -> (double) (v + miner.getCapacity())));
+
+        // Update each miner's share
+        miners.forEach(miner -> miner.recalculateShare(poolCapacity.get()));
     }
 
     private void payoutIfNeeded() {
