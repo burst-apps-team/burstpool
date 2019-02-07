@@ -85,6 +85,13 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
+    public Map<Long, Submission> getBestSubmissions() {
+        synchronized (bestSubmissionForBlock) {
+            return bestSubmissionForBlock;
+        }
+    }
+
+    @Override
     public Submission getBestSubmissionForBlock(long blockHeight) {
         synchronized (bestSubmissionForBlock) {
             return bestSubmissionForBlock.get(blockHeight);
@@ -95,6 +102,13 @@ public class MemoryStorageService implements StorageService {
     public void setOrUpdateBestSubmissionForBlock(long blockHeight, Submission submission) {
         synchronized (bestSubmissionForBlock) {
             bestSubmissionForBlock.put(blockHeight, submission);
+        }
+    }
+
+    @Override
+    public void removeBestSubmission(long blockHeight) {
+        synchronized (bestSubmissionForBlock) {
+            bestSubmissionForBlock.get(blockHeight);
         }
     }
 

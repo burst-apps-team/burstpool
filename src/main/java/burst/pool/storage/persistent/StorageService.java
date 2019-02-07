@@ -6,6 +6,7 @@ import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.Submission;
 
 import java.util.List;
+import java.util.Map;
 
 public interface StorageService {
     int getMinerCount();
@@ -18,6 +19,8 @@ public interface StorageService {
     int getLastProcessedBlock();
     void incrementLastProcessedBlock();
 
+    Map<Long, Submission> getBestSubmissions();
     Submission getBestSubmissionForBlock(long blockHeight);
     void setOrUpdateBestSubmissionForBlock(long blockHeight, Submission submission);
+    void removeBestSubmission(long blockHeight);
 }

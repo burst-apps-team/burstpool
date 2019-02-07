@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 
 import static burst.pool.db.burstpool.tables.Bestsubmissions.BESTSUBMISSIONS;
 import static burst.pool.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
@@ -140,6 +141,14 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
+    public Map<Long, Submission> getBestSubmissions() {
+        return context.select(BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE)
+                .from(BESTSUBMISSIONS)
+                .fetch()
+                .intoMap(MINERDEADLINES.HEIGHT, record -> new Submission(BurstAddress.fromId(new BurstID(record.get(BESTSUBMISSIONS.ACCOUNTID))), record.get(BESTSUBMISSIONS.NONCE)));
+    }
+
+    @Override
     public Submission getBestSubmissionForBlock(long blockHeight) {
         try {
             return context.selectFrom(BESTSUBMISSIONS)
@@ -166,6 +175,13 @@ public class DbStorageService implements StorageService {
                     .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce())
                     .execute();
         }
+    }
+
+    @Override
+    public void removeBestSubmission(long blockHeight) {
+        context.deleteFrom(BESTSUBMISSIONS)
+                .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
+                .execute();
     }
 
     private class DbMinerStore implements MinerStore {
