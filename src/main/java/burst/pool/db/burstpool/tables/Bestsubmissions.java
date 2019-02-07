@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Bestsubmissions extends TableImpl<BestsubmissionsRecord> {
 
-    private static final long serialVersionUID = -908614159;
+    private static final long serialVersionUID = 1235471112;
 
     /**
      * The reference instance of <code>BURSTPOOL.BESTSUBMISSIONS</code>
@@ -75,6 +75,11 @@ public class Bestsubmissions extends TableImpl<BestsubmissionsRecord> {
      * The column <code>BURSTPOOL.BESTSUBMISSIONS.NONCE</code>.
      */
     public final TableField<BestsubmissionsRecord, String> NONCE = createField("NONCE", org.jooq.impl.SQLDataType.CLOB, this, "");
+
+    /**
+     * The column <code>BURSTPOOL.BESTSUBMISSIONS.DEADLINE</code>.
+     */
+    public final TableField<BestsubmissionsRecord, Long> DEADLINE = createField("DEADLINE", org.jooq.impl.SQLDataType.BIGINT, this, "");
 
     /**
      * Create a <code>BURSTPOOL.BESTSUBMISSIONS</code> table reference

@@ -17,6 +17,7 @@ public class Props {
 
     public static final Prop<Integer> nAvg = new Prop<>("nAvg", 360); // Must be ?
     public static final Prop<Integer> nMin = new Prop<>("nMin", 1); // Must be ?
+    public static final Prop<Integer> tMin = new Prop<>("tMin", 20); // Must be ?
     public static final Prop<Long> maxDeadline = new Prop<>("maxDeadline", Long.MAX_VALUE); // Must be > 0
     public static final Prop<Integer> processLag = new Prop<>("processLag", 10); // Must be > 0
 
@@ -54,6 +55,9 @@ public class Props {
         // Todo
 
         int nMin = propertyService.getInt(Props.nMin);
+        // Todo
+
+        int tMin = propertyService.getInt(Props.tMin);
         // Todo
 
         long maxDeadline = propertyService.getLong(Props.maxDeadline);

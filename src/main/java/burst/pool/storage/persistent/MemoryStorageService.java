@@ -6,6 +6,7 @@ import burst.pool.miners.Deadline;
 import burst.pool.miners.Miner;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.PoolFeeRecipient;
+import burst.pool.pool.StoredSubmission;
 import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
@@ -25,7 +26,7 @@ public class MemoryStorageService implements StorageService {
     private final MinerMaths minerMaths;
 
     private final Map<BurstAddress, Miner> miners = new HashMap<>();
-    private final Map<Long, Submission> bestSubmissionForBlock = new HashMap<>();
+    private final Map<Long, StoredSubmission> bestSubmissionForBlock = new HashMap<>();
     private final AtomicReference<PoolFeeRecipient> poolFeeRecipient = new AtomicReference<>();
     private final AtomicInteger lastProcessedBlock = new AtomicInteger(0);
 
@@ -85,21 +86,21 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
-    public Map<Long, Submission> getBestSubmissions() {
+    public Map<Long, StoredSubmission> getBestSubmissions() {
         synchronized (bestSubmissionForBlock) {
             return bestSubmissionForBlock;
         }
     }
 
     @Override
-    public Submission getBestSubmissionForBlock(long blockHeight) {
+    public StoredSubmission getBestSubmissionForBlock(long blockHeight) {
         synchronized (bestSubmissionForBlock) {
             return bestSubmissionForBlock.get(blockHeight);
         }
     }
 
     @Override
-    public void setOrUpdateBestSubmissionForBlock(long blockHeight, Submission submission) {
+    public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
         synchronized (bestSubmissionForBlock) {
             bestSubmissionForBlock.put(blockHeight, submission);
         }

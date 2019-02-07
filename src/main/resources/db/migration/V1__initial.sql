@@ -26,6 +26,7 @@ CREATE TABLE BurstPool.bestSubmissions (
   height LONG,
   accountId BIGINT,
   nonce TEXT,
+  deadline BIGINT,
   PRIMARY KEY (db_id)
 );
 

@@ -7,6 +7,7 @@ import burst.pool.miners.Deadline;
 import burst.pool.miners.Miner;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.PoolFeeRecipient;
+import burst.pool.pool.StoredSubmission;
 import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
@@ -141,26 +142,26 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
-    public Map<Long, Submission> getBestSubmissions() {
+    public Map<Long, StoredSubmission> getBestSubmissions() {
         return context.select(BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE)
                 .from(BESTSUBMISSIONS)
                 .fetch()
-                .intoMap(MINERDEADLINES.HEIGHT, record -> new Submission(BurstAddress.fromId(new BurstID(record.get(BESTSUBMISSIONS.ACCOUNTID))), record.get(BESTSUBMISSIONS.NONCE)));
+                .intoMap(MINERDEADLINES.HEIGHT, record -> new StoredSubmission(BurstAddress.fromId(new BurstID(record.get(BESTSUBMISSIONS.ACCOUNTID))), record.get(BESTSUBMISSIONS.NONCE), record.get(BESTSUBMISSIONS.DEADLINE)));
     }
 
     @Override
-    public Submission getBestSubmissionForBlock(long blockHeight) {
+    public StoredSubmission getBestSubmissionForBlock(long blockHeight) {
         try {
             return context.selectFrom(BESTSUBMISSIONS)
                     .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
-                    .fetchAny(response -> new Submission(BurstAddress.fromId(new BurstID(response.getAccountid())), response.getNonce()));
+                    .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(new BurstID(response.getAccountid())), response.getNonce(), response.getDeadline()));
         } catch (NullPointerException e) {
             return null;
         }
     }
 
     @Override
-    public void setOrUpdateBestSubmissionForBlock(long blockHeight, Submission submission) {
+    public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
         if (context.selectCount()
                 .from(BESTSUBMISSIONS)
                 .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))

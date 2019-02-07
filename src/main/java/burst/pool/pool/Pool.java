@@ -112,12 +112,15 @@ public class Pool {
             Thread.currentThread().interrupt();
         }
 
-        List<Long> fastBlocks = new ArrayList<>(); // todo
+        List<Long> fastBlocks = new ArrayList<>();
+        storageService.getBestSubmissions().forEach((height, deadline) -> {
+            if (deadline.getDeadline() < propertyService.getInt(Props.tMin)) {
+                fastBlocks.add(height);
+            }
+        });
 
         if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock() + 1) == null) {
-            minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1, fastBlocks);
-            storageService.incrementLastProcessedBlock();
-            processBlockSemaphore.release();
+            onProcessedBlock();
             return Completable.complete();
         }
 
@@ -130,15 +133,18 @@ public class Pool {
                         minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1, fastBlocks);
                     }
                 }))
-                .doOnComplete(() -> {
-                    storageService.incrementLastProcessedBlock();
-                    processBlockSemaphore.release();
-                })
+                .doOnComplete(this::onProcessedBlock)
                 .onErrorComplete(t -> {
                     logger.warn("Error processing block " + storageService.getLastProcessedBlock() + 1, t);
                     processBlockSemaphore.release();
                     return true;
                 });
+    }
+
+    private void onProcessedBlock() {
+        storageService.removeBestSubmission(storageService.getLastProcessedBlock() + 1);
+        storageService.incrementLastProcessedBlock();
+        processBlockSemaphore.release();
     }
 
     private void resetRound() {
@@ -180,10 +186,10 @@ public class Pool {
         return deadline;
     }
 
-    private void onNewBestDeadline(long blockHeight, Submission submission) {
+    private void onNewBestDeadline(long blockHeight, Submission submission) throws SubmissionException {
         bestDeadline.set(submission);
         submitDeadline(submission);
-        storageService.setOrUpdateBestSubmissionForBlock(blockHeight, submission);
+        storageService.setOrUpdateBestSubmissionForBlock(blockHeight, new StoredSubmission(submission.getMiner(), submission.getNonce(), Generator.calcDeadline(miningInfo.get(), submission).longValue()));
     }
 
     private void submitDeadline(Submission submission) {
