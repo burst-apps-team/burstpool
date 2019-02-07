@@ -8,10 +8,10 @@ import burst.pool.miners.Miner;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.StoredSubmission;
-import burst.pool.pool.Submission;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.FlywayException;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.exception.DataAccessException;
@@ -43,7 +43,7 @@ public class DbStorageService implements StorageService {
 
     private final Object newMinerLock = new Object();
 
-    public DbStorageService(PropertyService propertyService, MinerMaths minerMaths) throws SQLException {
+    public DbStorageService(PropertyService propertyService, MinerMaths minerMaths) throws SQLException, FlywayException {
         String url = propertyService.getString(Props.dbUrl);
         String username = propertyService.getString(Props.dbUsername);
         String password = propertyService.getString(Props.dbPassword);
