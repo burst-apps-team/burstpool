@@ -35,11 +35,10 @@ public class Generator {
     }
 
     public static BigInteger calcDeadline(MiningInfoResponse miningInfo, Submission submission) throws SubmissionException {
-        MiningInfoResponse mMiningInfo = miningInfo;
-        if (mMiningInfo == null) {
+        if (miningInfo == null) {
             throw new SubmissionException("Pool does not have mining info");
         }
-        return calculateDeadline(submission.getMiner().getBurstID().getSignedLongId(), parseUnsignedLong(submission.getNonce()), mMiningInfo.getGenerationSignature().getBytes(), calculateScoop(mMiningInfo.getGenerationSignature().getBytes(), mMiningInfo.getHeight()), mMiningInfo.getBaseTarget(), Math.toIntExact(mMiningInfo.getHeight())); // todo height -> long
+        return calculateDeadline(submission.getMiner().getBurstID().getSignedLongId(), parseUnsignedLong(submission.getNonce()), miningInfo.getGenerationSignature().getBytes(), calculateScoop(miningInfo.getGenerationSignature().getBytes(), miningInfo.getHeight()), miningInfo.getBaseTarget(), Math.toIntExact(miningInfo.getHeight())); // todo height -> long
     }
 
     private static long parseUnsignedLong(String number) {

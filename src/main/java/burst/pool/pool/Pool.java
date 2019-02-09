@@ -40,6 +40,7 @@ public class Pool {
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final Semaphore processBlockSemaphore = new Semaphore(1);
+    private final Object processDeadlineLock = new Object();
 
     // Variables
     private final AtomicReference<Instant> roundStartTime = new AtomicReference<>();
@@ -164,26 +165,29 @@ public class Pool {
         }
 
         BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
-        logger.debug("New submission from " + submission.getMiner() + " of nonce " + submission.getNonce() + ", calculated deadline " + deadline.toString() + " seconds.");
 
         if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");
         }
 
-        if (bestDeadline.get() != null) {
-            logger.debug("Best deadline is " + Generator.calcDeadline(miningInfo.get(), bestDeadline.get()) + ", new deadline is " + deadline);
-            if (deadline.compareTo(Generator.calcDeadline(miningInfo.get(), bestDeadline.get())) < 0) {
-                logger.debug("Newer deadline is better! Submitting...");
+        synchronized (processDeadlineLock) {
+            logger.debug("New submission from " + submission.getMiner() + " of nonce " + submission.getNonce() + ", calculated deadline " + deadline.toString() + " seconds.");
+
+            if (bestDeadline.get() != null) {
+                logger.debug("Best deadline is " + Generator.calcDeadline(miningInfo.get(), bestDeadline.get()) + ", new deadline is " + deadline);
+                if (deadline.compareTo(Generator.calcDeadline(miningInfo.get(), bestDeadline.get())) < 0) {
+                    logger.debug("Newer deadline is better! Submitting...");
+                    onNewBestDeadline(miningInfo.get().getHeight(), submission);
+                }
+            } else {
+                logger.debug("This is the first deadline, submitting...");
                 onNewBestDeadline(miningInfo.get().getHeight(), submission);
             }
-        } else {
-            logger.debug("This is the first deadline, submitting...");
-            onNewBestDeadline(miningInfo.get().getHeight(), submission);
+
+            minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
+
+            return deadline;
         }
-
-        minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
-
-        return deadline;
     }
 
     private void onNewBestDeadline(long blockHeight, Submission submission) throws SubmissionException {
@@ -194,6 +198,7 @@ public class Pool {
 
     private void submitDeadline(Submission submission) {
         disposables.add(nodeService.submitNonce(propertyService.getString(Props.passphrase), submission.getNonce(), submission.getMiner().getBurstID())
+                .retry(propertyService.getInt(Props.submitNonceRetryCount))
                 .subscribe(this::onNonceSubmitted, this::onSubmitNonceError));
     }
 

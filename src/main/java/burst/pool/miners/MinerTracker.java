@@ -150,8 +150,9 @@ public class MinerTracker {
         logger.info(logMessage.toString());
 
         compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), transactionFee, 1440, recipients)
+                .retry(propertyService.getInt(Props.payoutRetryCount))
                 .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
-                .flatMap(nodeService::broadcastTransaction)
+                .flatMap(signedBytes -> nodeService.broadcastTransaction(signedBytes).retry(propertyService.getInt(Props.payoutRetryCount)))
                 .subscribe(response -> onPaidOut(response, payees), this::onPayoutError));
     }
 

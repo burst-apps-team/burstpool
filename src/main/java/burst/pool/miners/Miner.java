@@ -16,8 +16,6 @@ public class Miner implements Payable {
     private final MinerMaths minerMaths;
     private final PropertyService propertyService;
 
-    private final Object processDeadlineLock = new Object();
-
     private final BurstAddress address;
     private final MinerStore store;
 
@@ -81,23 +79,21 @@ public class Miner implements Payable {
     }
 
     public void processNewDeadline(Deadline deadline) {
-        synchronized (processDeadlineLock) {
-            // Check if deadline is for an older block
-            List<Deadline> deadlines = store.getDeadlines();
-            boolean previousDeadlineExists = false;
-            for (Deadline existingDeadline : deadlines) {
-                if (existingDeadline.getHeight() > deadline.getHeight()) return;
-                if (existingDeadline.getHeight() == deadline.getHeight()) previousDeadlineExists = true;
-            }
+        // Check if deadline is for an older block
+        List<Deadline> deadlines = store.getDeadlines();
+        boolean previousDeadlineExists = false;
+        for (Deadline existingDeadline : deadlines) {
+            if (existingDeadline.getHeight() > deadline.getHeight()) return;
+            if (existingDeadline.getHeight() == deadline.getHeight()) previousDeadlineExists = true;
+        }
 
-            if (previousDeadlineExists) {
-                Deadline previousDeadline = store.getDeadline(deadline.getHeight());
-                if (previousDeadline == null || deadline.getDeadline().compareTo(previousDeadline.getDeadline()) < 0) { // If new deadline is better
-                    store.setOrUpdateDeadline(deadline.getHeight(), deadline);
-                }
-            } else {
+        if (previousDeadlineExists) {
+            Deadline previousDeadline = store.getDeadline(deadline.getHeight());
+            if (previousDeadline == null || deadline.getDeadline().compareTo(previousDeadline.getDeadline()) < 0) { // If new deadline is better
                 store.setOrUpdateDeadline(deadline.getHeight(), deadline);
             }
+        } else {
+            store.setOrUpdateDeadline(deadline.getHeight(), deadline);
         }
     }
 
