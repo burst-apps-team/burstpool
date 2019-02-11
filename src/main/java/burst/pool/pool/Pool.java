@@ -143,7 +143,8 @@ public class Pool {
     }
 
     private void onProcessedBlock() {
-        storageService.removeBestSubmission(storageService.getLastProcessedBlock() + 1);
+        // TODO this needs to be done if block is behind nAvg otherwise fast block calculation breaks
+        //storageService.removeBestSubmission(storageService.getLastProcessedBlock() + 1);
         storageService.incrementLastProcessedBlock();
         processBlockSemaphore.release();
     }
