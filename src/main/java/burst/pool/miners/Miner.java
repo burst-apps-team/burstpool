@@ -36,6 +36,7 @@ public class Miner implements Payable {
         // Calculate hitSum
         AtomicReference<BigInteger> hitSum = new AtomicReference<>(BigInteger.ZERO);
         AtomicInteger deadlineCount = new AtomicInteger(store.getDeadlineCount());
+        List<Deadline> deadlines = store.getDeadlines();
         store.getDeadlines().forEach(deadline -> {
             if (fastBlocks.contains(deadline.getHeight())) {
                 deadlineCount.getAndDecrement();
@@ -44,7 +45,7 @@ public class Miner implements Payable {
             }
         });
         // Calculate estimated capacity
-        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(deadlineCount.get(), hitSum.get()));
+        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(deadlines.size(), deadlineCount.get(), hitSum.get()));
     }
 
     public void recalculateShare(double poolCapacity) {

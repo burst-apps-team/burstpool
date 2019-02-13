@@ -20,11 +20,11 @@ public class MinerMaths {
         alphas[nAvg-1] = 1d;
     }
 
-    public double estimatedEffectivePlotSize(int nConf, BigInteger hitSum) {
+    public double estimatedEffectivePlotSize(int originalNConf, int nConf, BigInteger hitSum) {
         if (hitSum.compareTo(BigInteger.ZERO) == 0) {
             return 0;
         }
-        return alpha(nConf) * 240d * (((double)nConf)-1d) / (hitSum.divide(BigInteger.valueOf(GenesisBaseTarget)).longValue());
+        return alpha(originalNConf) * 240d * (((double)nConf)-1d) / (hitSum.divide(BigInteger.valueOf(GenesisBaseTarget)).longValue());
     }
 
     private double alpha(int nConf) {
