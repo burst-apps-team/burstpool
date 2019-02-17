@@ -167,6 +167,49 @@ function onPageLoad() {
     })
 }
 
+function loadCss(file) {
+    const fileref = document.createElement("link");
+    fileref.setAttribute("rel", "stylesheet");
+    fileref.setAttribute("type", "text/css");
+    fileref.setAttribute("href", file);
+    if (typeof fileref !== "undefined") document.getElementsByTagName("head")[0].appendChild(fileref)
+}
+
+function switchTheme() {
+    if (getCookie("theme") === "dark") {
+        setCookie("theme", "light");
+    } else {
+        setCookie("theme", "dark");
+    }
+    location.reload(true);
+}
+
+function setCookie(name, value) {
+    document.cookie = name + "=" + value + ";";
+}
+
+function getCookie(name) {
+    name += "=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for(let i = 0; i <ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+if (getCookie("theme") === "dark") {
+    loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/darkly/bootstrap.min.css");
+} else {
+    loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/flatly/bootstrap.min.css");
+}
+
 getPoolInfo();
 getCurrentRound();
 getMiners();
