@@ -8,9 +8,11 @@ import burst.pool.storage.persistent.MinerStore;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class Miner implements Payable {
     private final MinerMaths minerMaths;
@@ -37,8 +39,9 @@ public class Miner implements Payable {
         AtomicReference<BigInteger> hitSum = new AtomicReference<>(BigInteger.ZERO);
         AtomicInteger deadlineCount = new AtomicInteger(store.getDeadlineCount());
         List<Deadline> deadlines = store.getDeadlines();
-        store.getDeadlines().forEach(deadline -> {
-            if (fastBlocks.contains(deadline.getHeight())) {
+        List<Long> outliers = calculateOutliers(deadlines);
+        deadlines.forEach(deadline -> {
+            if (fastBlocks.contains(deadline.getHeight()) || outliers.contains(deadline.getHeight())) {
                 deadlineCount.getAndDecrement();
             } else {
                 hitSum.set(hitSum.get().add(deadline.calculateHit()));
@@ -46,6 +49,36 @@ public class Miner implements Payable {
         });
         // Calculate estimated capacity
         store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(deadlines.size(), deadlineCount.get(), hitSum.get()));
+    }
+
+    public List<Long> calculateOutliers(List<Deadline> input) {
+        List<Long> output = new ArrayList<>();
+        List<Deadline> data1;
+        List<Deadline> data2;
+        if (input.size() % 2 == 0) {
+            data1 = input.subList(0, input.size() / 2);
+            data2 = input.subList(input.size() / 2, input.size());
+        } else {
+            data1 = input.subList(0, input.size() / 2);
+            data2 = input.subList(input.size() / 2 + 1, input.size());
+        }
+        double q1 = getMedian(data1);
+        double q3 = getMedian(data2);
+        double iqr = q3 - q1;
+        double lowerFence = q1 - 1.5 * iqr;
+        double upperFence = q3 + 1.5 * iqr;
+        for (int i = 0; i < input.size(); i++) {
+            if (input.get(i).getDeadline().longValue() < lowerFence || input.get(i).getDeadline().longValue() > upperFence)
+                output.add(input.get(i).getHeight());
+        }
+        return output;
+    }
+
+    private static long getMedian(List<Deadline> data) {
+        if (data.size() % 2 == 0)
+            return (data.get(data.size() / 2).getDeadline().longValue() + data.get(data.size() / 2 - 1).getDeadline().longValue()) / 2;
+        else
+            return data.get(data.size() / 2).getDeadline().longValue();
     }
 
     public void recalculateShare(double poolCapacity) {
