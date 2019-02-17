@@ -52,6 +52,7 @@ public class Miner implements Payable {
     }
 
     public List<Long> calculateOutliers(List<Deadline> input) {
+        input.sort(Comparator.comparing(Deadline::calculateHit));
         List<Long> output = new ArrayList<>();
         List<Deadline> data1;
         List<Deadline> data2;
@@ -74,7 +75,6 @@ public class Miner implements Payable {
     }
 
     private static long getMedian(List<Deadline> data) { // TODO use calculateHit if it is worth the performance hit
-        data.sort(Comparator.comparing(Deadline::calculateHit));
         if (data.size() % 2 == 0)
             return (data.get(data.size() / 2).getDeadline().longValue() + data.get(data.size() / 2 - 1).getDeadline().longValue()) / 2;
         else
