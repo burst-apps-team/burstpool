@@ -9,10 +9,10 @@ import burst.pool.storage.persistent.MinerStore;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 public class Miner implements Payable {
     private final MinerMaths minerMaths;
@@ -65,15 +65,16 @@ public class Miner implements Payable {
         double q1 = getMedian(data1);
         double q3 = getMedian(data2);
         double iqr = q3 - q1;
-        double upperFence = q3 + 1.5 * iqr;
-        for (int i = 0; i < input.size(); i++) {
-            if (input.get(i).getDeadline().longValue() > upperFence)
-                output.add(input.get(i).getHeight());
+        double upperFence = q3 + 100 * iqr;
+        for (Deadline deadline : input) {
+            if (deadline.getDeadline().longValue() > upperFence)
+                output.add(deadline.getHeight());
         }
         return output;
     }
 
-    private static long getMedian(List<Deadline> data) {
+    private static long getMedian(List<Deadline> data) { // TODO use calculateHit if it is worth the performance hit
+        data.sort(Comparator.comparing(Deadline::calculateHit));
         if (data.size() % 2 == 0)
             return (data.get(data.size() / 2).getDeadline().longValue() + data.get(data.size() / 2 - 1).getDeadline().longValue()) / 2;
         else
