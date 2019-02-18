@@ -176,10 +176,10 @@ function loadCss(file) {
 }
 
 function switchTheme() {
-    if (getCookie("theme") === "dark") {
-        setCookie("theme", "light");
-    } else {
+    if (getCookie("theme") === "light") {
         setCookie("theme", "dark");
+    } else {
+        setCookie("theme", "light");
     }
     location.reload(true);
 }
@@ -204,10 +204,10 @@ function getCookie(name) {
     return "";
 }
 
-if (getCookie("theme") === "dark") {
-    loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/darkly/bootstrap.min.css");
-} else {
+if (getCookie("theme") === "light") {
     loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/flatly/bootstrap.min.css");
+} else {
+    loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/darkly/bootstrap.min.css");
 }
 
 getPoolInfo();
