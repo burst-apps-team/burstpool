@@ -18,6 +18,7 @@ import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class MinerTracker {
@@ -27,6 +28,7 @@ public class MinerTracker {
     private final PropertyService propertyService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final BurstNodeService nodeService;
+    private final AtomicBoolean currentlyProcessingBlock = new AtomicBoolean(false);
 
     private final Semaphore payoutSemaphore = new Semaphore(1);
 
@@ -36,6 +38,7 @@ public class MinerTracker {
     }
 
     public void onMinerSubmittedDeadline(StorageService storageService, BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight, String userAgent) {
+        waitUntilNotProcessingBlock();
         Miner miner = getOrCreate(storageService, minerAddress);
         miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
         miner.setUserAgent(userAgent);
@@ -83,8 +86,6 @@ public class MinerTracker {
         }
 
         logger.info("Finished processing winnings for block " + blockHeight + ". Reward ( + fees) is " + blockReward + ", pool fee is " + poolTake + ", forger take is " + winnerTake + ", miners took " + amountTaken.get());
-
-        payoutIfNeeded(transactionalStorageService);
     }
 
     public void onBlockNotWon(StorageService transactionalStorageService, long blockHeight, List<Long> fastBlocks) {
@@ -103,7 +104,7 @@ public class MinerTracker {
         miners.forEach(miner -> miner.recalculateShare(poolCapacity.get()));
     }
 
-    private void payoutIfNeeded(StorageService transactionalStorageService) {
+    public void payoutIfNeeded(StorageService storageService) {
         if (payoutSemaphore.availablePermits() == 0) {
             logger.info("Cannot payout - payout is already in progress.");
             return;
@@ -116,18 +117,18 @@ public class MinerTracker {
         }
 
         Set<Payable> payableMinersSet = new HashSet<>();
-        for (Payable miner : transactionalStorageService.getMiners()) {
+        for (Payable miner : storageService.getMiners()) {
             if (miner.getMinimumPayout().compareTo(miner.getPending()) <= 0) {
                 payableMinersSet.add(miner);
             }
         }
 
-        PoolFeeRecipient poolFeeRecipient = transactionalStorageService.getPoolFeeRecipient();
+        PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
         if (poolFeeRecipient.getMinimumPayout().compareTo(poolFeeRecipient.getPending()) <= 0) {
             payableMinersSet.add(poolFeeRecipient);
         }
 
-        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() < transactionalStorageService.getMinerCount())) {
+        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() < storageService.getMinerCount())) {
             payoutSemaphore.release();
             return;
         }
@@ -155,6 +156,7 @@ public class MinerTracker {
     }
 
     private void onPaidOut(BroadcastTransactionResponse response, Map<Payable, BurstValue> paidMiners) {
+        waitUntilNotProcessingBlock();
         for (Map.Entry<Payable, BurstValue> payment : paidMiners.entrySet()) {
             payment.getKey().decreasePending(payment.getValue());
         }
@@ -170,6 +172,7 @@ public class MinerTracker {
 
 
     private void onMinerAccount(StorageService storageService, AccountResponse accountResponse) {
+        waitUntilNotProcessingBlock();
         Miner miner = storageService.getMiner(accountResponse.getAccount());
         if (miner == null) return;
         if (accountResponse.getName() == null) return;
@@ -178,5 +181,19 @@ public class MinerTracker {
 
     private void onMinerAccountError(Throwable throwable) {
         logger.warn("Error obtaining miner account info", throwable);
+    }
+
+    private void waitUntilNotProcessingBlock() {
+        while (currentlyProcessingBlock.get()) {
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void setCurrentlyProcessingBlock(boolean currentlyProcessingBlock){
+        this.currentlyProcessingBlock.set(currentlyProcessingBlock);
     }
 }

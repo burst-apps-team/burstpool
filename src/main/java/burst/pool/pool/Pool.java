@@ -118,8 +118,11 @@ public class Pool {
             transactionalStorageService = storageService.beginTransaction();
         } catch (Exception e) {
             logger.error("Could not open transactional storage service", e);
+            processBlockSemaphore.release();
             return Completable.complete();
         }
+
+        minerTracker.setCurrentlyProcessingBlock(true);
 
         List<Long> fastBlocks = new ArrayList<>();
         transactionalStorageService.getBestSubmissions().forEach((height, deadline) -> {
@@ -151,6 +154,7 @@ public class Pool {
                     } catch (Exception e) {
                         logger.error("Error rolling back transaction", e);
                     }
+                    minerTracker.setCurrentlyProcessingBlock(false);
                     processBlockSemaphore.release();
                     return true;
                 });
@@ -166,7 +170,9 @@ public class Pool {
         } catch (Exception e) {
             logger.error("Error committing transaction", e);
         }
+        minerTracker.setCurrentlyProcessingBlock(false);
         processBlockSemaphore.release();
+        minerTracker.payoutIfNeeded(storageService);
     }
 
     private void resetRound() {

@@ -22,6 +22,7 @@ import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -70,10 +71,10 @@ public class DbStorageService implements StorageService {
         hikariConfig.setAutoCommit(true);
 
         connectionPool = new HikariDataSource(hikariConfig);
-        defaultContext = DSL.using(connectionPool, sqlDialect);
+        defaultContext = DSL.using(connectionPool.getConnection(), sqlDialect);
     }
 
-    protected DbStorageService(PropertyService propertyService, MinerMaths minerMaths, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect) {
+    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect) {
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
         this.connectionPool = connectionPool;
@@ -218,7 +219,7 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         defaultContext.close();
         connectionPool.close();
     }

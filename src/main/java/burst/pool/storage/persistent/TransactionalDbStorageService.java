@@ -37,7 +37,8 @@ public class TransactionalDbStorageService extends DbStorageService {
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         dslContext.close();
+        connection.close();
     }
 }
