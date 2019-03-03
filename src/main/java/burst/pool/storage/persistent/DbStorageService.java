@@ -26,6 +26,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static burst.pool.db.burstpool.tables.Bestsubmissions.BESTSUBMISSIONS;
 import static burst.pool.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
@@ -40,6 +41,8 @@ public class DbStorageService implements StorageService {
     private final PropertyService propertyService;
     private final MinerMaths minerMaths;
 
+    private final int nMin;
+
     private final HikariDataSource connectionPool;
     private final DSLContext defaultContext;
     private final SQLDialect sqlDialect;
@@ -52,6 +55,8 @@ public class DbStorageService implements StorageService {
         String password = propertyService.getString(Props.dbPassword);
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
+
+        nMin = propertyService.getInt(Props.nMin);
 
         String driverClass = JDBCUtils.driver(url);
         sqlDialect = JDBCUtils.dialect(url);
@@ -80,6 +85,7 @@ public class DbStorageService implements StorageService {
         this.connectionPool = connectionPool;
         this.defaultContext = defaultContext;
         this.sqlDialect = sqlDialect;
+        nMin = propertyService.getInt(Props.nMin);
     }
 
     private Miner minerFromRecord(MinersRecord record) {
@@ -111,7 +117,10 @@ public class DbStorageService implements StorageService {
     @Override
     public List<Miner> getMiners() {
         return defaultContext.selectFrom(MINERS)
-                .fetch(this::minerFromRecord);
+                .fetch(this::minerFromRecord)
+                .stream()
+                .filter(miner -> miner.getNConf() >= nMin)
+                .collect(Collectors.toList());
     }
 
     @Override
