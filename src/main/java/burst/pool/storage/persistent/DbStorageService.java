@@ -11,6 +11,8 @@ import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.StoredSubmission;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.jooq.DSLContext;
@@ -20,8 +22,6 @@ import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +31,7 @@ import static burst.pool.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
 import static burst.pool.db.burstpool.tables.Miners.MINERS;
 import static burst.pool.db.burstpool.tables.Poolstate.POOLSTATE;
 
-public class DbStorageService implements StorageService {
+public class DbStorageService implements StorageService, AutoCloseable {
 
     private static final String POOLSTATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
     private static final String POOLSTATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";
@@ -39,8 +39,9 @@ public class DbStorageService implements StorageService {
     private final PropertyService propertyService;
     private final MinerMaths minerMaths;
 
-    private final Connection conn;
-    private final DSLContext context;
+    private final HikariDataSource connectionPool;
+    private final DSLContext defaultContext;
+    private final SQLDialect sqlDialect;
 
     private final Object newMinerLock = new Object();
 
@@ -52,7 +53,7 @@ public class DbStorageService implements StorageService {
         this.minerMaths = minerMaths;
 
         String driverClass = JDBCUtils.driver(url);
-        SQLDialect dialect = JDBCUtils.dialect(url);
+        sqlDialect = JDBCUtils.dialect(url);
         try {
             Class.forName(driverClass);
         } catch (ClassNotFoundException e) {
@@ -61,8 +62,23 @@ public class DbStorageService implements StorageService {
 
         Flyway flyway = Flyway.configure().dataSource(url, username, password).load();
         flyway.migrate();
-        conn = DriverManager.getConnection(url, username, password);
-        context = DSL.using(conn, dialect); // todo close
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(url);
+        hikariConfig.setUsername(username);
+        hikariConfig.setPassword(password);
+        hikariConfig.setMaximumPoolSize(32);
+        hikariConfig.setAutoCommit(true);
+
+        connectionPool = new HikariDataSource(hikariConfig);
+        defaultContext = DSL.using(connectionPool, sqlDialect);
+    }
+
+    protected DbStorageService(PropertyService propertyService, MinerMaths minerMaths, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect) {
+        this.propertyService = propertyService;
+        this.minerMaths = minerMaths;
+        this.connectionPool = connectionPool;
+        this.defaultContext = defaultContext;
+        this.sqlDialect = sqlDialect;
     }
 
     private Miner minerFromRecord(MinersRecord record) {
@@ -70,22 +86,37 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
+    public StorageService beginTransaction() throws SQLException {
+        return TransactionalDbStorageService.create(propertyService, minerMaths, connectionPool, sqlDialect);
+    }
+
+    @Override
+    public void commitTransaction() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void rollbackTransaction() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public int getMinerCount() {
-        return context.selectCount()
+        return defaultContext.selectCount()
                 .from(MINERS)
                 .fetchOne(0, int.class);
     }
 
     @Override
     public List<Miner> getMiners() {
-        return context.selectFrom(MINERS)
+        return defaultContext.selectFrom(MINERS)
                 .fetch(this::minerFromRecord);
     }
 
     @Override
     public Miner getMiner(BurstAddress address) {
         try {
-            return context.selectFrom(MINERS)
+            return defaultContext.selectFrom(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(address.getBurstID().getSignedLongId()))
                     .fetchAny(this::minerFromRecord);
         } catch (NullPointerException e) {
@@ -96,13 +127,13 @@ public class DbStorageService implements StorageService {
     @Override
     public Miner newMiner(BurstAddress address) {
         synchronized (newMinerLock) {
-            if (context.selectCount()
+            if (defaultContext.selectCount()
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(address.getBurstID().getSignedLongId()))
                     .fetchOne(0, int.class) > 0) {
                 return getMiner(address);
             } else {
-                context.insertInto(MINERS, MINERS.ACCOUNT_ID, MINERS.PENDING_BALANCE, MINERS.ESTIMATED_CAPACITY, MINERS.SHARE, MINERS.MINIMUM_PAYOUT, MINERS.NAME, MINERS.USER_AGENT)
+                defaultContext.insertInto(MINERS, MINERS.ACCOUNT_ID, MINERS.PENDING_BALANCE, MINERS.ESTIMATED_CAPACITY, MINERS.SHARE, MINERS.MINIMUM_PAYOUT, MINERS.NAME, MINERS.USER_AGENT)
                         .values(address.getBurstID().getSignedLongId(), 0d, 0d, 0d, (double) propertyService.getFloat(Props.defaultMinimumPayout), "", "")
                         .execute();
                 return getMiner(address);
@@ -118,7 +149,7 @@ public class DbStorageService implements StorageService {
     @Override
     public int getLastProcessedBlock() {
         try {
-            return context.select(POOLSTATE.VALUE)
+            return defaultContext.select(POOLSTATE.VALUE)
                     .from(POOLSTATE)
                     .where(POOLSTATE.KEY.eq(POOLSTATE_LAST_PROCESSED_BLOCK))
                     .fetchAny(result -> Integer.parseInt(result.get(POOLSTATE.VALUE)));
@@ -131,11 +162,11 @@ public class DbStorageService implements StorageService {
     public void incrementLastProcessedBlock() {
         int lastProcessedBlock = getLastProcessedBlock();
         try {
-            context.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
+            defaultContext.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
                     .values(POOLSTATE_LAST_PROCESSED_BLOCK, Integer.toString(lastProcessedBlock + 1))
                     .execute();
         } catch (DataAccessException e) { // TODO there's gotta be a better way to do this...
-            context.update(POOLSTATE)
+            defaultContext.update(POOLSTATE)
                     .set(POOLSTATE.VALUE, Integer.toString(lastProcessedBlock + 1))
                     .where(POOLSTATE.KEY.eq(POOLSTATE_LAST_PROCESSED_BLOCK))
                     .execute();
@@ -144,7 +175,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     public Map<Long, StoredSubmission> getBestSubmissions() {
-        return context.selectFrom(BESTSUBMISSIONS)
+        return defaultContext.selectFrom(BESTSUBMISSIONS)
                 .fetch()
                 .intoMap(BestsubmissionsRecord::getHeight, record -> new StoredSubmission(BurstAddress.fromId(new BurstID(record.getAccountid())), record.getNonce(), record.getDeadline()));
     }
@@ -152,7 +183,7 @@ public class DbStorageService implements StorageService {
     @Override
     public StoredSubmission getBestSubmissionForBlock(long blockHeight) {
         try {
-            return context.selectFrom(BESTSUBMISSIONS)
+            return defaultContext.selectFrom(BESTSUBMISSIONS)
                     .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
                     .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(new BurstID(response.getAccountid())), response.getNonce(), response.getDeadline()));
         } catch (NullPointerException e) {
@@ -162,18 +193,18 @@ public class DbStorageService implements StorageService {
 
     @Override
     public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
-        if (context.selectCount()
+        if (defaultContext.selectCount()
                 .from(BESTSUBMISSIONS)
                 .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
                 .fetchOne(0, int.class) > 0) {
-            context.update(BESTSUBMISSIONS)
+            defaultContext.update(BESTSUBMISSIONS)
                     .set(BESTSUBMISSIONS.ACCOUNTID, submission.getMiner().getBurstID().getSignedLongId())
                     .set(BESTSUBMISSIONS.NONCE, submission.getNonce())
                     .set(BESTSUBMISSIONS.DEADLINE, submission.getDeadline())
                     .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
                     .execute();
         } else {
-            context.insertInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE, BESTSUBMISSIONS.DEADLINE)
+            defaultContext.insertInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE, BESTSUBMISSIONS.DEADLINE)
                     .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce(), submission.getDeadline())
                     .execute();
         }
@@ -181,9 +212,15 @@ public class DbStorageService implements StorageService {
 
     @Override
     public void removeBestSubmission(long blockHeight) {
-        context.deleteFrom(BESTSUBMISSIONS)
+        defaultContext.deleteFrom(BESTSUBMISSIONS)
                 .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
                 .execute();
+    }
+
+    @Override
+    public void close() {
+        defaultContext.close();
+        connectionPool.close();
     }
 
     private class DbMinerStore implements MinerStore {
@@ -195,7 +232,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public double getPendingBalance() {
-            return context.select(MINERS.PENDING_BALANCE)
+            return defaultContext.select(MINERS.PENDING_BALANCE)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -204,7 +241,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setPendingBalance(double pendingBalance) {
-            context.update(MINERS)
+            defaultContext.update(MINERS)
                     .set(MINERS.PENDING_BALANCE, pendingBalance)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
@@ -212,7 +249,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public double getEstimatedCapacity() {
-            return context.select(MINERS.ESTIMATED_CAPACITY)
+            return defaultContext.select(MINERS.ESTIMATED_CAPACITY)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -221,7 +258,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setEstimatedCapacity(double estimatedCapacity) {
-            context.update(MINERS)
+            defaultContext.update(MINERS)
                     .set(MINERS.ESTIMATED_CAPACITY, estimatedCapacity)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
@@ -229,7 +266,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public double getShare() {
-            return context.select(MINERS.SHARE)
+            return defaultContext.select(MINERS.SHARE)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -238,7 +275,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setShare(double share) {
-            context.update(MINERS)
+            defaultContext.update(MINERS)
                     .set(MINERS.SHARE, share)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
@@ -246,7 +283,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public double getMinimumPayout() {
-            return context.select(MINERS.MINIMUM_PAYOUT)
+            return defaultContext.select(MINERS.MINIMUM_PAYOUT)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -255,7 +292,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setMinimumPayout(double minimumPayout) {
-            context.update(MINERS)
+            defaultContext.update(MINERS)
                     .set(MINERS.MINIMUM_PAYOUT, minimumPayout)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
@@ -263,7 +300,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public String getName() {
-            return context.select(MINERS.NAME)
+            return defaultContext.select(MINERS.NAME)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -272,7 +309,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setName(String name) {
-            context.update(MINERS)
+            defaultContext.update(MINERS)
                     .set(MINERS.NAME, name)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
@@ -280,7 +317,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public String getUserAgent() {
-            return context.select(MINERS.USER_AGENT)
+            return defaultContext.select(MINERS.USER_AGENT)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -289,7 +326,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setUserAgent(String userAgent) {
-            context.update(MINERS)
+            defaultContext.update(MINERS)
                     .set(MINERS.USER_AGENT, userAgent)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
@@ -297,7 +334,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public List<Deadline> getDeadlines() {
-            return context.select(MINERDEADLINES.BASETARGET, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE)
+            return defaultContext.select(MINERDEADLINES.BASETARGET, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE)
                     .from(MINERDEADLINES)
                     .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId))
                     .fetch()
@@ -306,7 +343,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public int getDeadlineCount() {
-            return context.selectCount()
+            return defaultContext.selectCount()
                     .from(MINERDEADLINES)
                     .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId))
                     .fetchAny(0, int.class);
@@ -314,7 +351,7 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void removeDeadline(long height) {
-            context.delete(MINERDEADLINES)
+            defaultContext.delete(MINERDEADLINES)
                     .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
                     .execute();
         }
@@ -322,7 +359,7 @@ public class DbStorageService implements StorageService {
         @Override
         public Deadline getDeadline(long height) {
             try {
-                return context.select(MINERDEADLINES.BASETARGET, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE)
+                return defaultContext.select(MINERDEADLINES.BASETARGET, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE)
                         .from(MINERDEADLINES)
                         .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
                         .fetchAny()
@@ -334,17 +371,17 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setOrUpdateDeadline(long height, Deadline deadline) {
-            if (context.selectCount()
+            if (defaultContext.selectCount()
                     .from(MINERDEADLINES)
                     .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
                     .fetchOne(0, int.class) > 0) {
-                context.update(MINERDEADLINES)
+                defaultContext.update(MINERDEADLINES)
                         .set(MINERDEADLINES.DEADLINE, deadline.getDeadline().longValue())
                         .set(MINERDEADLINES.BASETARGET, deadline.getBaseTarget().longValue())
                         .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
                         .execute();
             } else {
-                context.insertInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
+                defaultContext.insertInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
                         .values(accountId, height, deadline.getDeadline().longValue(), deadline.getBaseTarget().longValue())
                         .execute();
             }
@@ -356,7 +393,7 @@ public class DbStorageService implements StorageService {
         @Override
         public double getPendingBalance() {
             try {
-                return context.select(POOLSTATE.VALUE)
+                return defaultContext.select(POOLSTATE.VALUE)
                         .from(POOLSTATE)
                         .where(POOLSTATE.KEY.eq(POOLSTATE_FEE_RECIPIENT_BALANCE))
                         .fetchAny(record -> Double.parseDouble(record.get(POOLSTATE.VALUE)));
@@ -368,11 +405,11 @@ public class DbStorageService implements StorageService {
         @Override
         public void setPendingBalance(double pending) {
             try {
-                context.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
+                defaultContext.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
                         .values(POOLSTATE_FEE_RECIPIENT_BALANCE, Double.toString(pending))
                         .execute();
             } catch (DataAccessException e) { // TODO there's gotta be a better way to do this...
-                context.update(POOLSTATE)
+                defaultContext.update(POOLSTATE)
                         .set(POOLSTATE.VALUE, Double.toString(pending))
                         .where(POOLSTATE.KEY.eq(POOLSTATE_FEE_RECIPIENT_BALANCE))
                         .execute();

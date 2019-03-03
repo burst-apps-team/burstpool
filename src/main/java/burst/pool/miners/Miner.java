@@ -52,6 +52,7 @@ public class Miner implements Payable {
     }
 
     public List<Long> calculateOutliers(List<Deadline> input) {
+        if (input.size() < 2) return new ArrayList<>();
         input.sort(Comparator.comparing(Deadline::calculateHit));
         List<Long> output = new ArrayList<>();
         List<Deadline> data1;

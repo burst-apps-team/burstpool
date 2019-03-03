@@ -37,6 +37,21 @@ public class MemoryStorageService implements StorageService {
     }
 
     @Override
+    public StorageService beginTransaction() {
+        return this;
+    }
+
+    @Override
+    public void commitTransaction() {
+        // TODO Not supported
+    }
+
+    @Override
+    public void rollbackTransaction() {
+        // TODO Not supported
+    }
+
+    @Override
     public int getMinerCount() {
         synchronized (miners) {
             return miners.size();

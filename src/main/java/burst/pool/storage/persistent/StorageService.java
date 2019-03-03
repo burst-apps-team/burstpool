@@ -9,6 +9,10 @@ import java.util.List;
 import java.util.Map;
 
 public interface StorageService {
+    StorageService beginTransaction() throws Exception;
+    void commitTransaction() throws Exception;
+    void rollbackTransaction() throws Exception;
+
     int getMinerCount();
     List<Miner> getMiners();
     Miner getMiner(BurstAddress address);
