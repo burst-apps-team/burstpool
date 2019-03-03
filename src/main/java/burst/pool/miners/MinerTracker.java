@@ -24,27 +24,25 @@ public class MinerTracker {
     private static final Logger logger = LoggerFactory.getLogger(MinerTracker.class);
 
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
-    private final StorageService storageService;
     private final PropertyService propertyService;
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final BurstNodeService nodeService;
 
     private final Semaphore payoutSemaphore = new Semaphore(1);
 
-    public MinerTracker(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService) {
+    public MinerTracker(BurstNodeService nodeService, PropertyService propertyService) {
         this.nodeService = nodeService;
-        this.storageService = storageService;
         this.propertyService = propertyService;
     }
 
-    public void onMinerSubmittedDeadline(BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight, String userAgent) {
-        Miner miner = getOrCreate(minerAddress);
+    public void onMinerSubmittedDeadline(StorageService storageService, BurstAddress minerAddress, BigInteger deadline, BigInteger baseTarget, long blockHeight, String userAgent) {
+        Miner miner = getOrCreate(storageService, minerAddress);
         miner.processNewDeadline(new Deadline(deadline, baseTarget, blockHeight));
         miner.setUserAgent(userAgent);
-        compositeDisposable.add(nodeService.getAccount(minerAddress).subscribe(this::onMinerAccount, this::onMinerAccountError));
+        compositeDisposable.add(nodeService.getAccount(minerAddress).subscribe(accountResponse -> onMinerAccount(storageService, accountResponse), this::onMinerAccountError));
     }
 
-    private Miner getOrCreate(BurstAddress minerAddress) {
+    private Miner getOrCreate(StorageService storageService, BurstAddress minerAddress) {
         Miner miner = storageService.getMiner(minerAddress);
         if (miner == null) {
             miner = storageService.newMiner(minerAddress);
@@ -52,23 +50,23 @@ public class MinerTracker {
         return miner;
     }
 
-    public void onBlockWon(long blockHeight, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
+    public void onBlockWon(StorageService transactionalStorageService, long blockHeight, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
         logger.info("Block won! Block height: " + blockHeight + ", forger: " + winner.getFullAddress());
         BurstValue reward = blockReward;
 
         // Take pool fee
         BurstValue poolTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.poolFeePercentage))));
         reward = new BurstValue(reward.subtract(poolTake));
-        PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
+        PoolFeeRecipient poolFeeRecipient = transactionalStorageService.getPoolFeeRecipient();
         poolFeeRecipient.increasePending(poolTake);
 
         // Take winner fee
         BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.winnerRewardPercentage))));
         reward = new BurstValue(reward.subtract(winnerTake));
-        Miner winningMiner = getOrCreate(winner);
+        Miner winningMiner = getOrCreate(transactionalStorageService, winner);
         winningMiner.increasePending(winnerTake);
 
-        List<Miner> miners = storageService.getMiners();
+        List<Miner> miners = transactionalStorageService.getMiners();
 
         updateMiners(miners, blockHeight, fastBlocks);
 
@@ -86,11 +84,11 @@ public class MinerTracker {
 
         logger.info("Finished processing winnings for block " + blockHeight + ". Reward ( + fees) is " + blockReward + ", pool fee is " + poolTake + ", forger take is " + winnerTake + ", miners took " + amountTaken.get());
 
-        payoutIfNeeded();
+        payoutIfNeeded(transactionalStorageService);
     }
 
-    public void onBlockNotWon(long blockHeight, List<Long> fastBlocks) {
-        updateMiners(storageService.getMiners(), blockHeight, fastBlocks);
+    public void onBlockNotWon(StorageService transactionalStorageService, long blockHeight, List<Long> fastBlocks) {
+        updateMiners(transactionalStorageService.getMiners(), blockHeight, fastBlocks);
     }
 
     private void updateMiners(List<Miner> miners, long blockHeight, List<Long> fastBlocks) {
@@ -105,7 +103,7 @@ public class MinerTracker {
         miners.forEach(miner -> miner.recalculateShare(poolCapacity.get()));
     }
 
-    private void payoutIfNeeded() {
+    private void payoutIfNeeded(StorageService transactionalStorageService) {
         if (payoutSemaphore.availablePermits() == 0) {
             logger.info("Cannot payout - payout is already in progress.");
             return;
@@ -118,18 +116,18 @@ public class MinerTracker {
         }
 
         Set<Payable> payableMinersSet = new HashSet<>();
-        for (Payable miner : storageService.getMiners()) {
+        for (Payable miner : transactionalStorageService.getMiners()) {
             if (miner.getMinimumPayout().compareTo(miner.getPending()) <= 0) {
                 payableMinersSet.add(miner);
             }
         }
 
-        PoolFeeRecipient poolFeeRecipient = storageService.getPoolFeeRecipient();
+        PoolFeeRecipient poolFeeRecipient = transactionalStorageService.getPoolFeeRecipient();
         if (poolFeeRecipient.getMinimumPayout().compareTo(poolFeeRecipient.getPending()) <= 0) {
             payableMinersSet.add(poolFeeRecipient);
         }
 
-        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() < storageService.getMinerCount())) {
+        if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() < transactionalStorageService.getMinerCount())) {
             payoutSemaphore.release();
             return;
         }
@@ -171,7 +169,7 @@ public class MinerTracker {
     }
 
 
-    private void onMinerAccount(AccountResponse accountResponse) {
+    private void onMinerAccount(StorageService storageService, AccountResponse accountResponse) {
         Miner miner = storageService.getMiner(accountResponse.getAccount());
         if (miner == null) return;
         if (accountResponse.getName() == null) return;

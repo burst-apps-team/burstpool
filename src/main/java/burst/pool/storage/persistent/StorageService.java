@@ -8,7 +8,7 @@ import burst.pool.pool.StoredSubmission;
 import java.util.List;
 import java.util.Map;
 
-public interface StorageService {
+public interface StorageService extends AutoCloseable {
     StorageService beginTransaction() throws Exception;
     void commitTransaction() throws Exception;
     void rollbackTransaction() throws Exception;

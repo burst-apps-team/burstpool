@@ -31,7 +31,7 @@ import static burst.pool.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
 import static burst.pool.db.burstpool.tables.Miners.MINERS;
 import static burst.pool.db.burstpool.tables.Poolstate.POOLSTATE;
 
-public class DbStorageService implements StorageService, AutoCloseable {
+public class DbStorageService implements StorageService {
 
     private static final String POOLSTATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
     private static final String POOLSTATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";

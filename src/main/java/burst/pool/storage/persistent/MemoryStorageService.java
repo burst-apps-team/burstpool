@@ -128,6 +128,11 @@ public class MemoryStorageService implements StorageService {
         }
     }
 
+    @Override
+    public void close() throws Exception {
+        // Do nothing
+    }
+
     private class MemoryMinerStore implements MinerStore {
         private volatile double pendingBalance;
         private volatile double estimatedCapacity;

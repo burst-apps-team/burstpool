@@ -41,7 +41,7 @@ public class Launcher {
         }
         //StorageService storageService = new MemoryStorageService(propertyService, minerMaths);
         BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress));
-        MinerTracker minerTracker = new MinerTracker(nodeService, storageService, propertyService);
+        MinerTracker minerTracker = new MinerTracker(nodeService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);
         Server server = new Server(storageService, propertyService, pool);
         try {

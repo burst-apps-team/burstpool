@@ -113,39 +113,59 @@ public class Pool {
             Thread.currentThread().interrupt();
         }
 
+        StorageService transactionalStorageService;
+        try {
+            transactionalStorageService = storageService.beginTransaction();
+        } catch (Exception e) {
+            logger.error("Could not open transactional storage service", e);
+            return Completable.complete();
+        }
+
         List<Long> fastBlocks = new ArrayList<>();
-        storageService.getBestSubmissions().forEach((height, deadline) -> {
+        transactionalStorageService.getBestSubmissions().forEach((height, deadline) -> {
             if (deadline.getDeadline() < propertyService.getInt(Props.tMin)) {
                 fastBlocks.add(height);
             }
         });
 
-        if (storageService.getBestSubmissionForBlock(storageService.getLastProcessedBlock() + 1) == null) {
-            onProcessedBlock();
+        if (transactionalStorageService.getBestSubmissionForBlock(transactionalStorageService.getLastProcessedBlock() + 1) == null) {
+            onProcessedBlock(transactionalStorageService);
             return Completable.complete();
         }
 
-        return nodeService.getBlock(storageService.getLastProcessedBlock() + 1)
+        return nodeService.getBlock(transactionalStorageService.getLastProcessedBlock() + 1)
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
-                    Submission submission = storageService.getBestSubmissionForBlock(block.getHeight());
+                    Submission submission = transactionalStorageService.getBestSubmissionForBlock(block.getHeight());
                     if (submission != null && Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
-                        minerTracker.onBlockWon(storageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())), fastBlocks);
+                        minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())), fastBlocks);
                     } else {
-                        minerTracker.onBlockNotWon(storageService.getLastProcessedBlock() + 1, fastBlocks);
+                        minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, fastBlocks);
                     }
                 }))
-                .doOnComplete(this::onProcessedBlock)
+                .doOnComplete(() -> onProcessedBlock(transactionalStorageService))
                 .onErrorComplete(t -> {
-                    logger.warn("Error processing block " + storageService.getLastProcessedBlock() + 1, t);
+                    logger.warn("Error processing block " + transactionalStorageService.getLastProcessedBlock() + 1, t);
+                    try {
+                        transactionalStorageService.rollbackTransaction();
+                        transactionalStorageService.close();
+                    } catch (Exception e) {
+                        logger.error("Error rolling back transaction", e);
+                    }
                     processBlockSemaphore.release();
                     return true;
                 });
     }
 
-    private void onProcessedBlock() {
+    private void onProcessedBlock(StorageService transactionalStorageService) {
         // TODO this needs to be done if block is behind nAvg otherwise fast block calculation breaks
         //storageService.removeBestSubmission(storageService.getLastProcessedBlock() + 1);
-        storageService.incrementLastProcessedBlock();
+        transactionalStorageService.incrementLastProcessedBlock();
+        try {
+            transactionalStorageService.commitTransaction();
+            transactionalStorageService.close();
+        } catch (Exception e) {
+            logger.error("Error committing transaction", e);
+        }
         processBlockSemaphore.release();
     }
 
@@ -185,7 +205,7 @@ public class Pool {
                 onNewBestDeadline(miningInfo.get().getHeight(), submission);
             }
 
-            minerTracker.onMinerSubmittedDeadline(submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
+            minerTracker.onMinerSubmittedDeadline(storageService, submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
 
             return deadline;
         }
