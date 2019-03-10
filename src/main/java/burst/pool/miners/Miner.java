@@ -169,4 +169,8 @@ public class Miner implements Payable {
     public void setUserAgent(String userAgent) {
         store.setUserAgent(userAgent);
     }
+
+    public void setMinimumPayout(double minimumPayout) {
+        store.setMinimumPayout(minimumPayout);
+    }
 }

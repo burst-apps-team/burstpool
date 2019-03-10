@@ -104,6 +104,13 @@ public class MinerTracker {
         miners.forEach(miner -> miner.recalculateShare(poolCapacity.get()));
     }
 
+    public void setMinerMinimumPayout(StorageService storageService, BurstAddress minerAddress, BurstValue amount) {
+        waitUntilNotProcessingBlock();
+        Miner miner = storageService.getMiner(minerAddress);
+        if (miner == null) return;
+        miner.setMinimumPayout(amount.doubleValue());
+    }
+
     public void payoutIfNeeded(StorageService storageService) {
         if (payoutSemaphore.availablePermits() == 0) {
             logger.info("Cannot payout - payout is already in progress.");
