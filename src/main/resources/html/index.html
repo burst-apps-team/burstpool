@@ -152,6 +152,9 @@
                             <td>Pending Balance</td><td><span id="minerPending">Loading...</span></td>
                         </tr>
                         <tr>
+                            <td>Minimum Payout</td><td><span id="minerMinimumPayout">Loading...</span></td>
+                        </tr>
+                        <tr>
                             <td>Estimated Capacity</td><td><span id="minerCapacity">Loading...</span></td>
                         </tr>
                         <tr>
@@ -162,6 +165,11 @@
                         </tr>
                         <tr>
                             <td>Software</td><td><span id="minerSoftware">Loading...</span></td>
+                        </tr>
+                        <tr id="setMinimumPayoutButton">
+                            <td colspan="2">
+                                <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#setMinimumPayoutModal">Set Minimum Payout</button>
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -225,6 +233,47 @@
                         </tr>
                     </table>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="setMinimumPayoutModal" tabindex="-1" role="dialog" aria-labelledby="setMinimumPayoutTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="setMinimumPayoutTitle">Set Minimum Payout</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <label for="setMinimumAddress">Miner Address:</label>
+                    <input type="text" disabled id="setMinimumAddress" class="form-control" placeholder="BURST-XXXX-XXXX-XXXX-XXXXX" />
+                </p><p>
+                    <label for="setMinimumAmount">New Minimum Payout:</label>
+                    <input type="text" id="setMinimumAmount" class="form-control" placeholder="Amount in BURST" />
+                </p><p>
+                    <button class="btn btn-primary" onclick="generateSetMinimumMessage();">Generate message to be signed</button>
+                </p><p>
+                    <label for="setMinimumMessage">Message to sign:</label>
+                    <input type="text" disabled id="setMinimumMessage" class="form-control" placeholder="Message to sign will appear here" />
+                </p><p>
+                    <label for="setMinimumPublicKey">Public key:</label>
+                    <input type="text" id="setMinimumPublicKey" class="form-control" placeholder="Public Key" />
+                </p><p>
+                    <label for="setMinimumSignature">Message Signature:</label>
+                    <input type="text" id="setMinimumSignature" class="form-control" placeholder="Signature" />
+                </p><p>
+                    <button onclick="setMinimumPayout();" class="btn btn-primary">Set Minimum Payout</button>
+                </p><p>
+                    <div class="callout callout-info" id="setMinimumResult">
+                        Result: <span id="setMinimumResultText"></span>
+                    </div>
+                </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>

@@ -138,7 +138,7 @@ public class Server extends NanoHTTPD {
             if (minerAddress == null || storageService.getMiner(minerAddress) == null) {
                 return new JsonPrimitive("Address not found").toString();
             }
-            if (newMinimumPayout.floatValue() < propertyService.getFloat(Props.minimumMinimumPayout)) {
+            if (Float.parseFloat(newMinimumPayout.toUnformattedString()) < propertyService.getFloat(Props.minimumMinimumPayout)) { // TODO to bypass burstkit4j bug
                 return new JsonPrimitive("New minimum payout is below the amount allowed by the pool").toString();
             }
             byte[] signatureBytes;
@@ -212,7 +212,7 @@ public class Server extends NanoHTTPD {
         minerJson.addProperty("estimatedCapacity", miner.getCapacity());
         minerJson.addProperty("nConf", miner.getNConf());
         minerJson.addProperty("share", miner.getShare());
-        minerJson.addProperty("minimumPayout", miner.getMinimumPayout().toUnformattedString());
+        minerJson.addProperty("minimumPayout", miner.getMinimumPayout().toFormattedString());
         if (!Objects.equals(miner.getName(), "")) {
             minerJson.addProperty("name", miner.getName());
         }

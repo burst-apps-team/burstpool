@@ -108,7 +108,7 @@ public class MinerTracker {
         waitUntilNotProcessingBlock();
         Miner miner = storageService.getMiner(minerAddress);
         if (miner == null) return;
-        miner.setMinimumPayout(amount.doubleValue());
+        miner.setMinimumPayout(Double.parseDouble(amount.toUnformattedString()));
     }
 
     public void payoutIfNeeded(StorageService storageService) {
