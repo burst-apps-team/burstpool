@@ -6,6 +6,8 @@ for (let i = 0; i < colors.length; i++) {
     colors[i] = generateColour();
 }
 
+let chart = null;
+
 function generateColour() {
     return "rgb(" + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + ")";
 }
@@ -73,34 +75,37 @@ function getMiners() {
         document.getElementById("minerCount").innerText = response.miners.length;
         document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
         let topTenMiners = response.miners.sort((a,b) => parseFloat(a.share) - parseFloat(b.share)).slice(0, 10);
-        let minerShares = topTenMiners.map(miner => parseFloat(miner.share));
+        let minerShares = topTenMiners.map(miner => Math.random()); // TODO revert
         let minerNames = topTenMiners.map(miner => miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")");
         let minerColors = colors.slice(0, topTenMiners.length + 1);
         let other = 1;
         minerShares.forEach(share => other -= share);
         minerShares.push(other);
         minerNames.push("Others");
-        let chart = document.getElementById("sharesChart"), newChart = htmlToElement("<canvas id=\"sharesChart\" class=\"w-100 h-100\"></canvas>");
-        chart.parentNode.replaceChild(newChart, chart);
-        new Chart(newChart, {
-            type: "pie",
-            data: {
-                datasets: [{
-                    data: minerShares,
-                    backgroundColor: minerColors
-                }],
-                labels: minerNames
-            },
-            options: {
-                animation: {
-                    duration: 0
+        if (chart == null) {
+            chart = new Chart(document.getElementById("sharesChart"), {
+                type: "pie",
+                data: {
+                    datasets: [{
+                        data: minerShares,
+                        backgroundColor: minerColors
+                    }],
+                    labels: minerNames
                 },
-                title: {
-                    display: true,
-                    text: "Pool Shares"
+                options: {
+                    title: {
+                        display: true,
+                        text: "Pool Shares"
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
                 }
-            }
-        });
+            });
+        } else {
+            chart.data.datasets[0].data = minerShares;
+            chart.data.labels = minerNames;
+            chart.update();
+        }
         miners = response.miners;
     });
 }
