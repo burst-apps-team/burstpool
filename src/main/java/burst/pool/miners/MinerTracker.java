@@ -82,7 +82,8 @@ public class MinerTracker {
         // Essentially prevents the pool from overpaying or underpaying. Even if it gave out too much to the fee recipient and reward recipient, it will now take the extra from the pending of miners.
         if (miners.size() > 0) {
             BurstValue amountRemainingEach = new BurstValue(poolReward.subtract(amountTaken.get()).divide(BigDecimal.valueOf(miners.size()), RoundingMode.DOWN));
-            miners.forEach(miner -> miner.increasePending(amountRemainingEach));
+            logger.info("Amount remaining each is " + amountRemainingEach);
+            //miners.forEach(miner -> miner.increasePending(amountRemainingEach));
         }
 
         logger.info("Finished processing winnings for block " + blockHeight + ". Reward ( + fees) is " + blockReward + ", pool fee is " + poolTake + ", forger take is " + winnerTake + ", miners took " + amountTaken.get());
