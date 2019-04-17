@@ -34,11 +34,33 @@ public class Generator {
         return hit.divide(BigInteger.valueOf(baseTarget));
     }
 
+    /*
+    java.lang.NullPointerException: null
+	at burst.pool.brs.Generator.calcDeadline(Generator.java:41) ~[burstpool.jar:?]
+	at burst.pool.pool.Pool.checkNewSubmission(Pool.java:205) ~[burstpool.jar:?]
+	at burst.pool.pool.Server.handleBurstApiCall(Server.java:70) ~[burstpool.jar:?]
+	at burst.pool.pool.Server.serve(Server.java:46) [burstpool.jar:?]
+	at fi.iki.elonen.NanoHTTPD$HTTPSession.execute(NanoHTTPD.java:840) [burstpool.jar:?]
+	at fi.iki.elonen.NanoHTTPD$ClientHandler.run(NanoHTTPD.java:189) [burstpool.jar:?]
+	at java.lang.Thread.run(Thread.java:844) [?:?]
+     */
+
     public static BigInteger calcDeadline(MiningInfoResponse miningInfo, Submission submission) throws SubmissionException {
         if (miningInfo == null) {
             throw new SubmissionException("Pool does not have mining info");
         }
-        return calculateDeadline(submission.getMiner().getBurstID().getSignedLongId(), parseUnsignedLong(submission.getNonce()), miningInfo.getGenerationSignature().getBytes(), calculateScoop(miningInfo.getGenerationSignature().getBytes(), miningInfo.getHeight()), miningInfo.getBaseTarget(), Math.toIntExact(miningInfo.getHeight())); // todo height -> long
+        return calculateDeadline(submission
+                .getMiner()
+                .getBurstID()
+                .getSignedLongId(), parseUnsignedLong(submission
+                .getNonce()), miningInfo
+                .getGenerationSignature()
+                .getBytes(), calculateScoop(miningInfo
+                .getGenerationSignature()
+                .getBytes(), miningInfo
+                .getHeight()), miningInfo
+                .getBaseTarget(), Math.toIntExact(miningInfo
+                .getHeight())); // todo height -> long
     }
 
     private static long parseUnsignedLong(String number) {

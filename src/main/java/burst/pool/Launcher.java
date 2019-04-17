@@ -1,5 +1,6 @@
 package burst.pool;
 
+import burst.kit.entity.BurstAddress;
 import burst.kit.service.BurstNodeService;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.MinerTracker;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class Launcher {
     public static void main(String[] args) { // todo catch exception
