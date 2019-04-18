@@ -36,13 +36,13 @@ public class Generator {
 
     /*
     java.lang.NullPointerException: null
-	at burst.pool.brs.Generator.calcDeadline(Generator.java:41) ~[burstpool.jar:?]
+	at burst.pool.brs.Generator.calcDeadline(Generator.java:53) ~[burstpool.jar:?]
 	at burst.pool.pool.Pool.checkNewSubmission(Pool.java:205) ~[burstpool.jar:?]
-	at burst.pool.pool.Server.handleBurstApiCall(Server.java:70) ~[burstpool.jar:?]
-	at burst.pool.pool.Server.serve(Server.java:46) [burstpool.jar:?]
-	at fi.iki.elonen.NanoHTTPD$HTTPSession.execute(NanoHTTPD.java:840) [burstpool.jar:?]
-	at fi.iki.elonen.NanoHTTPD$ClientHandler.run(NanoHTTPD.java:189) [burstpool.jar:?]
-	at java.lang.Thread.run(Thread.java:844) [?:?]
+	at burst.pool.pool.Server.handleBurstApiCall(Server.java:74) ~[burstpool.jar:?]
+	at burst.pool.pool.Server.serve(Server.java:50) ~[burstpool.jar:?]
+	at fi.iki.elonen.NanoHTTPD$HTTPSession.execute(NanoHTTPD.java:840) ~[burstpool.jar:?]
+	at fi.iki.elonen.NanoHTTPD$ClientHandler.run(NanoHTTPD.java:189) ~[burstpool.jar:?]
+	at java.lang.Thread.run(Thread.java:834) ~[?:?]
      */
 
     public static BigInteger calcDeadline(MiningInfoResponse miningInfo, Submission submission) throws SubmissionException {

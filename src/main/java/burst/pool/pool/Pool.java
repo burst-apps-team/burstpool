@@ -40,7 +40,8 @@ public class Pool {
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final Semaphore processBlockSemaphore = new Semaphore(1);
-    private final Object processDeadlineLock = new Object();
+    private final Semaphore resetRoundSemaphore = new Semaphore(1);
+    private final Semaphore processDeadlineSemaphore = new Semaphore(1);
 
     // Variables
     private final AtomicReference<Instant> roundStartTime = new AtomicReference<>();
@@ -55,7 +56,7 @@ public class Pool {
         this.nodeService = nodeService;
         disposables.add(refreshMiningInfoThread());
         disposables.add(processBlocksThread());
-        resetRound();
+        resetRound(null);
     }
 
     private Disposable processBlocksThread() {
@@ -89,8 +90,7 @@ public class Pool {
         if (miningInfo.get() == null || !Objects.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
                 || !Objects.equals(miningInfo.get().getHeight(), newMiningInfo.getHeight())) {
             logger.info("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + newMiningInfo.getGenerationSignature() +", diff " + newMiningInfo.getBaseTarget() + ")");
-            miningInfo.set(newMiningInfo);
-            resetRound();
+            resetRound(newMiningInfo);
         }
     }
 
@@ -175,11 +175,31 @@ public class Pool {
         minerTracker.payoutIfNeeded(storageService);
     }
 
-    private void resetRound() {
+    private void resetRound(MiningInfoResponse newMiningInfo) {
+        // Traffic flow - we want to stop new requests but let old ones finish before we go ahead.
+        try {
+            // Lock the reset round semaphore to stop accepting new requests
+            resetRoundSemaphore.acquire();
+            // Wait for all requests to be processed
+            while (processDeadlineSemaphore.getQueueLength() > 0) {
+                Thread.sleep(1);
+            }
+            // Lock the process block semaphore as we are going to be modifying bestDeadline
+            processDeadlineSemaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         bestDeadline.set(null);
         disposables.add(nodeService.getAccountsWithRewardRecipient(burstCrypto.getBurstAddressFromPassphrase(propertyService.getString(Props.passphrase)))
                 .subscribe(this::onRewardRecipients, this::onRewardRecipientsError));
         roundStartTime.set(Instant.now());
+        miningInfo.set(newMiningInfo);
+        // Unlock to signal we have finished modifying bestDeadline
+        processDeadlineSemaphore.release();
+        // Unlock to start accepting requests again
+        resetRoundSemaphore.release();
     }
 
     BigInteger checkNewSubmission(Submission submission, String userAgent) throws SubmissionException {
@@ -191,13 +211,25 @@ public class Pool {
             throw new SubmissionException("Reward recipient not set to pool");
         }
 
-        BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
-
-        if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
-            throw new SubmissionException("Deadline exceeds maximum allowed deadline");
+        // If we are resetting the request must be for the previous round and no longer matters - reject
+        if (resetRoundSemaphore.availablePermits() < 0) {
+            throw new SubmissionException("Cannot submit - new round starting");
         }
 
-        synchronized (processDeadlineLock) {
+        try {
+            processDeadlineSemaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new SubmissionException("Server Interrupted");
+        }
+
+        try {
+            BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
+
+            if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
+                throw new SubmissionException("Deadline exceeds maximum allowed deadline");
+            }
+
             logger.debug("New submission from " + submission.getMiner() + " of nonce " + submission.getNonce() + ", calculated deadline " + deadline.toString() + " seconds.");
 
             if (bestDeadline.get() != null) {
@@ -214,6 +246,8 @@ public class Pool {
             minerTracker.onMinerSubmittedDeadline(storageService, submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
 
             return deadline;
+        } finally {
+            processDeadlineSemaphore.release();
         }
     }
 
