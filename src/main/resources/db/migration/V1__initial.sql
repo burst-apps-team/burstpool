@@ -35,3 +35,23 @@ CREATE TABLE BurstPool.poolState (
   value TEXT,
   PRIMARY KEY (key)
 );
+
+CREATE TABLE BurstPool.wonBlocks (
+  db_id BIGINT AUTO_INCREMENT,
+  blockHeight LONG,
+  blockId BIGINT,
+  generatorId BIGINT,
+  nonce TEXT,
+  fullReward BIGINT,
+  PRIMARY KEY (db_id)
+);
+
+CREATE TABLE BurstPool.payouts (
+  db_id BIGINT AUTO_INCREMENT,
+  transactionId BIGINT,
+  senderPublicKey BINARY,
+  fee BIGINT,
+  deadline LONG,
+  attachment BINARY,
+  PRIMARY KEY (db_id)
+)

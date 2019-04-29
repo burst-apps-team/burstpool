@@ -7,11 +7,15 @@ package burst.pool.db.burstpool;
 import burst.pool.db.burstpool.tables.Bestsubmissions;
 import burst.pool.db.burstpool.tables.Minerdeadlines;
 import burst.pool.db.burstpool.tables.Miners;
+import burst.pool.db.burstpool.tables.Payouts;
 import burst.pool.db.burstpool.tables.Poolstate;
+import burst.pool.db.burstpool.tables.Wonblocks;
 import burst.pool.db.burstpool.tables.records.BestsubmissionsRecord;
 import burst.pool.db.burstpool.tables.records.MinerdeadlinesRecord;
 import burst.pool.db.burstpool.tables.records.MinersRecord;
+import burst.pool.db.burstpool.tables.records.PayoutsRecord;
 import burst.pool.db.burstpool.tables.records.PoolstateRecord;
+import burst.pool.db.burstpool.tables.records.WonblocksRecord;
 
 import javax.annotation.Generated;
 
@@ -41,6 +45,8 @@ public class Keys {
     public static final Identity<BestsubmissionsRecord, Long> IDENTITY_BESTSUBMISSIONS = Identities0.IDENTITY_BESTSUBMISSIONS;
     public static final Identity<MinerdeadlinesRecord, Long> IDENTITY_MINERDEADLINES = Identities0.IDENTITY_MINERDEADLINES;
     public static final Identity<MinersRecord, Long> IDENTITY_MINERS = Identities0.IDENTITY_MINERS;
+    public static final Identity<PayoutsRecord, Long> IDENTITY_PAYOUTS = Identities0.IDENTITY_PAYOUTS;
+    public static final Identity<WonblocksRecord, Long> IDENTITY_WONBLOCKS = Identities0.IDENTITY_WONBLOCKS;
 
     // -------------------------------------------------------------------------
     // UNIQUE and PRIMARY KEY definitions
@@ -49,7 +55,9 @@ public class Keys {
     public static final UniqueKey<BestsubmissionsRecord> CONSTRAINT_6 = UniqueKeys0.CONSTRAINT_6;
     public static final UniqueKey<MinerdeadlinesRecord> CONSTRAINT_F = UniqueKeys0.CONSTRAINT_F;
     public static final UniqueKey<MinersRecord> CONSTRAINT_8 = UniqueKeys0.CONSTRAINT_8;
+    public static final UniqueKey<PayoutsRecord> CONSTRAINT_FB = UniqueKeys0.CONSTRAINT_FB;
     public static final UniqueKey<PoolstateRecord> CONSTRAINT_3 = UniqueKeys0.CONSTRAINT_3;
+    public static final UniqueKey<WonblocksRecord> CONSTRAINT_4 = UniqueKeys0.CONSTRAINT_4;
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -64,12 +72,16 @@ public class Keys {
         public static Identity<BestsubmissionsRecord, Long> IDENTITY_BESTSUBMISSIONS = Internal.createIdentity(Bestsubmissions.BESTSUBMISSIONS, Bestsubmissions.BESTSUBMISSIONS.DB_ID);
         public static Identity<MinerdeadlinesRecord, Long> IDENTITY_MINERDEADLINES = Internal.createIdentity(Minerdeadlines.MINERDEADLINES, Minerdeadlines.MINERDEADLINES.DB_ID);
         public static Identity<MinersRecord, Long> IDENTITY_MINERS = Internal.createIdentity(Miners.MINERS, Miners.MINERS.DB_ID);
+        public static Identity<PayoutsRecord, Long> IDENTITY_PAYOUTS = Internal.createIdentity(Payouts.PAYOUTS, Payouts.PAYOUTS.DB_ID);
+        public static Identity<WonblocksRecord, Long> IDENTITY_WONBLOCKS = Internal.createIdentity(Wonblocks.WONBLOCKS, Wonblocks.WONBLOCKS.DB_ID);
     }
 
     private static class UniqueKeys0 {
         public static final UniqueKey<BestsubmissionsRecord> CONSTRAINT_6 = Internal.createUniqueKey(Bestsubmissions.BESTSUBMISSIONS, "CONSTRAINT_6", Bestsubmissions.BESTSUBMISSIONS.DB_ID);
         public static final UniqueKey<MinerdeadlinesRecord> CONSTRAINT_F = Internal.createUniqueKey(Minerdeadlines.MINERDEADLINES, "CONSTRAINT_F", Minerdeadlines.MINERDEADLINES.DB_ID);
         public static final UniqueKey<MinersRecord> CONSTRAINT_8 = Internal.createUniqueKey(Miners.MINERS, "CONSTRAINT_8", Miners.MINERS.DB_ID);
+        public static final UniqueKey<PayoutsRecord> CONSTRAINT_FB = Internal.createUniqueKey(Payouts.PAYOUTS, "CONSTRAINT_FB", Payouts.PAYOUTS.DB_ID);
         public static final UniqueKey<PoolstateRecord> CONSTRAINT_3 = Internal.createUniqueKey(Poolstate.POOLSTATE, "CONSTRAINT_3", Poolstate.POOLSTATE.KEY);
+        public static final UniqueKey<WonblocksRecord> CONSTRAINT_4 = Internal.createUniqueKey(Wonblocks.WONBLOCKS, "CONSTRAINT_4", Wonblocks.WONBLOCKS.DB_ID);
     }
 }

@@ -2,8 +2,11 @@ package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
+import burst.pool.db.burstpool.tables.Wonblocks;
 import burst.pool.db.burstpool.tables.records.BestsubmissionsRecord;
 import burst.pool.db.burstpool.tables.records.MinersRecord;
+import burst.pool.entity.Payout;
+import burst.pool.entity.WonBlock;
 import burst.pool.miners.Deadline;
 import burst.pool.miners.Miner;
 import burst.pool.miners.MinerMaths;
@@ -22,7 +25,6 @@ import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +33,9 @@ import java.util.stream.Collectors;
 import static burst.pool.db.burstpool.tables.Bestsubmissions.BESTSUBMISSIONS;
 import static burst.pool.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
 import static burst.pool.db.burstpool.tables.Miners.MINERS;
+import static burst.pool.db.burstpool.tables.Payouts.PAYOUTS;
 import static burst.pool.db.burstpool.tables.Poolstate.POOLSTATE;
+import static burst.pool.db.burstpool.tables.Wonblocks.WONBLOCKS;
 
 public class DbStorageService implements StorageService {
 
@@ -224,6 +228,20 @@ public class DbStorageService implements StorageService {
     public void removeBestSubmission(long blockHeight) {
         defaultContext.deleteFrom(BESTSUBMISSIONS)
                 .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
+                .execute();
+    }
+
+    @Override
+    public void addWonBlock(WonBlock wonBlock) {
+        defaultContext.insertInto(WONBLOCKS, WONBLOCKS.BLOCKHEIGHT, WONBLOCKS.BLOCKID, WONBLOCKS.GENERATORID, WONBLOCKS.NONCE, WONBLOCKS.FULLREWARD)
+            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce(), Long.parseUnsignedLong(wonBlock.getFullReward().toPlanck()))
+            .execute();
+    }
+
+    @Override
+    public void addPayout(Payout payout) {
+        defaultContext.insertInto(PAYOUTS, PAYOUTS.TRANSACTIONID, PAYOUTS.SENDERPUBLICKEY, PAYOUTS.FEE, PAYOUTS.DEADLINE, PAYOUTS.ATTACHMENT)
+                .values(payout.getTransactionId().getSignedLongId(), payout.getSenderPublicKey(), Long.parseUnsignedLong(payout.getFee().toPlanck()), (long) payout.getDeadline(), payout.getAttachment())
                 .execute();
     }
 

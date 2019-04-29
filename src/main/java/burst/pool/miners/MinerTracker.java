@@ -2,10 +2,13 @@ package burst.pool.miners;
 
 import burst.kit.burst.BurstCrypto;
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.BurstID;
 import burst.kit.entity.BurstValue;
 import burst.kit.entity.response.AccountResponse;
 import burst.kit.entity.response.BroadcastTransactionResponse;
 import burst.kit.service.BurstNodeService;
+import burst.pool.entity.Payout;
+import burst.pool.entity.WonBlock;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -53,8 +57,11 @@ public class MinerTracker {
         return miner;
     }
 
-    public void onBlockWon(StorageService transactionalStorageService, long blockHeight, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
+    public void onBlockWon(StorageService transactionalStorageService, long blockHeight, BurstID blockId, String nonce, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
         logger.info("Block won! Block height: " + blockHeight + ", forger: " + winner.getFullAddress());
+
+        transactionalStorageService.addWonBlock(new WonBlock((int) blockHeight, blockId, winner.getBurstID(), nonce, blockReward));
+
         BurstValue reward = blockReward;
 
         // Take pool fee
@@ -148,27 +155,32 @@ public class MinerTracker {
         Map<Payable, BurstValue> payees = new HashMap<>(); // Does not have subtracted transaction fee
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
         StringBuilder logMessage = new StringBuilder("Paying out to miners");
+        ByteBuffer transactionAttachment = ByteBuffer.allocate(8 * 2 * payableMiners.length);
         for (Payable payable : payableMiners) {
             payees.put(payable, payable.getPending());
             BurstValue actualPayout = new BurstValue(payable.getPending().subtract(transactionFeePaidPerMiner));
             recipients.put(payable.getAddress(), actualPayout);
+            transactionAttachment.putLong(payable.getAddress().getBurstID().getSignedLongId());
+            transactionAttachment.putLong(Long.parseUnsignedLong(actualPayout.toPlanck()));
             logMessage.append(", ").append(payable.getAddress().getFullAddress()).append("(").append(actualPayout).append(")");
         }
         logger.info(logMessage.toString());
 
-        compositeDisposable.add(nodeService.generateMultiOutTransaction(burstCrypto.getPublicKey(propertyService.getString(Props.passphrase)), transactionFee, 1440, recipients)
+        byte[] publicKey = burstCrypto.getPublicKey(propertyService.getString(Props.passphrase));
+
+        compositeDisposable.add(nodeService.generateMultiOutTransaction(publicKey, transactionFee, 1440, recipients)
                 .retry(propertyService.getInt(Props.payoutRetryCount))
                 .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
                 .flatMap(signedBytes -> nodeService.broadcastTransaction(signedBytes).retry(propertyService.getInt(Props.payoutRetryCount)))
-                .subscribe(response -> onPaidOut(response, payees), this::onPayoutError));
+                .subscribe(response -> onPaidOut(storageService, response, payees, publicKey, transactionFee, 1440, transactionAttachment.array()), this::onPayoutError));
     }
 
-    private void onPaidOut(BroadcastTransactionResponse response, Map<Payable, BurstValue> paidMiners) {
+    private void onPaidOut(StorageService storageService, BroadcastTransactionResponse response, Map<Payable, BurstValue> paidMiners, byte[] senderPublicKey, BurstValue fee, int deadline, byte[] transactionAttachment) {
         waitUntilNotProcessingBlock();
         for (Map.Entry<Payable, BurstValue> payment : paidMiners.entrySet()) {
             payment.getKey().decreasePending(payment.getValue());
         }
-        // todo store
+        storageService.addPayout(new Payout(response.getTransactionID(), senderPublicKey, fee, deadline, transactionAttachment));
         logger.info("Paid out, transaction id " + response.getTransactionID());
         payoutSemaphore.release();
     }

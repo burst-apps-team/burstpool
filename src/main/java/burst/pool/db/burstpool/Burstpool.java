@@ -8,7 +8,9 @@ import burst.pool.db.DefaultCatalog;
 import burst.pool.db.burstpool.tables.Bestsubmissions;
 import burst.pool.db.burstpool.tables.Minerdeadlines;
 import burst.pool.db.burstpool.tables.Miners;
+import burst.pool.db.burstpool.tables.Payouts;
 import burst.pool.db.burstpool.tables.Poolstate;
+import burst.pool.db.burstpool.tables.Wonblocks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,7 +36,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Burstpool extends SchemaImpl {
 
-    private static final long serialVersionUID = -184051675;
+    private static final long serialVersionUID = 285302409;
 
     /**
      * The reference instance of <code>BURSTPOOL</code>
@@ -57,9 +59,19 @@ public class Burstpool extends SchemaImpl {
     public final Miners MINERS = burst.pool.db.burstpool.tables.Miners.MINERS;
 
     /**
+     * The table <code>BURSTPOOL.PAYOUTS</code>.
+     */
+    public final Payouts PAYOUTS = burst.pool.db.burstpool.tables.Payouts.PAYOUTS;
+
+    /**
      * The table <code>BURSTPOOL.POOLSTATE</code>.
      */
     public final Poolstate POOLSTATE = burst.pool.db.burstpool.tables.Poolstate.POOLSTATE;
+
+    /**
+     * The table <code>BURSTPOOL.WONBLOCKS</code>.
+     */
+    public final Wonblocks WONBLOCKS = burst.pool.db.burstpool.tables.Wonblocks.WONBLOCKS;
 
     /**
      * No further instances allowed
@@ -89,6 +101,8 @@ public class Burstpool extends SchemaImpl {
             Bestsubmissions.BESTSUBMISSIONS,
             Minerdeadlines.MINERDEADLINES,
             Miners.MINERS,
-            Poolstate.POOLSTATE);
+            Payouts.PAYOUTS,
+            Poolstate.POOLSTATE,
+            Wonblocks.WONBLOCKS);
     }
 }

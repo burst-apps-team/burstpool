@@ -7,7 +7,9 @@ package burst.pool.db.burstpool;
 import burst.pool.db.burstpool.tables.Bestsubmissions;
 import burst.pool.db.burstpool.tables.Minerdeadlines;
 import burst.pool.db.burstpool.tables.Miners;
+import burst.pool.db.burstpool.tables.Payouts;
 import burst.pool.db.burstpool.tables.Poolstate;
+import burst.pool.db.burstpool.tables.Wonblocks;
 
 import javax.annotation.Generated;
 
@@ -41,7 +43,17 @@ public class Tables {
     public static final Miners MINERS = burst.pool.db.burstpool.tables.Miners.MINERS;
 
     /**
+     * The table <code>BURSTPOOL.PAYOUTS</code>.
+     */
+    public static final Payouts PAYOUTS = burst.pool.db.burstpool.tables.Payouts.PAYOUTS;
+
+    /**
      * The table <code>BURSTPOOL.POOLSTATE</code>.
      */
     public static final Poolstate POOLSTATE = burst.pool.db.burstpool.tables.Poolstate.POOLSTATE;
+
+    /**
+     * The table <code>BURSTPOOL.WONBLOCKS</code>.
+     */
+    public static final Wonblocks WONBLOCKS = burst.pool.db.burstpool.tables.Wonblocks.WONBLOCKS;
 }

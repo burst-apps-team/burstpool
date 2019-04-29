@@ -1,6 +1,8 @@
 package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
+import burst.pool.entity.Payout;
+import burst.pool.entity.WonBlock;
 import burst.pool.miners.Miner;
 import burst.pool.miners.PoolFeeRecipient;
 import burst.pool.pool.StoredSubmission;
@@ -27,4 +29,8 @@ public interface StorageService extends AutoCloseable {
     StoredSubmission getBestSubmissionForBlock(long blockHeight);
     void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission);
     void removeBestSubmission(long blockHeight);
+
+    void addWonBlock(WonBlock wonBlock);
+
+    void addPayout(Payout payout);
 }

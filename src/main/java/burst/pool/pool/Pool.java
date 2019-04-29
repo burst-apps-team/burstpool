@@ -140,7 +140,7 @@ public class Pool {
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
                     Submission submission = transactionalStorageService.getBestSubmissionForBlock(block.getHeight());
                     if (submission != null && Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
-                        minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())), fastBlocks);
+                        minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getBlock(), block.getNonce(), block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())), fastBlocks);
                     } else {
                         minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, fastBlocks);
                     }

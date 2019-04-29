@@ -7,7 +7,9 @@ package burst.pool.db.burstpool;
 import burst.pool.db.burstpool.tables.Bestsubmissions;
 import burst.pool.db.burstpool.tables.Minerdeadlines;
 import burst.pool.db.burstpool.tables.Miners;
+import burst.pool.db.burstpool.tables.Payouts;
 import burst.pool.db.burstpool.tables.Poolstate;
+import burst.pool.db.burstpool.tables.Wonblocks;
 
 import javax.annotation.Generated;
 
@@ -36,7 +38,9 @@ public class Indexes {
     public static final Index PRIMARY_KEY_6 = Indexes0.PRIMARY_KEY_6;
     public static final Index PRIMARY_KEY_F = Indexes0.PRIMARY_KEY_F;
     public static final Index PRIMARY_KEY_8 = Indexes0.PRIMARY_KEY_8;
+    public static final Index PRIMARY_KEY_FB = Indexes0.PRIMARY_KEY_FB;
     public static final Index PRIMARY_KEY_3 = Indexes0.PRIMARY_KEY_3;
+    public static final Index PRIMARY_KEY_4 = Indexes0.PRIMARY_KEY_4;
 
     // -------------------------------------------------------------------------
     // [#1459] distribute members to avoid static initialisers > 64kb
@@ -46,6 +50,8 @@ public class Indexes {
         public static Index PRIMARY_KEY_6 = Internal.createIndex("PRIMARY_KEY_6", Bestsubmissions.BESTSUBMISSIONS, new OrderField[] { Bestsubmissions.BESTSUBMISSIONS.DB_ID }, true);
         public static Index PRIMARY_KEY_F = Internal.createIndex("PRIMARY_KEY_F", Minerdeadlines.MINERDEADLINES, new OrderField[] { Minerdeadlines.MINERDEADLINES.DB_ID }, true);
         public static Index PRIMARY_KEY_8 = Internal.createIndex("PRIMARY_KEY_8", Miners.MINERS, new OrderField[] { Miners.MINERS.DB_ID }, true);
+        public static Index PRIMARY_KEY_FB = Internal.createIndex("PRIMARY_KEY_FB", Payouts.PAYOUTS, new OrderField[] { Payouts.PAYOUTS.DB_ID }, true);
         public static Index PRIMARY_KEY_3 = Internal.createIndex("PRIMARY_KEY_3", Poolstate.POOLSTATE, new OrderField[] { Poolstate.POOLSTATE.KEY }, true);
+        public static Index PRIMARY_KEY_4 = Internal.createIndex("PRIMARY_KEY_4", Wonblocks.WONBLOCKS, new OrderField[] { Wonblocks.WONBLOCKS.DB_ID }, true);
     }
 }

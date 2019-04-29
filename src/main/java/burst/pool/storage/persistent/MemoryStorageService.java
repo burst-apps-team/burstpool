@@ -2,6 +2,8 @@ package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
+import burst.pool.entity.Payout;
+import burst.pool.entity.WonBlock;
 import burst.pool.miners.Deadline;
 import burst.pool.miners.Miner;
 import burst.pool.miners.MinerMaths;
@@ -126,6 +128,16 @@ public class MemoryStorageService implements StorageService {
         synchronized (bestSubmissionForBlock) {
             bestSubmissionForBlock.get(blockHeight);
         }
+    }
+
+    @Override
+    public void addWonBlock(WonBlock wonBlock) {
+
+    }
+
+    @Override
+    public void addPayout(Payout payout) {
+
     }
 
     @Override
