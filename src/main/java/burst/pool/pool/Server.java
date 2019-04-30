@@ -21,6 +21,8 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URLConnection;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Server extends NanoHTTPD {
     private static final String[] allowedFileExtensions = new String[]{".html", ".css", ".js", ".ico"};
@@ -167,6 +169,20 @@ public class Server extends NanoHTTPD {
             }
             minerTracker.setMinerMinimumPayout(storageService, minerAddress, newMinimumPayout);
             return new JsonPrimitive("Success").toString();
+        } else if (session.getUri().startsWith("/api/getTop10Miners")) {
+            AtomicReference<Double> othersShare = new AtomicReference<>(1d);
+            JsonArray topMiners = new JsonArray();
+            storageService.getMiners().stream()
+                    .sorted((m1, m2) -> Double.compare(m2.getShare(), m1.getShare())) // Reverse order - highest to lowest
+                    .limit(10)
+                    .forEach(miner -> {
+                        topMiners.add(minerToJson(miner));
+                        othersShare.updateAndGet(share -> share - miner.getShare());
+                    });
+            JsonObject response = new JsonObject();
+            response.add("topMiners", topMiners);
+            response.addProperty("othersShare", othersShare.get());
+            return response.toString();
         } else {
             return "null";
         }

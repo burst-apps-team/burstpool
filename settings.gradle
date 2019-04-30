@@ -1,1 +1,3 @@
 rootProject.name = 'burstcoin-pool'
+include 'migrator'
+

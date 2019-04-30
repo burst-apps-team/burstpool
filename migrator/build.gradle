@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+}
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'nu.studer.jooq'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    implementation "org.jooq:jooq"
+    implementation "org.jooq:jooq-meta"
+    implementation "org.jooq:jooq-codegen"
+    implementation "com.h2database:h2:1.4.197"
+    implementation 'com.github.burst-apps-team:burstkit4j:v0.9-beta5'
+    compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
+    jooqRuntime group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
+}
+
+jooq {
+    version = "3.11.9"
+    edition = "OSS"
+    burstPool(sourceSets.main) {
+        jdbc {
+            url = "jdbc:mariadb://localhost:3306/nogrod"
+            user = "root"
+        }
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+            database {
+                includes = ".*"
+            }
+            target {
+                packageName = "burst.pool.migrator.nogroddb"
+                directory = "src/main/java"
+            }
+        }
+    }
+}
