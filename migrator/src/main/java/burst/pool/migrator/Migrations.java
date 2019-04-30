@@ -4,11 +4,13 @@ import burst.kit.entity.BurstAddress;
 import burst.pool.migrator.db.burstpool.tables.Wonblocks;
 import burst.pool.migrator.entity.MinerWithCapacity;
 import burst.pool.migrator.nogroddb.nogrod.tables.records.BlockRecord;
+import burst.pool.migrator.nogroddb.nogrod.tables.records.NonceSubmissionRecord;
 import org.jooq.DSLContext;
 import org.jooq.types.ULong;
 
 import java.util.List;
 
+import static burst.pool.migrator.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
 import static burst.pool.migrator.db.burstpool.tables.Miners.MINERS;
 import static burst.pool.migrator.db.burstpool.tables.Poolstate.POOLSTATE;
 import static burst.pool.migrator.db.burstpool.tables.Wonblocks.WONBLOCKS;
@@ -30,6 +32,7 @@ public class Migrations implements Runnable {
     public void run() {
         migrateMiners();
         migrateWonBlocks();
+        migrateMinerDeadlines();
     }
 
     private void migrateMiners() {
@@ -68,6 +71,15 @@ public class Migrations implements Runnable {
                 .execute();
     }
 
+    private void migrateMinerDeadlines() {
+        List<NonceSubmissionRecord> nonceSubmissions = source.selectFrom(NONCE_SUBMISSION)
+                .fetch();
+        nonceSubmissions.forEach(nonceSubmission -> target.insertInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
+                // TODO Lack of baseTarget is a SERIOUS PROBLEM for calculating hitSum and therefore capacity
+                .values(getMinerAccountIdFromTableId(nonceSubmission.getMinerId()), nonceSubmission.getBlockHeight().longValue(), nonceSubmission.getDeadline().longValue(), 0L /* TODO Nogrod does not store basetarget? */)
+                .execute());
+    }
+
     private long getAccountCapacity(ULong id) {
         return source.selectFrom(MINER)
                 .where(MINER.ID.eq(id))
@@ -81,5 +93,13 @@ public class Migrations implements Runnable {
                 .fetchAny()
                 .getNonce()
                 .toString();
+    }
+
+    private long getMinerAccountIdFromTableId(ULong tableId) {
+        String address = source.selectFrom(ACCOUNT)
+                .where(ACCOUNT.ID.eq(tableId))
+                .fetchAny()
+                .getAddress();
+        return BurstAddress.fromRs(address).getBurstID().getSignedLongId();
     }
 }
