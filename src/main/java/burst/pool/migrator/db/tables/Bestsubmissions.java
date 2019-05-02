@@ -8,13 +8,24 @@ import burst.pool.migrator.db.Indexes;
 import burst.pool.migrator.db.Keys;
 import burst.pool.migrator.db.Pooldb;
 import burst.pool.migrator.db.tables.records.BestsubmissionsRecord;
-import org.jooq.*;
-import org.jooq.impl.DSL;
-import org.jooq.impl.TableImpl;
 
-import javax.annotation.Generated;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Generated;
+
+import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Identity;
+import org.jooq.Index;
+import org.jooq.Name;
+import org.jooq.Record;
+import org.jooq.Schema;
+import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.UniqueKey;
+import org.jooq.impl.DSL;
+import org.jooq.impl.TableImpl;
 
 
 /**
@@ -53,22 +64,22 @@ public class Bestsubmissions extends TableImpl<BestsubmissionsRecord> {
     /**
      * The column <code>pooldb.bestsubmissions.height</code>.
      */
-    public final TableField<BestsubmissionsRecord, Long> HEIGHT = createField("height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<BestsubmissionsRecord, Long> HEIGHT = createField("height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.bestsubmissions.accountId</code>.
      */
-    public final TableField<BestsubmissionsRecord, Long> ACCOUNTID = createField("accountId", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<BestsubmissionsRecord, Long> ACCOUNTID = createField("accountId", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.bestsubmissions.nonce</code>.
      */
-    public final TableField<BestsubmissionsRecord, String> NONCE = createField("nonce", org.jooq.impl.SQLDataType.CLOB.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
+    public final TableField<BestsubmissionsRecord, String> NONCE = createField("nonce", org.jooq.impl.SQLDataType.CLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
 
     /**
      * The column <code>pooldb.bestsubmissions.deadline</code>.
      */
-    public final TableField<BestsubmissionsRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<BestsubmissionsRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * Create a <code>pooldb.bestsubmissions</code> table reference

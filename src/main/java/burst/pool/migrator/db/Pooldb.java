@@ -4,15 +4,23 @@
 package burst.pool.migrator.db;
 
 
-import burst.pool.migrator.db.tables.*;
-import org.jooq.Catalog;
-import org.jooq.Table;
-import org.jooq.impl.SchemaImpl;
+import burst.pool.migrator.db.tables.Bestsubmissions;
+import burst.pool.migrator.db.tables.FlywaySchemaHistory;
+import burst.pool.migrator.db.tables.Minerdeadlines;
+import burst.pool.migrator.db.tables.Miners;
+import burst.pool.migrator.db.tables.Payouts;
+import burst.pool.migrator.db.tables.Poolstate;
+import burst.pool.migrator.db.tables.Wonblocks;
 
-import javax.annotation.Generated;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Generated;
+
+import org.jooq.Catalog;
+import org.jooq.Table;
+import org.jooq.impl.SchemaImpl;
 
 
 /**

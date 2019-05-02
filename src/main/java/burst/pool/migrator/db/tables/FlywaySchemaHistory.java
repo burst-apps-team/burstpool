@@ -8,14 +8,24 @@ import burst.pool.migrator.db.Indexes;
 import burst.pool.migrator.db.Keys;
 import burst.pool.migrator.db.Pooldb;
 import burst.pool.migrator.db.tables.records.FlywaySchemaHistoryRecord;
-import org.jooq.*;
-import org.jooq.impl.DSL;
-import org.jooq.impl.TableImpl;
 
-import javax.annotation.Generated;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Generated;
+
+import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Index;
+import org.jooq.Name;
+import org.jooq.Record;
+import org.jooq.Schema;
+import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.UniqueKey;
+import org.jooq.impl.DSL;
+import org.jooq.impl.TableImpl;
 
 
 /**
@@ -54,7 +64,7 @@ public class FlywaySchemaHistory extends TableImpl<FlywaySchemaHistoryRecord> {
     /**
      * The column <code>pooldb.flyway_schema_history.version</code>.
      */
-    public final TableField<FlywaySchemaHistoryRecord, String> VERSION = createField("version", org.jooq.impl.SQLDataType.VARCHAR(50).defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.VARCHAR)), this, "");
+    public final TableField<FlywaySchemaHistoryRecord, String> VERSION = createField("version", org.jooq.impl.SQLDataType.VARCHAR(50).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.VARCHAR)), this, "");
 
     /**
      * The column <code>pooldb.flyway_schema_history.description</code>.
@@ -74,7 +84,7 @@ public class FlywaySchemaHistory extends TableImpl<FlywaySchemaHistoryRecord> {
     /**
      * The column <code>pooldb.flyway_schema_history.checksum</code>.
      */
-    public final TableField<FlywaySchemaHistoryRecord, Integer> CHECKSUM = createField("checksum", org.jooq.impl.SQLDataType.INTEGER.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.INTEGER)), this, "");
+    public final TableField<FlywaySchemaHistoryRecord, Integer> CHECKSUM = createField("checksum", org.jooq.impl.SQLDataType.INTEGER.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.INTEGER)), this, "");
 
     /**
      * The column <code>pooldb.flyway_schema_history.installed_by</code>.
@@ -84,7 +94,7 @@ public class FlywaySchemaHistory extends TableImpl<FlywaySchemaHistoryRecord> {
     /**
      * The column <code>pooldb.flyway_schema_history.installed_on</code>.
      */
-    public final TableField<FlywaySchemaHistoryRecord, Timestamp> INSTALLED_ON = createField("installed_on", org.jooq.impl.SQLDataType.TIMESTAMP.nullable(false).defaultValue(DSL.field("current_timestamp()", org.jooq.impl.SQLDataType.TIMESTAMP)), this, "");
+    public final TableField<FlywaySchemaHistoryRecord, Timestamp> INSTALLED_ON = createField("installed_on", org.jooq.impl.SQLDataType.TIMESTAMP.nullable(false).defaultValue(org.jooq.impl.DSL.field("current_timestamp()", org.jooq.impl.SQLDataType.TIMESTAMP)), this, "");
 
     /**
      * The column <code>pooldb.flyway_schema_history.execution_time</code>.

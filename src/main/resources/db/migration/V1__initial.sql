@@ -8,7 +8,7 @@ CREATE TABLE miners (
   name TEXT,
   user_agent TEXT,
   PRIMARY KEY (db_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE minerDeadlines (
   db_id BIGINT AUTO_INCREMENT,
@@ -17,7 +17,7 @@ CREATE TABLE minerDeadlines (
   deadline BIGINT,
   baseTarget BIGINT,
   PRIMARY KEY (db_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE bestSubmissions (
   db_id BIGINT AUTO_INCREMENT,
@@ -26,13 +26,13 @@ CREATE TABLE bestSubmissions (
   nonce TEXT,
   deadline BIGINT,
   PRIMARY KEY (db_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE poolState (
   `key` VARCHAR(50),
   value TEXT,
   PRIMARY KEY (`key`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE wonBlocks (
   db_id BIGINT AUTO_INCREMENT,
@@ -42,7 +42,7 @@ CREATE TABLE wonBlocks (
   nonce TEXT,
   fullReward BIGINT,
   PRIMARY KEY (db_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE payouts (
   db_id BIGINT AUTO_INCREMENT,
@@ -52,4 +52,4 @@ CREATE TABLE payouts (
   deadline BIGINT,
   attachment BINARY,
   PRIMARY KEY (db_id)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

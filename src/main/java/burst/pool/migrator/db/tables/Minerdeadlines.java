@@ -8,13 +8,24 @@ import burst.pool.migrator.db.Indexes;
 import burst.pool.migrator.db.Keys;
 import burst.pool.migrator.db.Pooldb;
 import burst.pool.migrator.db.tables.records.MinerdeadlinesRecord;
-import org.jooq.*;
-import org.jooq.impl.DSL;
-import org.jooq.impl.TableImpl;
 
-import javax.annotation.Generated;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Generated;
+
+import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Identity;
+import org.jooq.Index;
+import org.jooq.Name;
+import org.jooq.Record;
+import org.jooq.Schema;
+import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.UniqueKey;
+import org.jooq.impl.DSL;
+import org.jooq.impl.TableImpl;
 
 
 /**
@@ -53,22 +64,22 @@ public class Minerdeadlines extends TableImpl<MinerdeadlinesRecord> {
     /**
      * The column <code>pooldb.minerdeadlines.account_id</code>.
      */
-    public final TableField<MinerdeadlinesRecord, Long> ACCOUNT_ID = createField("account_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<MinerdeadlinesRecord, Long> ACCOUNT_ID = createField("account_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.minerdeadlines.height</code>.
      */
-    public final TableField<MinerdeadlinesRecord, Long> HEIGHT = createField("height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<MinerdeadlinesRecord, Long> HEIGHT = createField("height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.minerdeadlines.deadline</code>.
      */
-    public final TableField<MinerdeadlinesRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<MinerdeadlinesRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.minerdeadlines.baseTarget</code>.
      */
-    public final TableField<MinerdeadlinesRecord, Long> BASETARGET = createField("baseTarget", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<MinerdeadlinesRecord, Long> BASETARGET = createField("baseTarget", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * Create a <code>pooldb.minerdeadlines</code> table reference

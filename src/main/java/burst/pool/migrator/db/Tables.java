@@ -4,7 +4,13 @@
 package burst.pool.migrator.db;
 
 
-import burst.pool.migrator.db.tables.*;
+import burst.pool.migrator.db.tables.Bestsubmissions;
+import burst.pool.migrator.db.tables.FlywaySchemaHistory;
+import burst.pool.migrator.db.tables.Minerdeadlines;
+import burst.pool.migrator.db.tables.Miners;
+import burst.pool.migrator.db.tables.Payouts;
+import burst.pool.migrator.db.tables.Poolstate;
+import burst.pool.migrator.db.tables.Wonblocks;
 
 import javax.annotation.Generated;
 
@@ -30,22 +36,22 @@ public class Tables {
     /**
      * The table <code>pooldb.flyway_schema_history</code>.
      */
-    public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
+    public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = burst.pool.migrator.db.tables.FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
 
     /**
      * The table <code>pooldb.minerdeadlines</code>.
      */
-    public static final Minerdeadlines MINERDEADLINES = Minerdeadlines.MINERDEADLINES;
+    public static final Minerdeadlines MINERDEADLINES = burst.pool.migrator.db.tables.Minerdeadlines.MINERDEADLINES;
 
     /**
      * The table <code>pooldb.miners</code>.
      */
-    public static final Miners MINERS = Miners.MINERS;
+    public static final Miners MINERS = burst.pool.migrator.db.tables.Miners.MINERS;
 
     /**
      * The table <code>pooldb.payouts</code>.
      */
-    public static final Payouts PAYOUTS = Payouts.PAYOUTS;
+    public static final Payouts PAYOUTS = burst.pool.migrator.db.tables.Payouts.PAYOUTS;
 
     /**
      * The table <code>pooldb.poolstate</code>.
@@ -55,5 +61,5 @@ public class Tables {
     /**
      * The table <code>pooldb.wonblocks</code>.
      */
-    public static final Wonblocks WONBLOCKS = Wonblocks.WONBLOCKS;
+    public static final Wonblocks WONBLOCKS = burst.pool.migrator.db.tables.Wonblocks.WONBLOCKS;
 }

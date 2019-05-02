@@ -4,6 +4,8 @@ import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
+import org.mariadb.jdbc.MariaDbDataSource;
+import org.mariadb.jdbc.MariaDbPoolDataSource;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

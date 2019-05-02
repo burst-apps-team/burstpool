@@ -74,7 +74,7 @@ jooq {
                 inputSchema = "pooldb"
             }
             target {
-                packageName = "burst.pool.db"
+                packageName = "burst.pool.migrator.db"
                 directory = "src/main/java"
             }
         }

@@ -8,13 +8,24 @@ import burst.pool.migrator.db.Indexes;
 import burst.pool.migrator.db.Keys;
 import burst.pool.migrator.db.Pooldb;
 import burst.pool.migrator.db.tables.records.PayoutsRecord;
-import org.jooq.*;
-import org.jooq.impl.DSL;
-import org.jooq.impl.TableImpl;
 
-import javax.annotation.Generated;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Generated;
+
+import org.jooq.Field;
+import org.jooq.ForeignKey;
+import org.jooq.Identity;
+import org.jooq.Index;
+import org.jooq.Name;
+import org.jooq.Record;
+import org.jooq.Schema;
+import org.jooq.Table;
+import org.jooq.TableField;
+import org.jooq.UniqueKey;
+import org.jooq.impl.DSL;
+import org.jooq.impl.TableImpl;
 
 
 /**
@@ -53,27 +64,27 @@ public class Payouts extends TableImpl<PayoutsRecord> {
     /**
      * The column <code>pooldb.payouts.transactionId</code>.
      */
-    public final TableField<PayoutsRecord, Long> TRANSACTIONID = createField("transactionId", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<PayoutsRecord, Long> TRANSACTIONID = createField("transactionId", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.payouts.senderPublicKey</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> SENDERPUBLICKEY = createField("senderPublicKey", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> SENDERPUBLICKEY = createField("senderPublicKey", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
 
     /**
      * The column <code>pooldb.payouts.fee</code>.
      */
-    public final TableField<PayoutsRecord, Long> FEE = createField("fee", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<PayoutsRecord, Long> FEE = createField("fee", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.payouts.deadline</code>.
      */
-    public final TableField<PayoutsRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<PayoutsRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>pooldb.payouts.attachment</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> ATTACHMENT = createField("attachment", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> ATTACHMENT = createField("attachment", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
 
     /**
      * Create a <code>pooldb.payouts</code> table reference

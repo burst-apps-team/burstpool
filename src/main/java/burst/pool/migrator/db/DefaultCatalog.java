@@ -4,13 +4,14 @@
 package burst.pool.migrator.db;
 
 
-import org.jooq.Schema;
-import org.jooq.impl.CatalogImpl;
-
-import javax.annotation.Generated;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import javax.annotation.Generated;
+
+import org.jooq.Schema;
+import org.jooq.impl.CatalogImpl;
 
 
 /**
@@ -36,7 +37,7 @@ public class DefaultCatalog extends CatalogImpl {
     /**
      * The schema <code>pooldb</code>.
      */
-    public final Pooldb POOLDB = Pooldb.POOLDB;
+    public final Pooldb POOLDB = burst.pool.migrator.db.Pooldb.POOLDB;
 
     /**
      * No further instances allowed
