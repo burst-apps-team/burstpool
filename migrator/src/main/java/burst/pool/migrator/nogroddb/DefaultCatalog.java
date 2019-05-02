@@ -4,11 +4,6 @@
 package burst.pool.migrator.nogroddb;
 
 
-import burst.pool.migrator.nogroddb.information_schema.InformationSchema;
-import burst.pool.migrator.nogroddb.mysql.Mysql;
-import burst.pool.migrator.nogroddb.nogrod.Nogrod;
-import burst.pool.migrator.nogroddb.performance_schema.PerformanceSchema;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -32,7 +27,7 @@ import org.jooq.impl.CatalogImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class DefaultCatalog extends CatalogImpl {
 
-    private static final long serialVersionUID = -1743104338;
+    private static final long serialVersionUID = -1288860255;
 
     /**
      * The reference instance of <code></code>
@@ -40,24 +35,9 @@ public class DefaultCatalog extends CatalogImpl {
     public static final DefaultCatalog DEFAULT_CATALOG = new DefaultCatalog();
 
     /**
-     * The schema <code>information_schema</code>.
+     * The schema <code>nogrod_vlp</code>.
      */
-    public final InformationSchema INFORMATION_SCHEMA = burst.pool.migrator.nogroddb.information_schema.InformationSchema.INFORMATION_SCHEMA;
-
-    /**
-     * The schema <code>mysql</code>.
-     */
-    public final Mysql MYSQL = burst.pool.migrator.nogroddb.mysql.Mysql.MYSQL;
-
-    /**
-     * The schema <code>nogrod</code>.
-     */
-    public final Nogrod NOGROD = burst.pool.migrator.nogroddb.nogrod.Nogrod.NOGROD;
-
-    /**
-     * The schema <code>performance_schema</code>.
-     */
-    public final PerformanceSchema PERFORMANCE_SCHEMA = burst.pool.migrator.nogroddb.performance_schema.PerformanceSchema.PERFORMANCE_SCHEMA;
+    public final NogrodVlp NOGROD_VLP = burst.pool.migrator.nogroddb.NogrodVlp.NOGROD_VLP;
 
     /**
      * No further instances allowed
@@ -75,9 +55,6 @@ public class DefaultCatalog extends CatalogImpl {
 
     private final List<Schema> getSchemas0() {
         return Arrays.<Schema>asList(
-            InformationSchema.INFORMATION_SCHEMA,
-            Mysql.MYSQL,
-            Nogrod.NOGROD,
-            PerformanceSchema.PERFORMANCE_SCHEMA);
+            NogrodVlp.NOGROD_VLP);
     }
 }

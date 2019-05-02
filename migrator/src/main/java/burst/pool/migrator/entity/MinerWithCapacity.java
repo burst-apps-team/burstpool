@@ -1,6 +1,6 @@
 package burst.pool.migrator.entity;
 
-import burst.pool.migrator.nogroddb.nogrod.tables.records.AccountRecord;
+import burst.pool.migrator.nogroddb.tables.records.AccountRecord;
 
 public class MinerWithCapacity {
     private final AccountRecord account;

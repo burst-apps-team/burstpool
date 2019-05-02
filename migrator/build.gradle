@@ -27,18 +27,17 @@ dependencies {
 jooq {
     version = "3.11.9"
     edition = "OSS"
-    burstPool(sourceSets.main) {
+    nogrod(sourceSets.main) {
         jdbc {
-            url = "jdbc:mariadb://localhost:3306/nogrod"
+            url = "jdbc:mariadb://localhost:3306/nogrod_vlp"
             user = "root"
         }
         generator {
-            name = 'org.jooq.codegen.DefaultGenerator'
-            strategy {
-                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
-            }
+            name = 'org.jooq.codegen.JavaGenerator'
             database {
                 includes = ".*"
+                name = "org.jooq.meta.mariadb.MariaDBDatabase"
+                inputSchema = "nogrod_vlp"
             }
             target {
                 packageName = "burst.pool.migrator.nogroddb"
