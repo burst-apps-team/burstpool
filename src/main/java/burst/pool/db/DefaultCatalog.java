@@ -4,10 +4,6 @@
 package burst.pool.db;
 
 
-import burst.pool.db.burstpool.Burstpool;
-import burst.pool.db.information_schema.InformationSchema;
-import burst.pool.db.public_.Public;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +27,7 @@ import org.jooq.impl.CatalogImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class DefaultCatalog extends CatalogImpl {
 
-    private static final long serialVersionUID = -131241772;
+    private static final long serialVersionUID = 509685920;
 
     /**
      * The reference instance of <code></code>
@@ -39,19 +35,9 @@ public class DefaultCatalog extends CatalogImpl {
     public static final DefaultCatalog DEFAULT_CATALOG = new DefaultCatalog();
 
     /**
-     * The schema <code>BURSTPOOL</code>.
+     * The schema <code>pooldb</code>.
      */
-    public final Burstpool BURSTPOOL = burst.pool.db.burstpool.Burstpool.BURSTPOOL;
-
-    /**
-     * The schema <code>INFORMATION_SCHEMA</code>.
-     */
-    public final InformationSchema INFORMATION_SCHEMA = burst.pool.db.information_schema.InformationSchema.INFORMATION_SCHEMA;
-
-    /**
-     * The schema <code>PUBLIC</code>.
-     */
-    public final Public PUBLIC = burst.pool.db.public_.Public.PUBLIC;
+    public final Pooldb POOLDB = burst.pool.db.Pooldb.POOLDB;
 
     /**
      * No further instances allowed
@@ -69,8 +55,6 @@ public class DefaultCatalog extends CatalogImpl {
 
     private final List<Schema> getSchemas0() {
         return Arrays.<Schema>asList(
-            Burstpool.BURSTPOOL,
-            InformationSchema.INFORMATION_SCHEMA,
-            Public.PUBLIC);
+            Pooldb.POOLDB);
     }
 }

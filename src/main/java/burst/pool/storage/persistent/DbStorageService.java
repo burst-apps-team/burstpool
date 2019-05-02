@@ -2,9 +2,8 @@ package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
-import burst.pool.db.burstpool.tables.Wonblocks;
-import burst.pool.db.burstpool.tables.records.BestsubmissionsRecord;
-import burst.pool.db.burstpool.tables.records.MinersRecord;
+import burst.pool.db.tables.records.BestsubmissionsRecord;
+import burst.pool.db.tables.records.MinersRecord;
 import burst.pool.entity.Payout;
 import burst.pool.entity.WonBlock;
 import burst.pool.miners.Deadline;
@@ -30,12 +29,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static burst.pool.db.burstpool.tables.Bestsubmissions.BESTSUBMISSIONS;
-import static burst.pool.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
-import static burst.pool.db.burstpool.tables.Miners.MINERS;
-import static burst.pool.db.burstpool.tables.Payouts.PAYOUTS;
-import static burst.pool.db.burstpool.tables.Poolstate.POOLSTATE;
-import static burst.pool.db.burstpool.tables.Wonblocks.WONBLOCKS;
+import static burst.pool.db.tables.Bestsubmissions.BESTSUBMISSIONS;
+import static burst.pool.db.tables.Minerdeadlines.MINERDEADLINES;
+import static burst.pool.db.tables.Miners.MINERS;
+import static burst.pool.db.tables.Payouts.PAYOUTS;
+import static burst.pool.db.tables.Poolstate.POOLSTATE;
+import static burst.pool.db.tables.Wonblocks.WONBLOCKS;
 
 public class DbStorageService implements StorageService {
 

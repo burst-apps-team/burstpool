@@ -12,7 +12,7 @@ buildscript {
 }
 
 plugins {
-    id "org.flywaydb.flyway" version "5.2.4"
+    id "org.flywaydb.flyway" version "6.0.0-beta"
 }
 
 repositories {
@@ -28,33 +28,34 @@ apply plugin: 'nu.studer.jooq'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def dburl =  "jdbc:h2:./build/burstPoolDb"
-def dbusername = "sa"
+def dburl =  "jdbc:mariadb://localhost:3306/pooldb"
+def dbusername = "root"
 
 dependencies {
     implementation 'org.apache.poi:poi-ooxml:3.17'
     implementation 'io.reactivex.rxjava2:rxjava:2.1.15'
     implementation 'com.github.burst-apps-team:burstkit4j:v0.9-beta5'
     implementation 'org.nanohttpd:nanohttpd:2.2.0'
-    implementation "org.flywaydb:flyway-core:5.2.4"
+    implementation "org.flywaydb:flyway-core:6.0.0-beta"
     implementation "org.jooq:jooq"
     implementation "org.jooq:jooq-meta"
     implementation "org.jooq:jooq-codegen"
-    implementation "org.flywaydb:flyway-core:2.5.4"
     implementation "org.apache.logging.log4j:log4j-api:2.11.1"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.11.1"
     implementation "org.slf4j:slf4j-api:1.7.25"
     implementation 'com.zaxxer:HikariCP:3.3.1'
 
     // Needed for build script so "compile" needed
-    compile "com.h2database:h2:1.4.197"
-    jooqRuntime "com.h2database:h2:1.4.197"
+    //compile "com.h2database:h2:1.4.197"
+    //jooqRuntime "com.h2database:h2:1.4.197"
+    compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
+    jooqRuntime group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
 }
 
 flyway {
     url = "${dburl}"
     user = "${dbusername}"
-    locations = ["filesystem:src/main/resources/db/migration"]
+    locations = ["filesystem:"+project.projectDir.toString()+"/src/main/resources/db/migration"]
 }
 
 jooq {
@@ -66,12 +67,11 @@ jooq {
             user = "${dbusername}"
         }
         generator {
-            name = 'org.jooq.codegen.DefaultGenerator'
-            strategy {
-                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
-            }
+            name = 'org.jooq.codegen.JavaGenerator'
             database {
                 includes = ".*"
+                name = "org.jooq.meta.mariadb.MariaDBDatabase"
+                inputSchema = "pooldb"
             }
             target {
                 packageName = "burst.pool.db"

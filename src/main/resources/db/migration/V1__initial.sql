@@ -1,6 +1,4 @@
-CREATE SCHEMA BurstPool;
-
-CREATE TABLE BurstPool.miners (
+CREATE TABLE miners (
   db_id BIGINT AUTO_INCREMENT,
   account_id BIGINT,
   pending_balance DOUBLE,
@@ -12,33 +10,33 @@ CREATE TABLE BurstPool.miners (
   PRIMARY KEY (db_id)
 );
 
-CREATE TABLE BurstPool.minerDeadlines (
+CREATE TABLE minerDeadlines (
   db_id BIGINT AUTO_INCREMENT,
   account_id BIGINT,
-  height LONG,
+  height BIGINT,
   deadline BIGINT,
   baseTarget BIGINT,
   PRIMARY KEY (db_id)
 );
 
-CREATE TABLE BurstPool.bestSubmissions (
+CREATE TABLE bestSubmissions (
   db_id BIGINT AUTO_INCREMENT,
-  height LONG,
+  height BIGINT,
   accountId BIGINT,
   nonce TEXT,
   deadline BIGINT,
   PRIMARY KEY (db_id)
 );
 
-CREATE TABLE BurstPool.poolState (
-  key VARCHAR(50),
+CREATE TABLE poolState (
+  `key` VARCHAR(50),
   value TEXT,
-  PRIMARY KEY (key)
+  PRIMARY KEY (`key`)
 );
 
-CREATE TABLE BurstPool.wonBlocks (
+CREATE TABLE wonBlocks (
   db_id BIGINT AUTO_INCREMENT,
-  blockHeight LONG,
+  blockHeight BIGINT,
   blockId BIGINT,
   generatorId BIGINT,
   nonce TEXT,
@@ -46,12 +44,12 @@ CREATE TABLE BurstPool.wonBlocks (
   PRIMARY KEY (db_id)
 );
 
-CREATE TABLE BurstPool.payouts (
+CREATE TABLE payouts (
   db_id BIGINT AUTO_INCREMENT,
   transactionId BIGINT,
   senderPublicKey BINARY,
   fee BIGINT,
-  deadline LONG,
+  deadline BIGINT,
   attachment BINARY,
   PRIMARY KEY (db_id)
-)
+);

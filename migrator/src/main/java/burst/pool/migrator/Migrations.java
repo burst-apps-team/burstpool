@@ -11,10 +11,10 @@ import org.jooq.types.ULong;
 import java.util.List;
 import java.util.Map;
 
-import static burst.pool.migrator.db.burstpool.tables.Minerdeadlines.MINERDEADLINES;
-import static burst.pool.migrator.db.burstpool.tables.Miners.MINERS;
-import static burst.pool.migrator.db.burstpool.tables.Poolstate.POOLSTATE;
-import static burst.pool.migrator.db.burstpool.tables.Wonblocks.WONBLOCKS;
+import static burst.pool.migrator.db.tables.Minerdeadlines.MINERDEADLINES;
+import static burst.pool.migrator.db.tables.Miners.MINERS;
+import static burst.pool.migrator.db.tables.Poolstate.POOLSTATE;
+import static burst.pool.migrator.db.tables.Wonblocks.WONBLOCKS;
 import static burst.pool.migrator.nogroddb.tables.Account.ACCOUNT;
 import static burst.pool.migrator.nogroddb.tables.Block.BLOCK;
 import static burst.pool.migrator.nogroddb.tables.Miner.MINER;
