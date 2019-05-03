@@ -15,16 +15,24 @@ import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.ehcache.Cache;
+import org.ehcache.CacheManager;
+import org.ehcache.config.CacheConfiguration;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
+import org.jooq.Table;
 import org.jooq.exception.DataAccessException;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,6 +57,8 @@ public class DbStorageService implements StorageService {
     private final HikariDataSource connectionPool;
     private final DSLContext defaultContext;
     private final SQLDialect sqlDialect;
+
+    private final CacheManager cacheManager;
 
     private final Object newMinerLock = new Object();
 
@@ -80,15 +90,38 @@ public class DbStorageService implements StorageService {
 
         connectionPool = new HikariDataSource(hikariConfig);
         defaultContext = DSL.using(connectionPool.getConnection(), sqlDialect);
+
+        CacheManagerBuilder cacheManager = CacheManagerBuilder.newCacheManagerBuilder();
+        CacheConfiguration<String, Object> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, Object.class, ResourcePoolsBuilder.heap(1024 * 1024).build()).build();
+        cacheManager = cacheManager.withCache(BESTSUBMISSIONS.getName(), cacheConfiguration);
+        cacheManager = cacheManager.withCache(MINERDEADLINES.getName(), cacheConfiguration);
+        cacheManager = cacheManager.withCache(MINERS.getName(), cacheConfiguration);
+        cacheManager = cacheManager.withCache(PAYOUTS.getName(), cacheConfiguration);
+        cacheManager = cacheManager.withCache(POOLSTATE.getName(), cacheConfiguration);
+        cacheManager = cacheManager.withCache(WONBLOCKS.getName(), cacheConfiguration);
+        this.cacheManager = cacheManager.build(true);
     }
 
-    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect) {
+    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect, CacheManager cacheManager) {
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
         this.connectionPool = connectionPool;
         this.defaultContext = defaultContext;
         this.sqlDialect = sqlDialect;
+        this.cacheManager = cacheManager;
         nMin = propertyService.getInt(Props.nMin);
+    }
+
+    private Cache<String, Object> getCache(Table<?> table) {
+        return cacheManager.getCache(table.getName(), String.class, Object.class);
+    }
+
+    private void storeInCache(Table<?> table, String key, Object value) {
+        getCache(table).put(key, value);
+    }
+
+    private Object getFromCache(Table<?> table, String key) {
+        return getCache(table).get(key);
     }
 
     private Miner minerFromRecord(MinersRecord record) {
@@ -97,7 +130,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     public StorageService beginTransaction() throws SQLException {
-        return TransactionalDbStorageService.create(propertyService, minerMaths, connectionPool, sqlDialect);
+        return TransactionalDbStorageService.create(propertyService, minerMaths, connectionPool, sqlDialect, cacheManager);
     }
 
     @Override
