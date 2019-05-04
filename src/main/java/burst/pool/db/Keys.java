@@ -55,12 +55,18 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_PRIMARY = UniqueKeys0.KEY_BEST_SUBMISSIONS_PRIMARY;
+    public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = UniqueKeys0.KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX;
     public static final UniqueKey<FlywaySchemaHistoryRecord> KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY = UniqueKeys0.KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY;
     public static final UniqueKey<MinersRecord> KEY_MINERS_PRIMARY = UniqueKeys0.KEY_MINERS_PRIMARY;
+    public static final UniqueKey<MinersRecord> KEY_MINERS_MINERS_INDEX = UniqueKeys0.KEY_MINERS_MINERS_INDEX;
     public static final UniqueKey<MinerDeadlinesRecord> KEY_MINER_DEADLINES_PRIMARY = UniqueKeys0.KEY_MINER_DEADLINES_PRIMARY;
+    public static final UniqueKey<MinerDeadlinesRecord> KEY_MINER_DEADLINES_MINER_DEADLINES_INDEX = UniqueKeys0.KEY_MINER_DEADLINES_MINER_DEADLINES_INDEX;
     public static final UniqueKey<PayoutsRecord> KEY_PAYOUTS_PRIMARY = UniqueKeys0.KEY_PAYOUTS_PRIMARY;
+    public static final UniqueKey<PayoutsRecord> KEY_PAYOUTS_PAYOUTS_INDEX = UniqueKeys0.KEY_PAYOUTS_PAYOUTS_INDEX;
     public static final UniqueKey<PoolStateRecord> KEY_POOL_STATE_PRIMARY = UniqueKeys0.KEY_POOL_STATE_PRIMARY;
+    public static final UniqueKey<PoolStateRecord> KEY_POOL_STATE_POOL_STATE_INDEX = UniqueKeys0.KEY_POOL_STATE_POOL_STATE_INDEX;
     public static final UniqueKey<WonBlocksRecord> KEY_WON_BLOCKS_PRIMARY = UniqueKeys0.KEY_WON_BLOCKS_PRIMARY;
+    public static final UniqueKey<WonBlocksRecord> KEY_WON_BLOCKS_WON_BLOCKS_INDEX = UniqueKeys0.KEY_WON_BLOCKS_WON_BLOCKS_INDEX;
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -81,11 +87,17 @@ public class Keys {
 
     private static class UniqueKeys0 {
         public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_PRIMARY = Internal.createUniqueKey(BestSubmissions.BEST_SUBMISSIONS, "KEY_best_submissions_PRIMARY", BestSubmissions.BEST_SUBMISSIONS.DB_ID);
+        public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = Internal.createUniqueKey(BestSubmissions.BEST_SUBMISSIONS, "KEY_best_submissions_best_submissions_index", BestSubmissions.BEST_SUBMISSIONS.HEIGHT);
         public static final UniqueKey<FlywaySchemaHistoryRecord> KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, "KEY_flyway_schema_history_PRIMARY", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK);
         public static final UniqueKey<MinersRecord> KEY_MINERS_PRIMARY = Internal.createUniqueKey(Miners.MINERS, "KEY_miners_PRIMARY", Miners.MINERS.DB_ID);
+        public static final UniqueKey<MinersRecord> KEY_MINERS_MINERS_INDEX = Internal.createUniqueKey(Miners.MINERS, "KEY_miners_miners_index", Miners.MINERS.ACCOUNT_ID);
         public static final UniqueKey<MinerDeadlinesRecord> KEY_MINER_DEADLINES_PRIMARY = Internal.createUniqueKey(MinerDeadlines.MINER_DEADLINES, "KEY_miner_deadlines_PRIMARY", MinerDeadlines.MINER_DEADLINES.DB_ID);
+        public static final UniqueKey<MinerDeadlinesRecord> KEY_MINER_DEADLINES_MINER_DEADLINES_INDEX = Internal.createUniqueKey(MinerDeadlines.MINER_DEADLINES, "KEY_miner_deadlines_miner_deadlines_index", MinerDeadlines.MINER_DEADLINES.ACCOUNT_ID, MinerDeadlines.MINER_DEADLINES.HEIGHT);
         public static final UniqueKey<PayoutsRecord> KEY_PAYOUTS_PRIMARY = Internal.createUniqueKey(Payouts.PAYOUTS, "KEY_payouts_PRIMARY", Payouts.PAYOUTS.DB_ID);
+        public static final UniqueKey<PayoutsRecord> KEY_PAYOUTS_PAYOUTS_INDEX = Internal.createUniqueKey(Payouts.PAYOUTS, "KEY_payouts_payouts_index", Payouts.PAYOUTS.TRANSACTION_ID);
         public static final UniqueKey<PoolStateRecord> KEY_POOL_STATE_PRIMARY = Internal.createUniqueKey(PoolState.POOL_STATE, "KEY_pool_state_PRIMARY", PoolState.POOL_STATE.KEY);
+        public static final UniqueKey<PoolStateRecord> KEY_POOL_STATE_POOL_STATE_INDEX = Internal.createUniqueKey(PoolState.POOL_STATE, "KEY_pool_state_pool_state_index", PoolState.POOL_STATE.KEY);
         public static final UniqueKey<WonBlocksRecord> KEY_WON_BLOCKS_PRIMARY = Internal.createUniqueKey(WonBlocks.WON_BLOCKS, "KEY_won_blocks_PRIMARY", WonBlocks.WON_BLOCKS.DB_ID);
+        public static final UniqueKey<WonBlocksRecord> KEY_WON_BLOCKS_WON_BLOCKS_INDEX = Internal.createUniqueKey(WonBlocks.WON_BLOCKS, "KEY_won_blocks_won_blocks_index", WonBlocks.WON_BLOCKS.BLOCK_HEIGHT, WonBlocks.WON_BLOCKS.BLOCK_ID);
     }
 }

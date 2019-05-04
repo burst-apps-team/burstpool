@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payouts extends TableImpl<PayoutsRecord> {
 
-    private static final long serialVersionUID = 3450944;
+    private static final long serialVersionUID = 2099380996;
 
     /**
      * The reference instance of <code>payouts</code>
@@ -132,7 +132,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.PAYOUTS_PRIMARY);
+        return Arrays.<Index>asList(Indexes.PAYOUTS_PAYOUTS_INDEX, Indexes.PAYOUTS_PRIMARY);
     }
 
     /**
@@ -156,7 +156,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
      */
     @Override
     public List<UniqueKey<PayoutsRecord>> getKeys() {
-        return Arrays.<UniqueKey<PayoutsRecord>>asList(Keys.KEY_PAYOUTS_PRIMARY);
+        return Arrays.<UniqueKey<PayoutsRecord>>asList(Keys.KEY_PAYOUTS_PRIMARY, Keys.KEY_PAYOUTS_PAYOUTS_INDEX);
     }
 
     /**

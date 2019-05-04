@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Miners extends TableImpl<MinersRecord> {
 
-    private static final long serialVersionUID = -1542192057;
+    private static final long serialVersionUID = -1457120187;
 
     /**
      * The reference instance of <code>miners</code>
@@ -142,7 +142,7 @@ public class Miners extends TableImpl<MinersRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.MINERS_PRIMARY);
+        return Arrays.<Index>asList(Indexes.MINERS_MINERS_INDEX, Indexes.MINERS_PRIMARY);
     }
 
     /**
@@ -166,7 +166,7 @@ public class Miners extends TableImpl<MinersRecord> {
      */
     @Override
     public List<UniqueKey<MinersRecord>> getKeys() {
-        return Arrays.<UniqueKey<MinersRecord>>asList(Keys.KEY_MINERS_PRIMARY);
+        return Arrays.<UniqueKey<MinersRecord>>asList(Keys.KEY_MINERS_PRIMARY, Keys.KEY_MINERS_MINERS_INDEX);
     }
 
     /**

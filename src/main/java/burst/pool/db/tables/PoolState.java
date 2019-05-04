@@ -40,7 +40,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PoolState extends TableImpl<PoolStateRecord> {
 
-    private static final long serialVersionUID = 1038448440;
+    private static final long serialVersionUID = 957687578;
 
     /**
      * The reference instance of <code>pool_state</code>
@@ -111,7 +111,7 @@ public class PoolState extends TableImpl<PoolStateRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.POOL_STATE_PRIMARY);
+        return Arrays.<Index>asList(Indexes.POOL_STATE_POOL_STATE_INDEX, Indexes.POOL_STATE_PRIMARY);
     }
 
     /**
@@ -127,7 +127,7 @@ public class PoolState extends TableImpl<PoolStateRecord> {
      */
     @Override
     public List<UniqueKey<PoolStateRecord>> getKeys() {
-        return Arrays.<UniqueKey<PoolStateRecord>>asList(Keys.KEY_POOL_STATE_PRIMARY);
+        return Arrays.<UniqueKey<PoolStateRecord>>asList(Keys.KEY_POOL_STATE_PRIMARY, Keys.KEY_POOL_STATE_POOL_STATE_INDEX);
     }
 
     /**

@@ -9,6 +9,7 @@ CREATE TABLE miners (
   user_agent TEXT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE UNIQUE INDEX miners_index ON miners (account_id);
 
 CREATE TABLE miner_deadlines (
   db_id BIGINT AUTO_INCREMENT,
@@ -18,6 +19,7 @@ CREATE TABLE miner_deadlines (
   base_target BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE UNIQUE INDEX miner_deadlines_index ON miner_deadlines (account_id, height);
 
 CREATE TABLE best_submissions (
   db_id BIGINT AUTO_INCREMENT,
@@ -27,12 +29,14 @@ CREATE TABLE best_submissions (
   deadline BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE UNIQUE INDEX best_submissions_index ON best_submissions (height);
 
 CREATE TABLE pool_state (
   `key` VARCHAR(50),
   value TEXT,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE UNIQUE INDEX pool_state_index ON pool_state (`key`);
 
 CREATE TABLE won_blocks (
   db_id BIGINT AUTO_INCREMENT,
@@ -43,6 +47,7 @@ CREATE TABLE won_blocks (
   full_reward BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE UNIQUE INDEX won_blocks_index ON won_blocks (block_height, block_id);
 
 CREATE TABLE payouts (
   db_id BIGINT AUTO_INCREMENT,
@@ -53,3 +58,4 @@ CREATE TABLE payouts (
   attachment BINARY,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE UNIQUE INDEX payouts_index ON payouts (transaction_id);

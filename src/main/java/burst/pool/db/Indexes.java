@@ -36,27 +36,39 @@ public class Indexes {
     // INDEX definitions
     // -------------------------------------------------------------------------
 
+    public static final Index BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = Indexes0.BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX;
     public static final Index BEST_SUBMISSIONS_PRIMARY = Indexes0.BEST_SUBMISSIONS_PRIMARY;
     public static final Index FLYWAY_SCHEMA_HISTORY_FLYWAY_SCHEMA_HISTORY_S_IDX = Indexes0.FLYWAY_SCHEMA_HISTORY_FLYWAY_SCHEMA_HISTORY_S_IDX;
     public static final Index FLYWAY_SCHEMA_HISTORY_PRIMARY = Indexes0.FLYWAY_SCHEMA_HISTORY_PRIMARY;
+    public static final Index MINERS_MINERS_INDEX = Indexes0.MINERS_MINERS_INDEX;
     public static final Index MINERS_PRIMARY = Indexes0.MINERS_PRIMARY;
+    public static final Index MINER_DEADLINES_MINER_DEADLINES_INDEX = Indexes0.MINER_DEADLINES_MINER_DEADLINES_INDEX;
     public static final Index MINER_DEADLINES_PRIMARY = Indexes0.MINER_DEADLINES_PRIMARY;
+    public static final Index PAYOUTS_PAYOUTS_INDEX = Indexes0.PAYOUTS_PAYOUTS_INDEX;
     public static final Index PAYOUTS_PRIMARY = Indexes0.PAYOUTS_PRIMARY;
+    public static final Index POOL_STATE_POOL_STATE_INDEX = Indexes0.POOL_STATE_POOL_STATE_INDEX;
     public static final Index POOL_STATE_PRIMARY = Indexes0.POOL_STATE_PRIMARY;
     public static final Index WON_BLOCKS_PRIMARY = Indexes0.WON_BLOCKS_PRIMARY;
+    public static final Index WON_BLOCKS_WON_BLOCKS_INDEX = Indexes0.WON_BLOCKS_WON_BLOCKS_INDEX;
 
     // -------------------------------------------------------------------------
     // [#1459] distribute members to avoid static initialisers > 64kb
     // -------------------------------------------------------------------------
 
     private static class Indexes0 {
+        public static Index BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = Internal.createIndex("best_submissions_index", BestSubmissions.BEST_SUBMISSIONS, new OrderField[] { BestSubmissions.BEST_SUBMISSIONS.HEIGHT }, true);
         public static Index BEST_SUBMISSIONS_PRIMARY = Internal.createIndex("PRIMARY", BestSubmissions.BEST_SUBMISSIONS, new OrderField[] { BestSubmissions.BEST_SUBMISSIONS.DB_ID }, true);
         public static Index FLYWAY_SCHEMA_HISTORY_FLYWAY_SCHEMA_HISTORY_S_IDX = Internal.createIndex("flyway_schema_history_s_idx", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.SUCCESS }, false);
         public static Index FLYWAY_SCHEMA_HISTORY_PRIMARY = Internal.createIndex("PRIMARY", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
+        public static Index MINERS_MINERS_INDEX = Internal.createIndex("miners_index", Miners.MINERS, new OrderField[] { Miners.MINERS.ACCOUNT_ID }, true);
         public static Index MINERS_PRIMARY = Internal.createIndex("PRIMARY", Miners.MINERS, new OrderField[] { Miners.MINERS.DB_ID }, true);
+        public static Index MINER_DEADLINES_MINER_DEADLINES_INDEX = Internal.createIndex("miner_deadlines_index", MinerDeadlines.MINER_DEADLINES, new OrderField[] { MinerDeadlines.MINER_DEADLINES.ACCOUNT_ID, MinerDeadlines.MINER_DEADLINES.HEIGHT }, true);
         public static Index MINER_DEADLINES_PRIMARY = Internal.createIndex("PRIMARY", MinerDeadlines.MINER_DEADLINES, new OrderField[] { MinerDeadlines.MINER_DEADLINES.DB_ID }, true);
+        public static Index PAYOUTS_PAYOUTS_INDEX = Internal.createIndex("payouts_index", Payouts.PAYOUTS, new OrderField[] { Payouts.PAYOUTS.TRANSACTION_ID }, true);
         public static Index PAYOUTS_PRIMARY = Internal.createIndex("PRIMARY", Payouts.PAYOUTS, new OrderField[] { Payouts.PAYOUTS.DB_ID }, true);
+        public static Index POOL_STATE_POOL_STATE_INDEX = Internal.createIndex("pool_state_index", PoolState.POOL_STATE, new OrderField[] { PoolState.POOL_STATE.KEY }, true);
         public static Index POOL_STATE_PRIMARY = Internal.createIndex("PRIMARY", PoolState.POOL_STATE, new OrderField[] { PoolState.POOL_STATE.KEY }, true);
         public static Index WON_BLOCKS_PRIMARY = Internal.createIndex("PRIMARY", WonBlocks.WON_BLOCKS, new OrderField[] { WonBlocks.WON_BLOCKS.DB_ID }, true);
+        public static Index WON_BLOCKS_WON_BLOCKS_INDEX = Internal.createIndex("won_blocks_index", WonBlocks.WON_BLOCKS, new OrderField[] { WonBlocks.WON_BLOCKS.BLOCK_HEIGHT, WonBlocks.WON_BLOCKS.BLOCK_ID }, true);
     }
 }

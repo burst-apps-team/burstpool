@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class WonBlocks extends TableImpl<WonBlocksRecord> {
 
-    private static final long serialVersionUID = 1105007678;
+    private static final long serialVersionUID = -766117034;
 
     /**
      * The reference instance of <code>won_blocks</code>
@@ -132,7 +132,7 @@ public class WonBlocks extends TableImpl<WonBlocksRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.WON_BLOCKS_PRIMARY);
+        return Arrays.<Index>asList(Indexes.WON_BLOCKS_PRIMARY, Indexes.WON_BLOCKS_WON_BLOCKS_INDEX);
     }
 
     /**
@@ -156,7 +156,7 @@ public class WonBlocks extends TableImpl<WonBlocksRecord> {
      */
     @Override
     public List<UniqueKey<WonBlocksRecord>> getKeys() {
-        return Arrays.<UniqueKey<WonBlocksRecord>>asList(Keys.KEY_WON_BLOCKS_PRIMARY);
+        return Arrays.<UniqueKey<WonBlocksRecord>>asList(Keys.KEY_WON_BLOCKS_PRIMARY, Keys.KEY_WON_BLOCKS_WON_BLOCKS_INDEX);
     }
 
     /**
