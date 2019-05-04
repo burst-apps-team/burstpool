@@ -84,6 +84,8 @@ jooq {
 }
 
 generateBurstPoolJooqSchemaSource.dependsOn flywayMigrate
+generateBurstPoolJooqSchemaSource.onlyIf {project.hasProperty("generateSchema")}
+flywayMigrate.onlyIf {project.hasProperty("generateSchema")}
 
 task buildJar(dependsOn: shadowJar)
 
