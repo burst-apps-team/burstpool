@@ -28,87 +28,87 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class WonBlocksRecord extends UpdatableRecordImpl<WonBlocksRecord> implements Record6<Long, Long, Long, Long, String, Long> {
 
-    private static final long serialVersionUID = -1647418654;
+    private static final long serialVersionUID = -1535606824;
 
     /**
-     * Setter for <code>pooldb.won_blocks.db_id</code>.
+     * Setter for <code>won_blocks.db_id</code>.
      */
     public void setDbId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>pooldb.won_blocks.db_id</code>.
+     * Getter for <code>won_blocks.db_id</code>.
      */
     public Long getDbId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>pooldb.won_blocks.block_height</code>.
+     * Setter for <code>won_blocks.block_height</code>.
      */
     public void setBlockHeight(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.won_blocks.block_height</code>.
+     * Getter for <code>won_blocks.block_height</code>.
      */
     public Long getBlockHeight() {
         return (Long) get(1);
     }
 
     /**
-     * Setter for <code>pooldb.won_blocks.block_id</code>.
+     * Setter for <code>won_blocks.block_id</code>.
      */
     public void setBlockId(Long value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>pooldb.won_blocks.block_id</code>.
+     * Getter for <code>won_blocks.block_id</code>.
      */
     public Long getBlockId() {
         return (Long) get(2);
     }
 
     /**
-     * Setter for <code>pooldb.won_blocks.generator_id</code>.
+     * Setter for <code>won_blocks.generator_id</code>.
      */
     public void setGeneratorId(Long value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>pooldb.won_blocks.generator_id</code>.
+     * Getter for <code>won_blocks.generator_id</code>.
      */
     public Long getGeneratorId() {
         return (Long) get(3);
     }
 
     /**
-     * Setter for <code>pooldb.won_blocks.nonce</code>.
+     * Setter for <code>won_blocks.nonce</code>.
      */
     public void setNonce(String value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>pooldb.won_blocks.nonce</code>.
+     * Getter for <code>won_blocks.nonce</code>.
      */
     public String getNonce() {
         return (String) get(4);
     }
 
     /**
-     * Setter for <code>pooldb.won_blocks.full_reward</code>.
+     * Setter for <code>won_blocks.full_reward</code>.
      */
     public void setFullReward(Long value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>pooldb.won_blocks.full_reward</code>.
+     * Getter for <code>won_blocks.full_reward</code>.
      */
     public Long getFullReward() {
         return (Long) get(5);

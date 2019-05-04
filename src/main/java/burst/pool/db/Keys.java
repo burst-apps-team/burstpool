@@ -28,7 +28,7 @@ import org.jooq.impl.Internal;
 
 /**
  * A class modelling foreign key relationships and constraints of tables of 
- * the <code>pooldb</code> schema.
+ * the <code></code> schema.
  */
 @Generated(
     value = {

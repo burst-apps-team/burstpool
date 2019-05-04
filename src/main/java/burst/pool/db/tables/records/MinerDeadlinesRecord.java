@@ -28,73 +28,73 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class MinerDeadlinesRecord extends UpdatableRecordImpl<MinerDeadlinesRecord> implements Record5<Long, Long, Long, Long, Long> {
 
-    private static final long serialVersionUID = -254290110;
+    private static final long serialVersionUID = 1315154336;
 
     /**
-     * Setter for <code>pooldb.miner_deadlines.db_id</code>.
+     * Setter for <code>miner_deadlines.db_id</code>.
      */
     public void setDbId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>pooldb.miner_deadlines.db_id</code>.
+     * Getter for <code>miner_deadlines.db_id</code>.
      */
     public Long getDbId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>pooldb.miner_deadlines.account_id</code>.
+     * Setter for <code>miner_deadlines.account_id</code>.
      */
     public void setAccountId(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.miner_deadlines.account_id</code>.
+     * Getter for <code>miner_deadlines.account_id</code>.
      */
     public Long getAccountId() {
         return (Long) get(1);
     }
 
     /**
-     * Setter for <code>pooldb.miner_deadlines.height</code>.
+     * Setter for <code>miner_deadlines.height</code>.
      */
     public void setHeight(Long value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>pooldb.miner_deadlines.height</code>.
+     * Getter for <code>miner_deadlines.height</code>.
      */
     public Long getHeight() {
         return (Long) get(2);
     }
 
     /**
-     * Setter for <code>pooldb.miner_deadlines.deadline</code>.
+     * Setter for <code>miner_deadlines.deadline</code>.
      */
     public void setDeadline(Long value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>pooldb.miner_deadlines.deadline</code>.
+     * Getter for <code>miner_deadlines.deadline</code>.
      */
     public Long getDeadline() {
         return (Long) get(3);
     }
 
     /**
-     * Setter for <code>pooldb.miner_deadlines.base_target</code>.
+     * Setter for <code>miner_deadlines.base_target</code>.
      */
     public void setBaseTarget(Long value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>pooldb.miner_deadlines.base_target</code>.
+     * Getter for <code>miner_deadlines.base_target</code>.
      */
     public Long getBaseTarget() {
         return (Long) get(4);

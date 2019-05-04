@@ -4,9 +4,9 @@
 package burst.pool.db.tables;
 
 
+import burst.pool.db.DefaultSchema;
 import burst.pool.db.Indexes;
 import burst.pool.db.Keys;
-import burst.pool.db.Pooldb;
 import burst.pool.db.tables.records.MinersRecord;
 
 import java.util.Arrays;
@@ -41,10 +41,10 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Miners extends TableImpl<MinersRecord> {
 
-    private static final long serialVersionUID = -1507995946;
+    private static final long serialVersionUID = -1542192057;
 
     /**
-     * The reference instance of <code>pooldb.miners</code>
+     * The reference instance of <code>miners</code>
      */
     public static final Miners MINERS = new Miners();
 
@@ -57,61 +57,61 @@ public class Miners extends TableImpl<MinersRecord> {
     }
 
     /**
-     * The column <code>pooldb.miners.db_id</code>.
+     * The column <code>miners.db_id</code>.
      */
     public final TableField<MinersRecord, Long> DB_ID = createField("db_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>pooldb.miners.account_id</code>.
+     * The column <code>miners.account_id</code>.
      */
     public final TableField<MinersRecord, Long> ACCOUNT_ID = createField("account_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.miners.pending_balance</code>.
+     * The column <code>miners.pending_balance</code>.
      */
     public final TableField<MinersRecord, Double> PENDING_BALANCE = createField("pending_balance", org.jooq.impl.SQLDataType.DOUBLE.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.DOUBLE)), this, "");
 
     /**
-     * The column <code>pooldb.miners.estimated_capacity</code>.
+     * The column <code>miners.estimated_capacity</code>.
      */
     public final TableField<MinersRecord, Double> ESTIMATED_CAPACITY = createField("estimated_capacity", org.jooq.impl.SQLDataType.DOUBLE.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.DOUBLE)), this, "");
 
     /**
-     * The column <code>pooldb.miners.share</code>.
+     * The column <code>miners.share</code>.
      */
     public final TableField<MinersRecord, Double> SHARE = createField("share", org.jooq.impl.SQLDataType.DOUBLE.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.DOUBLE)), this, "");
 
     /**
-     * The column <code>pooldb.miners.minimum_payout</code>.
+     * The column <code>miners.minimum_payout</code>.
      */
     public final TableField<MinersRecord, Double> MINIMUM_PAYOUT = createField("minimum_payout", org.jooq.impl.SQLDataType.DOUBLE.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.DOUBLE)), this, "");
 
     /**
-     * The column <code>pooldb.miners.name</code>.
+     * The column <code>miners.name</code>.
      */
     public final TableField<MinersRecord, String> NAME = createField("name", org.jooq.impl.SQLDataType.CLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
 
     /**
-     * The column <code>pooldb.miners.user_agent</code>.
+     * The column <code>miners.user_agent</code>.
      */
     public final TableField<MinersRecord, String> USER_AGENT = createField("user_agent", org.jooq.impl.SQLDataType.CLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
 
     /**
-     * Create a <code>pooldb.miners</code> table reference
+     * Create a <code>miners</code> table reference
      */
     public Miners() {
         this(DSL.name("miners"), null);
     }
 
     /**
-     * Create an aliased <code>pooldb.miners</code> table reference
+     * Create an aliased <code>miners</code> table reference
      */
     public Miners(String alias) {
         this(DSL.name(alias), MINERS);
     }
 
     /**
-     * Create an aliased <code>pooldb.miners</code> table reference
+     * Create an aliased <code>miners</code> table reference
      */
     public Miners(Name alias) {
         this(alias, MINERS);
@@ -134,7 +134,7 @@ public class Miners extends TableImpl<MinersRecord> {
      */
     @Override
     public Schema getSchema() {
-        return Pooldb.POOLDB;
+        return DefaultSchema.DEFAULT_SCHEMA;
     }
 
     /**

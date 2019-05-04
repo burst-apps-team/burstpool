@@ -28,73 +28,73 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class BestSubmissionsRecord extends UpdatableRecordImpl<BestSubmissionsRecord> implements Record5<Long, Long, Long, String, Long> {
 
-    private static final long serialVersionUID = -1946774782;
+    private static final long serialVersionUID = 1472656018;
 
     /**
-     * Setter for <code>pooldb.best_submissions.db_id</code>.
+     * Setter for <code>best_submissions.db_id</code>.
      */
     public void setDbId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>pooldb.best_submissions.db_id</code>.
+     * Getter for <code>best_submissions.db_id</code>.
      */
     public Long getDbId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>pooldb.best_submissions.height</code>.
+     * Setter for <code>best_submissions.height</code>.
      */
     public void setHeight(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.best_submissions.height</code>.
+     * Getter for <code>best_submissions.height</code>.
      */
     public Long getHeight() {
         return (Long) get(1);
     }
 
     /**
-     * Setter for <code>pooldb.best_submissions.account_id</code>.
+     * Setter for <code>best_submissions.account_id</code>.
      */
     public void setAccountId(Long value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>pooldb.best_submissions.account_id</code>.
+     * Getter for <code>best_submissions.account_id</code>.
      */
     public Long getAccountId() {
         return (Long) get(2);
     }
 
     /**
-     * Setter for <code>pooldb.best_submissions.nonce</code>.
+     * Setter for <code>best_submissions.nonce</code>.
      */
     public void setNonce(String value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>pooldb.best_submissions.nonce</code>.
+     * Getter for <code>best_submissions.nonce</code>.
      */
     public String getNonce() {
         return (String) get(3);
     }
 
     /**
-     * Setter for <code>pooldb.best_submissions.deadline</code>.
+     * Setter for <code>best_submissions.deadline</code>.
      */
     public void setDeadline(Long value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>pooldb.best_submissions.deadline</code>.
+     * Getter for <code>best_submissions.deadline</code>.
      */
     public Long getDeadline() {
         return (Long) get(4);

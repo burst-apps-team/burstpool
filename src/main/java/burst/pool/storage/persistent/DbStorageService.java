@@ -25,6 +25,7 @@ import org.flywaydb.core.api.FlywayException;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
+import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
 
@@ -56,12 +57,13 @@ public class DbStorageService implements StorageService {
 
     private final int nMin;
 
+    private final Settings settings;
     private final HikariDataSource connectionPool;
     private final DSLContext defaultContext;
     private final SQLDialect sqlDialect;
 
     private final CacheManager cacheManager;
-    private final Map<Table<?>, Semaphore> cacheLocks = new HashMap<>();
+    private final Map<Table<?>, Semaphore> cacheLocks;
 
     private final Object newMinerLock = new Object();
 
@@ -91,10 +93,13 @@ public class DbStorageService implements StorageService {
         hikariConfig.setMaximumPoolSize(32);
         hikariConfig.setAutoCommit(true);
 
+        settings = new Settings();
+        settings.setRenderSchema(false);
         connectionPool = new HikariDataSource(hikariConfig);
-        defaultContext = DSL.using(connectionPool.getConnection(), sqlDialect);
+        defaultContext = DSL.using(connectionPool.getConnection(), sqlDialect, settings);
 
         Table<?>[] tables = new Table[]{BEST_SUBMISSIONS, MINER_DEADLINES, MINERS, POOL_STATE};
+        cacheLocks = new HashMap<>();
         CacheManagerBuilder cacheManager = CacheManagerBuilder.newCacheManagerBuilder();
         CacheConfiguration<String, Object> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, Object.class, ResourcePoolsBuilder.heap(1024 * 1024).build()).build();
         for (Table<?> table : tables) {
@@ -104,13 +109,15 @@ public class DbStorageService implements StorageService {
         this.cacheManager = cacheManager.build(true);
     }
 
-    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect, CacheManager cacheManager) {
+    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) {
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
+        this.settings = settings;
         this.connectionPool = connectionPool;
         this.defaultContext = defaultContext;
         this.sqlDialect = sqlDialect;
         this.cacheManager = cacheManager;
+        this.cacheLocks = cacheLocks;
         nMin = propertyService.getInt(Props.nMin);
     }
 
@@ -157,7 +164,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     public StorageService beginTransaction() throws SQLException {
-        return TransactionalDbStorageService.create(propertyService, minerMaths, connectionPool, sqlDialect, cacheManager);
+        return TransactionalDbStorageService.create(propertyService, minerMaths, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
     }
 
     @Override
@@ -258,6 +265,7 @@ public class DbStorageService implements StorageService {
     public Map<Long, StoredSubmission> getBestSubmissions() {
         // We don't need to cache as getBestSubmissionForBlock will read from cache
         return defaultContext.select(BEST_SUBMISSIONS.HEIGHT)
+                .from(BEST_SUBMISSIONS)
                 .fetch()
                 .intoMap(height -> height.get(BEST_SUBMISSIONS.HEIGHT), height -> getBestSubmissionForBlock(height.get(BEST_SUBMISSIONS.HEIGHT)));
     }

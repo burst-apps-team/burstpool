@@ -4,9 +4,9 @@
 package burst.pool.db.tables;
 
 
+import burst.pool.db.DefaultSchema;
 import burst.pool.db.Indexes;
 import burst.pool.db.Keys;
-import burst.pool.db.Pooldb;
 import burst.pool.db.tables.records.MinerDeadlinesRecord;
 
 import java.util.Arrays;
@@ -41,10 +41,10 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class MinerDeadlines extends TableImpl<MinerDeadlinesRecord> {
 
-    private static final long serialVersionUID = 2026263091;
+    private static final long serialVersionUID = -1875982362;
 
     /**
-     * The reference instance of <code>pooldb.miner_deadlines</code>
+     * The reference instance of <code>miner_deadlines</code>
      */
     public static final MinerDeadlines MINER_DEADLINES = new MinerDeadlines();
 
@@ -57,46 +57,46 @@ public class MinerDeadlines extends TableImpl<MinerDeadlinesRecord> {
     }
 
     /**
-     * The column <code>pooldb.miner_deadlines.db_id</code>.
+     * The column <code>miner_deadlines.db_id</code>.
      */
     public final TableField<MinerDeadlinesRecord, Long> DB_ID = createField("db_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>pooldb.miner_deadlines.account_id</code>.
+     * The column <code>miner_deadlines.account_id</code>.
      */
     public final TableField<MinerDeadlinesRecord, Long> ACCOUNT_ID = createField("account_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.miner_deadlines.height</code>.
+     * The column <code>miner_deadlines.height</code>.
      */
     public final TableField<MinerDeadlinesRecord, Long> HEIGHT = createField("height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.miner_deadlines.deadline</code>.
+     * The column <code>miner_deadlines.deadline</code>.
      */
     public final TableField<MinerDeadlinesRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.miner_deadlines.base_target</code>.
+     * The column <code>miner_deadlines.base_target</code>.
      */
     public final TableField<MinerDeadlinesRecord, Long> BASE_TARGET = createField("base_target", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * Create a <code>pooldb.miner_deadlines</code> table reference
+     * Create a <code>miner_deadlines</code> table reference
      */
     public MinerDeadlines() {
         this(DSL.name("miner_deadlines"), null);
     }
 
     /**
-     * Create an aliased <code>pooldb.miner_deadlines</code> table reference
+     * Create an aliased <code>miner_deadlines</code> table reference
      */
     public MinerDeadlines(String alias) {
         this(DSL.name(alias), MINER_DEADLINES);
     }
 
     /**
-     * Create an aliased <code>pooldb.miner_deadlines</code> table reference
+     * Create an aliased <code>miner_deadlines</code> table reference
      */
     public MinerDeadlines(Name alias) {
         this(alias, MINER_DEADLINES);
@@ -119,7 +119,7 @@ public class MinerDeadlines extends TableImpl<MinerDeadlinesRecord> {
      */
     @Override
     public Schema getSchema() {
-        return Pooldb.POOLDB;
+        return DefaultSchema.DEFAULT_SCHEMA;
     }
 
     /**

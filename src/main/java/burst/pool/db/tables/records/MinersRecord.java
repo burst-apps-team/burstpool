@@ -28,115 +28,115 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class MinersRecord extends UpdatableRecordImpl<MinersRecord> implements Record8<Long, Long, Double, Double, Double, Double, String, String> {
 
-    private static final long serialVersionUID = -1470444509;
+    private static final long serialVersionUID = -1830503601;
 
     /**
-     * Setter for <code>pooldb.miners.db_id</code>.
+     * Setter for <code>miners.db_id</code>.
      */
     public void setDbId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.db_id</code>.
+     * Getter for <code>miners.db_id</code>.
      */
     public Long getDbId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>pooldb.miners.account_id</code>.
+     * Setter for <code>miners.account_id</code>.
      */
     public void setAccountId(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.account_id</code>.
+     * Getter for <code>miners.account_id</code>.
      */
     public Long getAccountId() {
         return (Long) get(1);
     }
 
     /**
-     * Setter for <code>pooldb.miners.pending_balance</code>.
+     * Setter for <code>miners.pending_balance</code>.
      */
     public void setPendingBalance(Double value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.pending_balance</code>.
+     * Getter for <code>miners.pending_balance</code>.
      */
     public Double getPendingBalance() {
         return (Double) get(2);
     }
 
     /**
-     * Setter for <code>pooldb.miners.estimated_capacity</code>.
+     * Setter for <code>miners.estimated_capacity</code>.
      */
     public void setEstimatedCapacity(Double value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.estimated_capacity</code>.
+     * Getter for <code>miners.estimated_capacity</code>.
      */
     public Double getEstimatedCapacity() {
         return (Double) get(3);
     }
 
     /**
-     * Setter for <code>pooldb.miners.share</code>.
+     * Setter for <code>miners.share</code>.
      */
     public void setShare(Double value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.share</code>.
+     * Getter for <code>miners.share</code>.
      */
     public Double getShare() {
         return (Double) get(4);
     }
 
     /**
-     * Setter for <code>pooldb.miners.minimum_payout</code>.
+     * Setter for <code>miners.minimum_payout</code>.
      */
     public void setMinimumPayout(Double value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.minimum_payout</code>.
+     * Getter for <code>miners.minimum_payout</code>.
      */
     public Double getMinimumPayout() {
         return (Double) get(5);
     }
 
     /**
-     * Setter for <code>pooldb.miners.name</code>.
+     * Setter for <code>miners.name</code>.
      */
     public void setName(String value) {
         set(6, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.name</code>.
+     * Getter for <code>miners.name</code>.
      */
     public String getName() {
         return (String) get(6);
     }
 
     /**
-     * Setter for <code>pooldb.miners.user_agent</code>.
+     * Setter for <code>miners.user_agent</code>.
      */
     public void setUserAgent(String value) {
         set(7, value);
     }
 
     /**
-     * Getter for <code>pooldb.miners.user_agent</code>.
+     * Getter for <code>miners.user_agent</code>.
      */
     public String getUserAgent() {
         return (String) get(7);

@@ -4,9 +4,9 @@
 package burst.pool.db.tables;
 
 
+import burst.pool.db.DefaultSchema;
 import burst.pool.db.Indexes;
 import burst.pool.db.Keys;
-import burst.pool.db.Pooldb;
 import burst.pool.db.tables.records.WonBlocksRecord;
 
 import java.util.Arrays;
@@ -41,10 +41,10 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class WonBlocks extends TableImpl<WonBlocksRecord> {
 
-    private static final long serialVersionUID = 1134094277;
+    private static final long serialVersionUID = 1105007678;
 
     /**
-     * The reference instance of <code>pooldb.won_blocks</code>
+     * The reference instance of <code>won_blocks</code>
      */
     public static final WonBlocks WON_BLOCKS = new WonBlocks();
 
@@ -57,51 +57,51 @@ public class WonBlocks extends TableImpl<WonBlocksRecord> {
     }
 
     /**
-     * The column <code>pooldb.won_blocks.db_id</code>.
+     * The column <code>won_blocks.db_id</code>.
      */
     public final TableField<WonBlocksRecord, Long> DB_ID = createField("db_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>pooldb.won_blocks.block_height</code>.
+     * The column <code>won_blocks.block_height</code>.
      */
     public final TableField<WonBlocksRecord, Long> BLOCK_HEIGHT = createField("block_height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.won_blocks.block_id</code>.
+     * The column <code>won_blocks.block_id</code>.
      */
     public final TableField<WonBlocksRecord, Long> BLOCK_ID = createField("block_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.won_blocks.generator_id</code>.
+     * The column <code>won_blocks.generator_id</code>.
      */
     public final TableField<WonBlocksRecord, Long> GENERATOR_ID = createField("generator_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.won_blocks.nonce</code>.
+     * The column <code>won_blocks.nonce</code>.
      */
     public final TableField<WonBlocksRecord, String> NONCE = createField("nonce", org.jooq.impl.SQLDataType.CLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
 
     /**
-     * The column <code>pooldb.won_blocks.full_reward</code>.
+     * The column <code>won_blocks.full_reward</code>.
      */
     public final TableField<WonBlocksRecord, Long> FULL_REWARD = createField("full_reward", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * Create a <code>pooldb.won_blocks</code> table reference
+     * Create a <code>won_blocks</code> table reference
      */
     public WonBlocks() {
         this(DSL.name("won_blocks"), null);
     }
 
     /**
-     * Create an aliased <code>pooldb.won_blocks</code> table reference
+     * Create an aliased <code>won_blocks</code> table reference
      */
     public WonBlocks(String alias) {
         this(DSL.name(alias), WON_BLOCKS);
     }
 
     /**
-     * Create an aliased <code>pooldb.won_blocks</code> table reference
+     * Create an aliased <code>won_blocks</code> table reference
      */
     public WonBlocks(Name alias) {
         this(alias, WON_BLOCKS);
@@ -124,7 +124,7 @@ public class WonBlocks extends TableImpl<WonBlocksRecord> {
      */
     @Override
     public Schema getSchema() {
-        return Pooldb.POOLDB;
+        return DefaultSchema.DEFAULT_SCHEMA;
     }
 
     /**

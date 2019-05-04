@@ -28,31 +28,31 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PoolStateRecord extends UpdatableRecordImpl<PoolStateRecord> implements Record2<String, String> {
 
-    private static final long serialVersionUID = 1605019564;
+    private static final long serialVersionUID = -1879293234;
 
     /**
-     * Setter for <code>pooldb.pool_state.key</code>.
+     * Setter for <code>pool_state.key</code>.
      */
     public void setKey(String value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>pooldb.pool_state.key</code>.
+     * Getter for <code>pool_state.key</code>.
      */
     public String getKey() {
         return (String) get(0);
     }
 
     /**
-     * Setter for <code>pooldb.pool_state.value</code>.
+     * Setter for <code>pool_state.value</code>.
      */
     public void setValue(String value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.pool_state.value</code>.
+     * Getter for <code>pool_state.value</code>.
      */
     public String getValue() {
         return (String) get(1);

@@ -4,9 +4,9 @@
 package burst.pool.db.tables;
 
 
+import burst.pool.db.DefaultSchema;
 import burst.pool.db.Indexes;
 import burst.pool.db.Keys;
-import burst.pool.db.Pooldb;
 import burst.pool.db.tables.records.BestSubmissionsRecord;
 
 import java.util.Arrays;
@@ -41,10 +41,10 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class BestSubmissions extends TableImpl<BestSubmissionsRecord> {
 
-    private static final long serialVersionUID = -1004535739;
+    private static final long serialVersionUID = -1005134770;
 
     /**
-     * The reference instance of <code>pooldb.best_submissions</code>
+     * The reference instance of <code>best_submissions</code>
      */
     public static final BestSubmissions BEST_SUBMISSIONS = new BestSubmissions();
 
@@ -57,46 +57,46 @@ public class BestSubmissions extends TableImpl<BestSubmissionsRecord> {
     }
 
     /**
-     * The column <code>pooldb.best_submissions.db_id</code>.
+     * The column <code>best_submissions.db_id</code>.
      */
     public final TableField<BestSubmissionsRecord, Long> DB_ID = createField("db_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>pooldb.best_submissions.height</code>.
+     * The column <code>best_submissions.height</code>.
      */
     public final TableField<BestSubmissionsRecord, Long> HEIGHT = createField("height", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.best_submissions.account_id</code>.
+     * The column <code>best_submissions.account_id</code>.
      */
     public final TableField<BestSubmissionsRecord, Long> ACCOUNT_ID = createField("account_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.best_submissions.nonce</code>.
+     * The column <code>best_submissions.nonce</code>.
      */
     public final TableField<BestSubmissionsRecord, String> NONCE = createField("nonce", org.jooq.impl.SQLDataType.CLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
 
     /**
-     * The column <code>pooldb.best_submissions.deadline</code>.
+     * The column <code>best_submissions.deadline</code>.
      */
     public final TableField<BestSubmissionsRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * Create a <code>pooldb.best_submissions</code> table reference
+     * Create a <code>best_submissions</code> table reference
      */
     public BestSubmissions() {
         this(DSL.name("best_submissions"), null);
     }
 
     /**
-     * Create an aliased <code>pooldb.best_submissions</code> table reference
+     * Create an aliased <code>best_submissions</code> table reference
      */
     public BestSubmissions(String alias) {
         this(DSL.name(alias), BEST_SUBMISSIONS);
     }
 
     /**
-     * Create an aliased <code>pooldb.best_submissions</code> table reference
+     * Create an aliased <code>best_submissions</code> table reference
      */
     public BestSubmissions(Name alias) {
         this(alias, BEST_SUBMISSIONS);
@@ -119,7 +119,7 @@ public class BestSubmissions extends TableImpl<BestSubmissionsRecord> {
      */
     @Override
     public Schema getSchema() {
-        return Pooldb.POOLDB;
+        return DefaultSchema.DEFAULT_SCHEMA;
     }
 
     /**

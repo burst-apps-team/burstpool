@@ -28,87 +28,87 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements Record6<Long, Long, byte[], Long, Long, byte[]> {
 
-    private static final long serialVersionUID = -1615437879;
+    private static final long serialVersionUID = -671320237;
 
     /**
-     * Setter for <code>pooldb.payouts.db_id</code>.
+     * Setter for <code>payouts.db_id</code>.
      */
     public void setDbId(Long value) {
         set(0, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.db_id</code>.
+     * Getter for <code>payouts.db_id</code>.
      */
     public Long getDbId() {
         return (Long) get(0);
     }
 
     /**
-     * Setter for <code>pooldb.payouts.transaction_id</code>.
+     * Setter for <code>payouts.transaction_id</code>.
      */
     public void setTransactionId(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.transaction_id</code>.
+     * Getter for <code>payouts.transaction_id</code>.
      */
     public Long getTransactionId() {
         return (Long) get(1);
     }
 
     /**
-     * Setter for <code>pooldb.payouts.sender_public_key</code>.
+     * Setter for <code>payouts.sender_public_key</code>.
      */
     public void setSenderPublicKey(byte... value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.sender_public_key</code>.
+     * Getter for <code>payouts.sender_public_key</code>.
      */
     public byte[] getSenderPublicKey() {
         return (byte[]) get(2);
     }
 
     /**
-     * Setter for <code>pooldb.payouts.fee</code>.
+     * Setter for <code>payouts.fee</code>.
      */
     public void setFee(Long value) {
         set(3, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.fee</code>.
+     * Getter for <code>payouts.fee</code>.
      */
     public Long getFee() {
         return (Long) get(3);
     }
 
     /**
-     * Setter for <code>pooldb.payouts.deadline</code>.
+     * Setter for <code>payouts.deadline</code>.
      */
     public void setDeadline(Long value) {
         set(4, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.deadline</code>.
+     * Getter for <code>payouts.deadline</code>.
      */
     public Long getDeadline() {
         return (Long) get(4);
     }
 
     /**
-     * Setter for <code>pooldb.payouts.attachment</code>.
+     * Setter for <code>payouts.attachment</code>.
      */
     public void setAttachment(byte... value) {
         set(5, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.attachment</code>.
+     * Getter for <code>payouts.attachment</code>.
      */
     public byte[] getAttachment() {
         return (byte[]) get(5);

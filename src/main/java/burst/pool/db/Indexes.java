@@ -20,7 +20,7 @@ import org.jooq.impl.Internal;
 
 
 /**
- * A class modelling indexes of tables of the <code>pooldb</code> schema.
+ * A class modelling indexes of tables of the <code></code> schema.
  */
 @Generated(
     value = {

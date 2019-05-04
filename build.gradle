@@ -73,6 +73,7 @@ jooq {
                 includes = ".*"
                 name = "org.jooq.meta.mariadb.MariaDBDatabase"
                 inputSchema = "pooldb"
+                outputSchemaToDefault = true
             }
             target {
                 packageName = "burst.pool.db"

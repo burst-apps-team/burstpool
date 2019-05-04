@@ -4,9 +4,9 @@
 package burst.pool.db.tables;
 
 
+import burst.pool.db.DefaultSchema;
 import burst.pool.db.Indexes;
 import burst.pool.db.Keys;
-import burst.pool.db.Pooldb;
 import burst.pool.db.tables.records.PoolStateRecord;
 
 import java.util.Arrays;
@@ -40,10 +40,10 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PoolState extends TableImpl<PoolStateRecord> {
 
-    private static final long serialVersionUID = -677573379;
+    private static final long serialVersionUID = 1038448440;
 
     /**
-     * The reference instance of <code>pooldb.pool_state</code>
+     * The reference instance of <code>pool_state</code>
      */
     public static final PoolState POOL_STATE = new PoolState();
 
@@ -56,31 +56,31 @@ public class PoolState extends TableImpl<PoolStateRecord> {
     }
 
     /**
-     * The column <code>pooldb.pool_state.key</code>.
+     * The column <code>pool_state.key</code>.
      */
     public final TableField<PoolStateRecord, String> KEY = createField("key", org.jooq.impl.SQLDataType.VARCHAR(50).nullable(false), this, "");
 
     /**
-     * The column <code>pooldb.pool_state.value</code>.
+     * The column <code>pool_state.value</code>.
      */
     public final TableField<PoolStateRecord, String> VALUE = createField("value", org.jooq.impl.SQLDataType.CLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.CLOB)), this, "");
 
     /**
-     * Create a <code>pooldb.pool_state</code> table reference
+     * Create a <code>pool_state</code> table reference
      */
     public PoolState() {
         this(DSL.name("pool_state"), null);
     }
 
     /**
-     * Create an aliased <code>pooldb.pool_state</code> table reference
+     * Create an aliased <code>pool_state</code> table reference
      */
     public PoolState(String alias) {
         this(DSL.name(alias), POOL_STATE);
     }
 
     /**
-     * Create an aliased <code>pooldb.pool_state</code> table reference
+     * Create an aliased <code>pool_state</code> table reference
      */
     public PoolState(Name alias) {
         this(alias, POOL_STATE);
@@ -103,7 +103,7 @@ public class PoolState extends TableImpl<PoolStateRecord> {
      */
     @Override
     public Schema getSchema() {
-        return Pooldb.POOLDB;
+        return DefaultSchema.DEFAULT_SCHEMA;
     }
 
     /**
