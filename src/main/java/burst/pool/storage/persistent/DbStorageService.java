@@ -213,18 +213,12 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
-    public void incrementLastProcessedBlock() { // TODO merge and cache
+    public void incrementLastProcessedBlock() { // TODO cache
         int lastProcessedBlock = getLastProcessedBlock();
-        try {
-            defaultContext.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
-                    .values(POOLSTATE_LAST_PROCESSED_BLOCK, Integer.toString(lastProcessedBlock + 1))
-                    .execute();
-        } catch (DataAccessException e) { // TODO there's gotta be a better way to do this...
-            defaultContext.update(POOLSTATE)
-                    .set(POOLSTATE.VALUE, Integer.toString(lastProcessedBlock + 1))
-                    .where(POOLSTATE.KEY.eq(POOLSTATE_LAST_PROCESSED_BLOCK))
-                    .execute();
-        }
+        defaultContext.mergeInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
+                .key(POOLSTATE.KEY)
+                .values(POOLSTATE_LAST_PROCESSED_BLOCK, Integer.toString(lastProcessedBlock + 1))
+                .execute();
     }
 
     @Override
@@ -246,22 +240,11 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
-    public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) { // TODO merge, cache
-        if (defaultContext.selectCount()
-                .from(BESTSUBMISSIONS)
-                .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
-                .fetchOne(0, int.class) > 0) {
-            defaultContext.update(BESTSUBMISSIONS)
-                    .set(BESTSUBMISSIONS.ACCOUNTID, submission.getMiner().getBurstID().getSignedLongId())
-                    .set(BESTSUBMISSIONS.NONCE, submission.getNonce())
-                    .set(BESTSUBMISSIONS.DEADLINE, submission.getDeadline())
-                    .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
-                    .execute();
-        } else {
-            defaultContext.insertInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE, BESTSUBMISSIONS.DEADLINE)
-                    .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce(), submission.getDeadline())
-                    .execute();
-        }
+    public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) { // TODO cache
+        defaultContext.mergeInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE, BESTSUBMISSIONS.DEADLINE)
+                .key(BESTSUBMISSIONS.HEIGHT)
+                .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce(), submission.getDeadline())
+                .execute();
     }
 
     @Override
@@ -445,21 +428,11 @@ public class DbStorageService implements StorageService {
         }
 
         @Override
-        public void setOrUpdateDeadline(long height, Deadline deadline) { // TODO Merge, cache
-            if (defaultContext.selectCount()
-                    .from(MINERDEADLINES)
-                    .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
-                    .fetchOne(0, int.class) > 0) {
-                defaultContext.update(MINERDEADLINES)
-                        .set(MINERDEADLINES.DEADLINE, deadline.getDeadline().longValue())
-                        .set(MINERDEADLINES.BASETARGET, deadline.getBaseTarget().longValue())
-                        .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
-                        .execute();
-            } else {
-                defaultContext.insertInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
-                        .values(accountId, height, deadline.getDeadline().longValue(), deadline.getBaseTarget().longValue())
-                        .execute();
-            }
+        public void setOrUpdateDeadline(long height, Deadline deadline) { // TODO cache
+            defaultContext.mergeInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
+                    .key(MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT)
+                    .values(accountId, height, deadline.getDeadline().longValue(), deadline.getBaseTarget().longValue())
+                    .execute();
         }
     }
 
@@ -478,17 +451,11 @@ public class DbStorageService implements StorageService {
         }
 
         @Override
-        public void setPendingBalance(double pending) { // TODO merge, cache
-            try {
-                defaultContext.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
-                        .values(POOLSTATE_FEE_RECIPIENT_BALANCE, Double.toString(pending))
-                        .execute();
-            } catch (DataAccessException e) { // TODO there's gotta be a better way to do this...
-                defaultContext.update(POOLSTATE)
-                        .set(POOLSTATE.VALUE, Double.toString(pending))
-                        .where(POOLSTATE.KEY.eq(POOLSTATE_FEE_RECIPIENT_BALANCE))
-                        .execute();
-            }
+        public void setPendingBalance(double pending) { // TODO cache
+            defaultContext.mergeInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
+                    .key(POOLSTATE.KEY)
+                    .values(POOLSTATE_FEE_RECIPIENT_BALANCE, Double.toString(pending))
+                    .execute();
         }
     }
 }
