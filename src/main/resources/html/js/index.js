@@ -60,6 +60,48 @@ function getCurrentRound() {
     });
 }
 
+function getTop10Miners() {
+    fetch("api/getTop10Miners").then(http => {
+        return http.json();
+    }).then(response => {
+        let topTenMiners = response.topMiners;
+        let topMinerNames = Array();
+        let topMinerShares = Array();
+        let minerColors = colors.slice(0, topTenMiners.length + 1);
+        for (let i = 0; i < topTenMiners.length; i++) {
+            let miner = topTenMiners[i];
+            topMinerNames.push(miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")");
+            topMinerShares.push(miner.share);
+        }
+        topMinerNames.push("Other");
+        topMinerShares.push(response.othersShare);
+        if (chart == null) {
+            chart = new Chart(document.getElementById("sharesChart"), {
+                type: "pie",
+                data: {
+                    datasets: [{
+                        data: topMinerShares,
+                        backgroundColor: minerColors
+                    }],
+                    labels: topMinerNames
+                },
+                options: {
+                    title: {
+                        display: true,
+                        text: "Pool Shares"
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                }
+            });
+        } else {
+            chart.data.datasets[0].data = topMinerShares;
+            chart.data.labels = topMinerNames;
+            chart.update();
+        }
+    });
+}
+
 function getMiners() {
     fetch("/api/getMiners").then(http => {
         return http.json();
@@ -74,38 +116,6 @@ function getMiners() {
         }
         document.getElementById("minerCount").innerText = response.miners.length;
         document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
-        let topTenMiners = response.miners.sort((a,b) => parseFloat(a.share) - parseFloat(b.share)).slice(0, 10);
-        let minerShares = topTenMiners.map(miner => Math.random()); // TODO revert
-        let minerNames = topTenMiners.map(miner => miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")");
-        let minerColors = colors.slice(0, topTenMiners.length + 1);
-        let other = 1;
-        minerShares.forEach(share => other -= share);
-        minerShares.push(other);
-        minerNames.push("Others");
-        if (chart == null) {
-            chart = new Chart(document.getElementById("sharesChart"), {
-                type: "pie",
-                data: {
-                    datasets: [{
-                        data: minerShares,
-                        backgroundColor: minerColors
-                    }],
-                    labels: minerNames
-                },
-                options: {
-                    title: {
-                        display: true,
-                        text: "Pool Shares"
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                }
-            });
-        } else {
-            chart.data.datasets[0].data = minerShares;
-            chart.data.labels = minerNames;
-            chart.update();
-        }
         miners = response.miners;
     });
 }
@@ -261,6 +271,8 @@ if (getCookie("theme") === "light") {
 getPoolInfo();
 getCurrentRound();
 getMiners();
+getTop10Miners();
 
 setInterval(getCurrentRound, 500);
 setInterval(getMiners, 10000);
+setInterval(getTop10Miners, 10000);
