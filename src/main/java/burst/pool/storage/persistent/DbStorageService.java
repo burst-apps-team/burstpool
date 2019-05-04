@@ -30,9 +30,14 @@ import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -58,6 +63,7 @@ public class DbStorageService implements StorageService {
     private final SQLDialect sqlDialect;
 
     private final CacheManager cacheManager;
+    private final Map<Table<?>, Semaphore> cacheLocks = new HashMap<>();
 
     private final Object newMinerLock = new Object();
 
@@ -90,12 +96,13 @@ public class DbStorageService implements StorageService {
         connectionPool = new HikariDataSource(hikariConfig);
         defaultContext = DSL.using(connectionPool.getConnection(), sqlDialect);
 
+        Table<?>[] tables = new Table[]{BESTSUBMISSIONS, MINERDEADLINES, MINERS, POOLSTATE};
         CacheManagerBuilder cacheManager = CacheManagerBuilder.newCacheManagerBuilder();
         CacheConfiguration<String, Object> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, Object.class, ResourcePoolsBuilder.heap(1024 * 1024).build()).build();
-        cacheManager = cacheManager.withCache(BESTSUBMISSIONS.getName(), cacheConfiguration);
-        cacheManager = cacheManager.withCache(MINERDEADLINES.getName(), cacheConfiguration);
-        cacheManager = cacheManager.withCache(MINERS.getName(), cacheConfiguration);
-        cacheManager = cacheManager.withCache(POOLSTATE.getName(), cacheConfiguration);
+        for (Table<?> table : tables) {
+            cacheManager = cacheManager.withCache(table.getName(), cacheConfiguration);
+            cacheLocks.put(table, new Semaphore(1));
+        }
         this.cacheManager = cacheManager.build(true);
     }
 
@@ -109,25 +116,41 @@ public class DbStorageService implements StorageService {
         nMin = propertyService.getInt(Props.nMin);
     }
 
-    private Cache<String, Object> getCache(Table<?> table) {
-        return cacheManager.getCache(table.getName(), String.class, Object.class);
+    private <T> T doOnCache(Table<?> table, Function<Cache<String, Object>, T> operation) {
+        Semaphore semaphore = cacheLocks.get(table);
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            return null;
+        }
+        try {
+            return operation.apply(cacheManager.getCache(table.getName(), String.class, Object.class));
+        } finally {
+            semaphore.release();
+        }
     }
 
     private void storeInCache(Table<?> table, String key, Object value) {
-        getCache(table).put(key, value);
+        doOnCache(table, cache -> {
+            cache.put(key, value);
+            return null;
+        });
     }
 
     private void removeFromCache(Table<?> table, String key) {
-        getCache(table).remove(key);
+        doOnCache(table, cache -> {
+            cache.remove(key);
+            return null;
+        });
     }
 
     @SuppressWarnings("unchecked")
     private <T> T getFromCacheOr(Table<?> table, String key, Supplier<T> supplier) {
-        return (T) Optional.ofNullable(getCache(table).get(key)).orElseGet(() -> {
+        return doOnCache(table, cache -> (T) Optional.ofNullable(cache.get(key)).orElseGet(() -> {
             T object = supplier.get();
-            if (object != null) getCache(table).put(key, object);
+            if (object != null) cache.put(key, object);
             return object;
-        });
+        }));
     }
 
     private Miner minerFromRecord(MinersRecord record) {
