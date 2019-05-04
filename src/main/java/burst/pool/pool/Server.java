@@ -92,7 +92,7 @@ public class Server extends NanoHTTPD {
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("miners", minersJson);
             double poolCapacity = 0;
-            for (Miner miner : storageService.getMiners()) {
+            for (Miner miner : miners) {
                 poolCapacity += miner.getCapacity();
             }
             jsonObject.addProperty("poolCapacity", poolCapacity);
