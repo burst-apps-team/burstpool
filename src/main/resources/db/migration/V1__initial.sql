@@ -10,44 +10,44 @@ CREATE TABLE miners (
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE minerDeadlines (
+CREATE TABLE miner_deadlines (
   db_id BIGINT AUTO_INCREMENT,
   account_id BIGINT,
   height BIGINT,
   deadline BIGINT,
-  baseTarget BIGINT,
+  base_target BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE bestSubmissions (
+CREATE TABLE best_submissions (
   db_id BIGINT AUTO_INCREMENT,
   height BIGINT,
-  accountId BIGINT,
+  account_id BIGINT,
   nonce TEXT,
   deadline BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE poolState (
+CREATE TABLE pool_state (
   `key` VARCHAR(50),
   value TEXT,
   PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE wonBlocks (
+CREATE TABLE won_blocks (
   db_id BIGINT AUTO_INCREMENT,
-  blockHeight BIGINT,
-  blockId BIGINT,
-  generatorId BIGINT,
+  block_height BIGINT,
+  block_id BIGINT,
+  generator_id BIGINT,
   nonce TEXT,
-  fullReward BIGINT,
+  full_reward BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE payouts (
   db_id BIGINT AUTO_INCREMENT,
-  transactionId BIGINT,
-  senderPublicKey BINARY,
+  transaction_id BIGINT,
+  sender_public_key BINARY,
   fee BIGINT,
   deadline BIGINT,
   attachment BINARY,

@@ -4,13 +4,13 @@
 package burst.pool.db;
 
 
-import burst.pool.db.tables.Bestsubmissions;
+import burst.pool.db.tables.BestSubmissions;
 import burst.pool.db.tables.FlywaySchemaHistory;
-import burst.pool.db.tables.Minerdeadlines;
+import burst.pool.db.tables.MinerDeadlines;
 import burst.pool.db.tables.Miners;
 import burst.pool.db.tables.Payouts;
-import burst.pool.db.tables.Poolstate;
-import burst.pool.db.tables.Wonblocks;
+import burst.pool.db.tables.PoolState;
+import burst.pool.db.tables.WonBlocks;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +36,7 @@ import org.jooq.impl.SchemaImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Pooldb extends SchemaImpl {
 
-    private static final long serialVersionUID = 2115849476;
+    private static final long serialVersionUID = 1671341202;
 
     /**
      * The reference instance of <code>pooldb</code>
@@ -44,9 +44,9 @@ public class Pooldb extends SchemaImpl {
     public static final Pooldb POOLDB = new Pooldb();
 
     /**
-     * The table <code>pooldb.bestsubmissions</code>.
+     * The table <code>pooldb.best_submissions</code>.
      */
-    public final Bestsubmissions BESTSUBMISSIONS = burst.pool.db.tables.Bestsubmissions.BESTSUBMISSIONS;
+    public final BestSubmissions BEST_SUBMISSIONS = burst.pool.db.tables.BestSubmissions.BEST_SUBMISSIONS;
 
     /**
      * The table <code>pooldb.flyway_schema_history</code>.
@@ -54,14 +54,14 @@ public class Pooldb extends SchemaImpl {
     public final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = burst.pool.db.tables.FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
 
     /**
-     * The table <code>pooldb.minerdeadlines</code>.
-     */
-    public final Minerdeadlines MINERDEADLINES = burst.pool.db.tables.Minerdeadlines.MINERDEADLINES;
-
-    /**
      * The table <code>pooldb.miners</code>.
      */
     public final Miners MINERS = burst.pool.db.tables.Miners.MINERS;
+
+    /**
+     * The table <code>pooldb.miner_deadlines</code>.
+     */
+    public final MinerDeadlines MINER_DEADLINES = burst.pool.db.tables.MinerDeadlines.MINER_DEADLINES;
 
     /**
      * The table <code>pooldb.payouts</code>.
@@ -69,14 +69,14 @@ public class Pooldb extends SchemaImpl {
     public final Payouts PAYOUTS = burst.pool.db.tables.Payouts.PAYOUTS;
 
     /**
-     * The table <code>pooldb.poolstate</code>.
+     * The table <code>pooldb.pool_state</code>.
      */
-    public final Poolstate POOLSTATE = burst.pool.db.tables.Poolstate.POOLSTATE;
+    public final PoolState POOL_STATE = burst.pool.db.tables.PoolState.POOL_STATE;
 
     /**
-     * The table <code>pooldb.wonblocks</code>.
+     * The table <code>pooldb.won_blocks</code>.
      */
-    public final Wonblocks WONBLOCKS = burst.pool.db.tables.Wonblocks.WONBLOCKS;
+    public final WonBlocks WON_BLOCKS = burst.pool.db.tables.WonBlocks.WON_BLOCKS;
 
     /**
      * No further instances allowed
@@ -103,12 +103,12 @@ public class Pooldb extends SchemaImpl {
 
     private final List<Table<?>> getTables0() {
         return Arrays.<Table<?>>asList(
-            Bestsubmissions.BESTSUBMISSIONS,
+            BestSubmissions.BEST_SUBMISSIONS,
             FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY,
-            Minerdeadlines.MINERDEADLINES,
             Miners.MINERS,
+            MinerDeadlines.MINER_DEADLINES,
             Payouts.PAYOUTS,
-            Poolstate.POOLSTATE,
-            Wonblocks.WONBLOCKS);
+            PoolState.POOL_STATE,
+            WonBlocks.WON_BLOCKS);
     }
 }

@@ -4,20 +4,20 @@
 package burst.pool.db;
 
 
-import burst.pool.db.tables.Bestsubmissions;
+import burst.pool.db.tables.BestSubmissions;
 import burst.pool.db.tables.FlywaySchemaHistory;
-import burst.pool.db.tables.Minerdeadlines;
+import burst.pool.db.tables.MinerDeadlines;
 import burst.pool.db.tables.Miners;
 import burst.pool.db.tables.Payouts;
-import burst.pool.db.tables.Poolstate;
-import burst.pool.db.tables.Wonblocks;
-import burst.pool.db.tables.records.BestsubmissionsRecord;
+import burst.pool.db.tables.PoolState;
+import burst.pool.db.tables.WonBlocks;
+import burst.pool.db.tables.records.BestSubmissionsRecord;
 import burst.pool.db.tables.records.FlywaySchemaHistoryRecord;
-import burst.pool.db.tables.records.MinerdeadlinesRecord;
+import burst.pool.db.tables.records.MinerDeadlinesRecord;
 import burst.pool.db.tables.records.MinersRecord;
 import burst.pool.db.tables.records.PayoutsRecord;
-import burst.pool.db.tables.records.PoolstateRecord;
-import burst.pool.db.tables.records.WonblocksRecord;
+import burst.pool.db.tables.records.PoolStateRecord;
+import burst.pool.db.tables.records.WonBlocksRecord;
 
 import javax.annotation.Generated;
 
@@ -44,23 +44,23 @@ public class Keys {
     // IDENTITY definitions
     // -------------------------------------------------------------------------
 
-    public static final Identity<BestsubmissionsRecord, Long> IDENTITY_BESTSUBMISSIONS = Identities0.IDENTITY_BESTSUBMISSIONS;
-    public static final Identity<MinerdeadlinesRecord, Long> IDENTITY_MINERDEADLINES = Identities0.IDENTITY_MINERDEADLINES;
+    public static final Identity<BestSubmissionsRecord, Long> IDENTITY_BEST_SUBMISSIONS = Identities0.IDENTITY_BEST_SUBMISSIONS;
     public static final Identity<MinersRecord, Long> IDENTITY_MINERS = Identities0.IDENTITY_MINERS;
+    public static final Identity<MinerDeadlinesRecord, Long> IDENTITY_MINER_DEADLINES = Identities0.IDENTITY_MINER_DEADLINES;
     public static final Identity<PayoutsRecord, Long> IDENTITY_PAYOUTS = Identities0.IDENTITY_PAYOUTS;
-    public static final Identity<WonblocksRecord, Long> IDENTITY_WONBLOCKS = Identities0.IDENTITY_WONBLOCKS;
+    public static final Identity<WonBlocksRecord, Long> IDENTITY_WON_BLOCKS = Identities0.IDENTITY_WON_BLOCKS;
 
     // -------------------------------------------------------------------------
     // UNIQUE and PRIMARY KEY definitions
     // -------------------------------------------------------------------------
 
-    public static final UniqueKey<BestsubmissionsRecord> KEY_BESTSUBMISSIONS_PRIMARY = UniqueKeys0.KEY_BESTSUBMISSIONS_PRIMARY;
+    public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_PRIMARY = UniqueKeys0.KEY_BEST_SUBMISSIONS_PRIMARY;
     public static final UniqueKey<FlywaySchemaHistoryRecord> KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY = UniqueKeys0.KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY;
-    public static final UniqueKey<MinerdeadlinesRecord> KEY_MINERDEADLINES_PRIMARY = UniqueKeys0.KEY_MINERDEADLINES_PRIMARY;
     public static final UniqueKey<MinersRecord> KEY_MINERS_PRIMARY = UniqueKeys0.KEY_MINERS_PRIMARY;
+    public static final UniqueKey<MinerDeadlinesRecord> KEY_MINER_DEADLINES_PRIMARY = UniqueKeys0.KEY_MINER_DEADLINES_PRIMARY;
     public static final UniqueKey<PayoutsRecord> KEY_PAYOUTS_PRIMARY = UniqueKeys0.KEY_PAYOUTS_PRIMARY;
-    public static final UniqueKey<PoolstateRecord> KEY_POOLSTATE_PRIMARY = UniqueKeys0.KEY_POOLSTATE_PRIMARY;
-    public static final UniqueKey<WonblocksRecord> KEY_WONBLOCKS_PRIMARY = UniqueKeys0.KEY_WONBLOCKS_PRIMARY;
+    public static final UniqueKey<PoolStateRecord> KEY_POOL_STATE_PRIMARY = UniqueKeys0.KEY_POOL_STATE_PRIMARY;
+    public static final UniqueKey<WonBlocksRecord> KEY_WON_BLOCKS_PRIMARY = UniqueKeys0.KEY_WON_BLOCKS_PRIMARY;
 
     // -------------------------------------------------------------------------
     // FOREIGN KEY definitions
@@ -72,20 +72,20 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     private static class Identities0 {
-        public static Identity<BestsubmissionsRecord, Long> IDENTITY_BESTSUBMISSIONS = Internal.createIdentity(Bestsubmissions.BESTSUBMISSIONS, Bestsubmissions.BESTSUBMISSIONS.DB_ID);
-        public static Identity<MinerdeadlinesRecord, Long> IDENTITY_MINERDEADLINES = Internal.createIdentity(Minerdeadlines.MINERDEADLINES, Minerdeadlines.MINERDEADLINES.DB_ID);
+        public static Identity<BestSubmissionsRecord, Long> IDENTITY_BEST_SUBMISSIONS = Internal.createIdentity(BestSubmissions.BEST_SUBMISSIONS, BestSubmissions.BEST_SUBMISSIONS.DB_ID);
         public static Identity<MinersRecord, Long> IDENTITY_MINERS = Internal.createIdentity(Miners.MINERS, Miners.MINERS.DB_ID);
+        public static Identity<MinerDeadlinesRecord, Long> IDENTITY_MINER_DEADLINES = Internal.createIdentity(MinerDeadlines.MINER_DEADLINES, MinerDeadlines.MINER_DEADLINES.DB_ID);
         public static Identity<PayoutsRecord, Long> IDENTITY_PAYOUTS = Internal.createIdentity(Payouts.PAYOUTS, Payouts.PAYOUTS.DB_ID);
-        public static Identity<WonblocksRecord, Long> IDENTITY_WONBLOCKS = Internal.createIdentity(Wonblocks.WONBLOCKS, Wonblocks.WONBLOCKS.DB_ID);
+        public static Identity<WonBlocksRecord, Long> IDENTITY_WON_BLOCKS = Internal.createIdentity(WonBlocks.WON_BLOCKS, WonBlocks.WON_BLOCKS.DB_ID);
     }
 
     private static class UniqueKeys0 {
-        public static final UniqueKey<BestsubmissionsRecord> KEY_BESTSUBMISSIONS_PRIMARY = Internal.createUniqueKey(Bestsubmissions.BESTSUBMISSIONS, "KEY_bestsubmissions_PRIMARY", Bestsubmissions.BESTSUBMISSIONS.DB_ID);
+        public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_PRIMARY = Internal.createUniqueKey(BestSubmissions.BEST_SUBMISSIONS, "KEY_best_submissions_PRIMARY", BestSubmissions.BEST_SUBMISSIONS.DB_ID);
         public static final UniqueKey<FlywaySchemaHistoryRecord> KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, "KEY_flyway_schema_history_PRIMARY", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK);
-        public static final UniqueKey<MinerdeadlinesRecord> KEY_MINERDEADLINES_PRIMARY = Internal.createUniqueKey(Minerdeadlines.MINERDEADLINES, "KEY_minerdeadlines_PRIMARY", Minerdeadlines.MINERDEADLINES.DB_ID);
         public static final UniqueKey<MinersRecord> KEY_MINERS_PRIMARY = Internal.createUniqueKey(Miners.MINERS, "KEY_miners_PRIMARY", Miners.MINERS.DB_ID);
+        public static final UniqueKey<MinerDeadlinesRecord> KEY_MINER_DEADLINES_PRIMARY = Internal.createUniqueKey(MinerDeadlines.MINER_DEADLINES, "KEY_miner_deadlines_PRIMARY", MinerDeadlines.MINER_DEADLINES.DB_ID);
         public static final UniqueKey<PayoutsRecord> KEY_PAYOUTS_PRIMARY = Internal.createUniqueKey(Payouts.PAYOUTS, "KEY_payouts_PRIMARY", Payouts.PAYOUTS.DB_ID);
-        public static final UniqueKey<PoolstateRecord> KEY_POOLSTATE_PRIMARY = Internal.createUniqueKey(Poolstate.POOLSTATE, "KEY_poolstate_PRIMARY", Poolstate.POOLSTATE.KEY);
-        public static final UniqueKey<WonblocksRecord> KEY_WONBLOCKS_PRIMARY = Internal.createUniqueKey(Wonblocks.WONBLOCKS, "KEY_wonblocks_PRIMARY", Wonblocks.WONBLOCKS.DB_ID);
+        public static final UniqueKey<PoolStateRecord> KEY_POOL_STATE_PRIMARY = Internal.createUniqueKey(PoolState.POOL_STATE, "KEY_pool_state_PRIMARY", PoolState.POOL_STATE.KEY);
+        public static final UniqueKey<WonBlocksRecord> KEY_WON_BLOCKS_PRIMARY = Internal.createUniqueKey(WonBlocks.WON_BLOCKS, "KEY_won_blocks_PRIMARY", WonBlocks.WON_BLOCKS.DB_ID);
     }
 }

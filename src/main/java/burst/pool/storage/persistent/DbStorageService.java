@@ -34,24 +34,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static burst.pool.db.tables.Bestsubmissions.BESTSUBMISSIONS;
-import static burst.pool.db.tables.Minerdeadlines.MINERDEADLINES;
+import static burst.pool.db.tables.BestSubmissions.BEST_SUBMISSIONS;
+import static burst.pool.db.tables.MinerDeadlines.MINER_DEADLINES;
 import static burst.pool.db.tables.Miners.MINERS;
 import static burst.pool.db.tables.Payouts.PAYOUTS;
-import static burst.pool.db.tables.Poolstate.POOLSTATE;
-import static burst.pool.db.tables.Wonblocks.WONBLOCKS;
+import static burst.pool.db.tables.PoolState.POOL_STATE;
+import static burst.pool.db.tables.WonBlocks.WON_BLOCKS;
 
 public class DbStorageService implements StorageService {
 
-    private static final String POOLSTATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
-    private static final String POOLSTATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";
+    private static final String POOL_STATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
+    private static final String POOL_STATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";
 
     private final PropertyService propertyService;
     private final MinerMaths minerMaths;
@@ -96,7 +94,7 @@ public class DbStorageService implements StorageService {
         connectionPool = new HikariDataSource(hikariConfig);
         defaultContext = DSL.using(connectionPool.getConnection(), sqlDialect);
 
-        Table<?>[] tables = new Table[]{BESTSUBMISSIONS, MINERDEADLINES, MINERS, POOLSTATE};
+        Table<?>[] tables = new Table[]{BEST_SUBMISSIONS, MINER_DEADLINES, MINERS, POOL_STATE};
         CacheManagerBuilder cacheManager = CacheManagerBuilder.newCacheManagerBuilder();
         CacheConfiguration<String, Object> cacheConfiguration = CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, Object.class, ResourcePoolsBuilder.heap(1024 * 1024).build()).build();
         for (Table<?> table : tables) {
@@ -237,10 +235,10 @@ public class DbStorageService implements StorageService {
     @Override
     public int getLastProcessedBlock() {
         try {
-            return getFromCacheOr(POOLSTATE, POOLSTATE_LAST_PROCESSED_BLOCK, () -> defaultContext.select(POOLSTATE.VALUE)
-                    .from(POOLSTATE)
-                    .where(POOLSTATE.KEY.eq(POOLSTATE_LAST_PROCESSED_BLOCK))
-                    .fetchAny(result -> Integer.parseInt(result.get(POOLSTATE.VALUE))));
+            return getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> defaultContext.select(POOL_STATE.VALUE)
+                    .from(POOL_STATE)
+                    .where(POOL_STATE.KEY.eq(POOL_STATE_LAST_PROCESSED_BLOCK))
+                    .fetchAny(result -> Integer.parseInt(result.get(POOL_STATE.VALUE))));
         } catch (NullPointerException e) {
             return 0;
         }
@@ -249,27 +247,27 @@ public class DbStorageService implements StorageService {
     @Override
     public void incrementLastProcessedBlock() {
         int block = getLastProcessedBlock() + 1;
-        defaultContext.mergeInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
-                .key(POOLSTATE.KEY)
-                .values(POOLSTATE_LAST_PROCESSED_BLOCK, Integer.toString(block))
+        defaultContext.mergeInto(POOL_STATE, POOL_STATE.KEY, POOL_STATE.VALUE)
+                .key(POOL_STATE.KEY)
+                .values(POOL_STATE_LAST_PROCESSED_BLOCK, Integer.toString(block))
                 .execute();
-        storeInCache(POOLSTATE, POOLSTATE_LAST_PROCESSED_BLOCK, block);
+        storeInCache(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, block);
     }
 
     @Override
     public Map<Long, StoredSubmission> getBestSubmissions() {
         // We don't need to cache as getBestSubmissionForBlock will read from cache
-        return defaultContext.select(BESTSUBMISSIONS.HEIGHT)
+        return defaultContext.select(BEST_SUBMISSIONS.HEIGHT)
                 .fetch()
-                .intoMap(height -> height.get(BESTSUBMISSIONS.HEIGHT), height -> getBestSubmissionForBlock(height.get(BESTSUBMISSIONS.HEIGHT)));
+                .intoMap(height -> height.get(BEST_SUBMISSIONS.HEIGHT), height -> getBestSubmissionForBlock(height.get(BEST_SUBMISSIONS.HEIGHT)));
     }
 
     @Override
     public StoredSubmission getBestSubmissionForBlock(long blockHeight) {
         try {
-            return getFromCacheOr(BESTSUBMISSIONS, Long.toString(blockHeight), () -> defaultContext.selectFrom(BESTSUBMISSIONS)
-                    .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
-                    .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(new BurstID(response.getAccountid())), response.getNonce(), response.getDeadline())));
+            return getFromCacheOr(BEST_SUBMISSIONS, Long.toString(blockHeight), () -> defaultContext.selectFrom(BEST_SUBMISSIONS)
+                    .where(BEST_SUBMISSIONS.HEIGHT.eq(blockHeight))
+                    .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(new BurstID(response.getAccountId())), response.getNonce(), response.getDeadline())));
         } catch (NullPointerException e) {
             return null;
         }
@@ -277,25 +275,25 @@ public class DbStorageService implements StorageService {
 
     @Override
     public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
-        defaultContext.mergeInto(BESTSUBMISSIONS, BESTSUBMISSIONS.HEIGHT, BESTSUBMISSIONS.ACCOUNTID, BESTSUBMISSIONS.NONCE, BESTSUBMISSIONS.DEADLINE)
-                .key(BESTSUBMISSIONS.HEIGHT)
+        defaultContext.mergeInto(BEST_SUBMISSIONS, BEST_SUBMISSIONS.HEIGHT, BEST_SUBMISSIONS.ACCOUNT_ID, BEST_SUBMISSIONS.NONCE, BEST_SUBMISSIONS.DEADLINE)
+                .key(BEST_SUBMISSIONS.HEIGHT)
                 .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce(), submission.getDeadline())
                 .execute();
-        storeInCache(BESTSUBMISSIONS, Long.toUnsignedString(blockHeight), submission);
+        storeInCache(BEST_SUBMISSIONS, Long.toUnsignedString(blockHeight), submission);
     }
 
     @Override
     public void removeBestSubmission(long blockHeight) {
-        defaultContext.deleteFrom(BESTSUBMISSIONS)
-                .where(BESTSUBMISSIONS.HEIGHT.eq(blockHeight))
+        defaultContext.deleteFrom(BEST_SUBMISSIONS)
+                .where(BEST_SUBMISSIONS.HEIGHT.eq(blockHeight))
                 .execute();
-        removeFromCache(BESTSUBMISSIONS, Long.toString(blockHeight));
+        removeFromCache(BEST_SUBMISSIONS, Long.toString(blockHeight));
     }
 
     @Override
     public void addWonBlock(WonBlock wonBlock) {
         // Won blocks are not cached.
-        defaultContext.insertInto(WONBLOCKS, WONBLOCKS.BLOCKHEIGHT, WONBLOCKS.BLOCKID, WONBLOCKS.GENERATORID, WONBLOCKS.NONCE, WONBLOCKS.FULLREWARD)
+        defaultContext.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
             .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce(), Long.parseUnsignedLong(wonBlock.getFullReward().toPlanck()))
             .execute();
     }
@@ -303,7 +301,7 @@ public class DbStorageService implements StorageService {
     @Override
     public void addPayout(Payout payout) {
         // Payouts are not cached.
-        defaultContext.insertInto(PAYOUTS, PAYOUTS.TRANSACTIONID, PAYOUTS.SENDERPUBLICKEY, PAYOUTS.FEE, PAYOUTS.DEADLINE, PAYOUTS.ATTACHMENT)
+        defaultContext.insertInto(PAYOUTS, PAYOUTS.TRANSACTION_ID, PAYOUTS.SENDER_PUBLIC_KEY, PAYOUTS.FEE, PAYOUTS.DEADLINE, PAYOUTS.ATTACHMENT)
                 .values(payout.getTransactionId().getSignedLongId(), payout.getSenderPublicKey(), Long.parseUnsignedLong(payout.getFee().toPlanck()), (long) payout.getDeadline(), payout.getAttachment())
                 .execute();
     }
@@ -325,9 +323,9 @@ public class DbStorageService implements StorageService {
         }
 
         private void recalculateCacheDeadlineCount() { // TODO increase / decrease would be faster...
-            storeInCache(MINERDEADLINES, accountIdStr + "dlcount", defaultContext.selectCount()
-                    .from(MINERDEADLINES)
-                    .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId))
+            storeInCache(MINER_DEADLINES, accountIdStr + "dlcount", defaultContext.selectCount()
+                    .from(MINER_DEADLINES)
+                    .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId))
                     .fetchAny(0, int.class));
         }
 
@@ -441,38 +439,38 @@ public class DbStorageService implements StorageService {
 
         @Override
         public List<Deadline> getDeadlines() { // TODO cache
-            return defaultContext.select(MINERDEADLINES.BASETARGET, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE)
-                    .from(MINERDEADLINES)
-                    .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId))
+            return defaultContext.select(MINER_DEADLINES.BASE_TARGET, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE)
+                    .from(MINER_DEADLINES)
+                    .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId))
                     .fetch()
-                    .map(record -> new Deadline(BigInteger.valueOf(record.get(MINERDEADLINES.DEADLINE)), BigInteger.valueOf(record.get(MINERDEADLINES.BASETARGET)), record.get(MINERDEADLINES.HEIGHT)));
+                    .map(record -> new Deadline(BigInteger.valueOf(record.get(MINER_DEADLINES.DEADLINE)), BigInteger.valueOf(record.get(MINER_DEADLINES.BASE_TARGET)), record.get(MINER_DEADLINES.HEIGHT)));
         }
 
         @Override
         public int getDeadlineCount() {
-            return getFromCacheOr(MINERDEADLINES, accountIdStr + "dlcount", () -> defaultContext.selectCount()
-                    .from(MINERDEADLINES)
-                    .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId))
+            return getFromCacheOr(MINER_DEADLINES, accountIdStr + "dlcount", () -> defaultContext.selectCount()
+                    .from(MINER_DEADLINES)
+                    .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId))
                     .fetchAny(0, int.class));
         }
 
         @Override
         public void removeDeadline(long height) {
-            defaultContext.delete(MINERDEADLINES)
-                    .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
+            defaultContext.delete(MINER_DEADLINES)
+                    .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId), MINER_DEADLINES.HEIGHT.eq(height))
                     .execute();
-            removeFromCache(MINERDEADLINES, accountIdStr + "deadline" + Long.toString(height));
+            removeFromCache(MINER_DEADLINES, accountIdStr + "deadline" + Long.toString(height));
             recalculateCacheDeadlineCount();
         }
 
         @Override
         public Deadline getDeadline(long height) {
             try {
-                return getFromCacheOr(MINERDEADLINES, accountIdStr + "deadline" + Long.toString(height), () -> defaultContext.select(MINERDEADLINES.BASETARGET, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE)
-                        .from(MINERDEADLINES)
-                        .where(MINERDEADLINES.ACCOUNT_ID.eq(accountId), MINERDEADLINES.HEIGHT.eq(height))
+                return getFromCacheOr(MINER_DEADLINES, accountIdStr + "deadline" + Long.toString(height), () -> defaultContext.select(MINER_DEADLINES.BASE_TARGET, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE)
+                        .from(MINER_DEADLINES)
+                        .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId), MINER_DEADLINES.HEIGHT.eq(height))
                         .fetchAny()
-                        .map(record -> new Deadline(BigInteger.valueOf(record.get(MINERDEADLINES.DEADLINE)), BigInteger.valueOf(record.get(MINERDEADLINES.BASETARGET)), height)));
+                        .map(record -> new Deadline(BigInteger.valueOf(record.get(MINER_DEADLINES.DEADLINE)), BigInteger.valueOf(record.get(MINER_DEADLINES.BASE_TARGET)), height)));
             } catch (NullPointerException e) {
                 return null;
             }
@@ -480,11 +478,11 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setOrUpdateDeadline(long height, Deadline deadline) {
-            defaultContext.mergeInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
-                    .key(MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT)
+            defaultContext.mergeInto(MINER_DEADLINES, MINER_DEADLINES.ACCOUNT_ID, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE, MINER_DEADLINES.BASE_TARGET)
+                    .key(MINER_DEADLINES.ACCOUNT_ID, MINER_DEADLINES.HEIGHT)
                     .values(accountId, height, deadline.getDeadline().longValue(), deadline.getBaseTarget().longValue())
                     .execute();
-            storeInCache(MINERDEADLINES, accountIdStr + "deadline" + Long.toString(height), deadline);
+            storeInCache(MINER_DEADLINES, accountIdStr + "deadline" + Long.toString(height), deadline);
             recalculateCacheDeadlineCount();
         }
     }
@@ -494,10 +492,10 @@ public class DbStorageService implements StorageService {
         @Override
         public double getPendingBalance() {
             try {
-                return getFromCacheOr(POOLSTATE, POOLSTATE_FEE_RECIPIENT_BALANCE, () -> defaultContext.select(POOLSTATE.VALUE)
-                        .from(POOLSTATE)
-                        .where(POOLSTATE.KEY.eq(POOLSTATE_FEE_RECIPIENT_BALANCE))
-                        .fetchAny(record -> Double.parseDouble(record.get(POOLSTATE.VALUE))));
+                return getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> defaultContext.select(POOL_STATE.VALUE)
+                        .from(POOL_STATE)
+                        .where(POOL_STATE.KEY.eq(POOL_STATE_FEE_RECIPIENT_BALANCE))
+                        .fetchAny(record -> Double.parseDouble(record.get(POOL_STATE.VALUE))));
             } catch (NullPointerException e) {
                 return 0;
             }
@@ -505,11 +503,11 @@ public class DbStorageService implements StorageService {
 
         @Override
         public void setPendingBalance(double pending) {
-            defaultContext.mergeInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
-                    .key(POOLSTATE.KEY)
-                    .values(POOLSTATE_FEE_RECIPIENT_BALANCE, Double.toString(pending))
+            defaultContext.mergeInto(POOL_STATE, POOL_STATE.KEY, POOL_STATE.VALUE)
+                    .key(POOL_STATE.KEY)
+                    .values(POOL_STATE_FEE_RECIPIENT_BALANCE, Double.toString(pending))
                     .execute();
-            storeInCache(POOLSTATE, POOLSTATE_FEE_RECIPIENT_BALANCE, pending);
+            storeInCache(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, pending);
         }
     }
 }

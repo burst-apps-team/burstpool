@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payouts extends TableImpl<PayoutsRecord> {
 
-    private static final long serialVersionUID = -1827976882;
+    private static final long serialVersionUID = 1298073683;
 
     /**
      * The reference instance of <code>pooldb.payouts</code>
@@ -62,14 +62,14 @@ public class Payouts extends TableImpl<PayoutsRecord> {
     public final TableField<PayoutsRecord, Long> DB_ID = createField("db_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>pooldb.payouts.transactionId</code>.
+     * The column <code>pooldb.payouts.transaction_id</code>.
      */
-    public final TableField<PayoutsRecord, Long> TRANSACTIONID = createField("transactionId", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<PayoutsRecord, Long> TRANSACTION_ID = createField("transaction_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.payouts.senderPublicKey</code>.
+     * The column <code>pooldb.payouts.sender_public_key</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> SENDERPUBLICKEY = createField("senderPublicKey", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> SENDER_PUBLIC_KEY = createField("sender_public_key", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
 
     /**
      * The column <code>pooldb.payouts.fee</code>.

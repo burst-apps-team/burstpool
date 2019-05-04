@@ -28,7 +28,7 @@ import org.jooq.impl.UpdatableRecordImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements Record6<Long, Long, byte[], Long, Long, byte[]> {
 
-    private static final long serialVersionUID = -153025890;
+    private static final long serialVersionUID = -1615437879;
 
     /**
      * Setter for <code>pooldb.payouts.db_id</code>.
@@ -45,30 +45,30 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
     }
 
     /**
-     * Setter for <code>pooldb.payouts.transactionId</code>.
+     * Setter for <code>pooldb.payouts.transaction_id</code>.
      */
-    public void setTransactionid(Long value) {
+    public void setTransactionId(Long value) {
         set(1, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.transactionId</code>.
+     * Getter for <code>pooldb.payouts.transaction_id</code>.
      */
-    public Long getTransactionid() {
+    public Long getTransactionId() {
         return (Long) get(1);
     }
 
     /**
-     * Setter for <code>pooldb.payouts.senderPublicKey</code>.
+     * Setter for <code>pooldb.payouts.sender_public_key</code>.
      */
-    public void setSenderpublickey(byte... value) {
+    public void setSenderPublicKey(byte... value) {
         set(2, value);
     }
 
     /**
-     * Getter for <code>pooldb.payouts.senderPublicKey</code>.
+     * Getter for <code>pooldb.payouts.sender_public_key</code>.
      */
-    public byte[] getSenderpublickey() {
+    public byte[] getSenderPublicKey() {
         return (byte[]) get(2);
     }
 
@@ -159,7 +159,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public Field<Long> field2() {
-        return Payouts.PAYOUTS.TRANSACTIONID;
+        return Payouts.PAYOUTS.TRANSACTION_ID;
     }
 
     /**
@@ -167,7 +167,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public Field<byte[]> field3() {
-        return Payouts.PAYOUTS.SENDERPUBLICKEY;
+        return Payouts.PAYOUTS.SENDER_PUBLIC_KEY;
     }
 
     /**
@@ -207,7 +207,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public Long component2() {
-        return getTransactionid();
+        return getTransactionId();
     }
 
     /**
@@ -215,7 +215,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public byte[] component3() {
-        return getSenderpublickey();
+        return getSenderPublicKey();
     }
 
     /**
@@ -255,7 +255,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public Long value2() {
-        return getTransactionid();
+        return getTransactionId();
     }
 
     /**
@@ -263,7 +263,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public byte[] value3() {
-        return getSenderpublickey();
+        return getSenderPublicKey();
     }
 
     /**
@@ -304,7 +304,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public PayoutsRecord value2(Long value) {
-        setTransactionid(value);
+        setTransactionId(value);
         return this;
     }
 
@@ -313,7 +313,7 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
      */
     @Override
     public PayoutsRecord value3(byte... value) {
-        setSenderpublickey(value);
+        setSenderPublicKey(value);
         return this;
     }
 
@@ -372,12 +372,12 @@ public class PayoutsRecord extends UpdatableRecordImpl<PayoutsRecord> implements
     /**
      * Create a detached, initialised PayoutsRecord
      */
-    public PayoutsRecord(Long dbId, Long transactionid, byte[] senderpublickey, Long fee, Long deadline, byte[] attachment) {
+    public PayoutsRecord(Long dbId, Long transactionId, byte[] senderPublicKey, Long fee, Long deadline, byte[] attachment) {
         super(Payouts.PAYOUTS);
 
         set(0, dbId);
-        set(1, transactionid);
-        set(2, senderpublickey);
+        set(1, transactionId);
+        set(2, senderPublicKey);
         set(3, fee);
         set(4, deadline);
         set(5, attachment);
