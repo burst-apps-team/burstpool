@@ -32,7 +32,7 @@ def dburl =  "jdbc:mariadb://localhost:3306/pooldb"
 def dbusername = "root"
 
 dependencies {
-    implementation 'org.apache.poi:poi-ooxml:3.17'
+    implementation 'org.apache.poi:poi-ooxml:4.1.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.1.15'
     implementation 'com.github.burst-apps-team:burstkit4j:v0.9-beta5'
     implementation 'org.nanohttpd:nanohttpd:2.2.0'
