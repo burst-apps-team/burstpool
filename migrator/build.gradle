@@ -46,3 +46,5 @@ jooq {
         }
     }
 }
+
+generateNogrodJooqSchemaSource.onlyIf {project.hasProperty("generateSchema")}
