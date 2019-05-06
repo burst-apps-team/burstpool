@@ -52,10 +52,10 @@ CREATE UNIQUE INDEX won_blocks_index ON won_blocks (block_height, block_id);
 CREATE TABLE payouts (
   db_id BIGINT AUTO_INCREMENT,
   transaction_id BIGINT,
-  sender_public_key BINARY,
+  sender_public_key BINARY(32),
   fee BIGINT,
   deadline BIGINT,
-  attachment BINARY,
+  attachment BLOB,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 CREATE UNIQUE INDEX payouts_index ON payouts (transaction_id);
