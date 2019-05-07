@@ -2,11 +2,13 @@ package burst.pool.pool;
 
 import burst.kit.entity.BurstAddress;
 
+import java.math.BigInteger;
+
 public class Submission {
     private final BurstAddress miner;
-    private final String nonce;
+    private final BigInteger nonce;
 
-    public Submission(BurstAddress miner, String nonce) {
+    public Submission(BurstAddress miner, BigInteger nonce) {
         this.miner = miner;
         this.nonce = nonce;
     }
@@ -15,7 +17,7 @@ public class Submission {
         return miner;
     }
 
-    public String getNonce() {
+    public BigInteger getNonce() {
         return nonce;
     }
 }

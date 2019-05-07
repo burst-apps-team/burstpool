@@ -1,11 +1,10 @@
 package burst.pool.miners;
 
-import burst.kit.burst.BurstCrypto;
+import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
 import burst.kit.entity.BurstValue;
-import burst.kit.entity.response.AccountResponse;
-import burst.kit.entity.response.BroadcastTransactionResponse;
+import burst.kit.entity.response.Account;
 import burst.kit.service.BurstNodeService;
 import burst.pool.entity.Payout;
 import burst.pool.entity.WonBlock;
@@ -20,6 +19,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,7 +57,7 @@ public class MinerTracker {
         return miner;
     }
 
-    public void onBlockWon(StorageService transactionalStorageService, long blockHeight, BurstID blockId, String nonce, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
+    public void onBlockWon(StorageService transactionalStorageService, long blockHeight, BurstID blockId, BigInteger nonce, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
         logger.info("Block won! Block height: " + blockHeight + ", forger: " + winner.getFullAddress());
 
         transactionalStorageService.addWonBlock(new WonBlock((int) blockHeight, blockId, winner.getBurstID(), nonce, blockReward));
@@ -169,20 +169,38 @@ public class MinerTracker {
 
         byte[] publicKey = burstCrypto.getPublicKey(propertyService.getString(Props.passphrase));
 
+        AtomicReference<BurstID> transactionId = new AtomicReference<>();
+
         compositeDisposable.add(nodeService.generateMultiOutTransaction(publicKey, transactionFee, 1440, recipients)
                 .retry(propertyService.getInt(Props.payoutRetryCount))
-                .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response.getUnsignedTransactionBytes().getBytes()))
-                .flatMap(signedBytes -> nodeService.broadcastTransaction(signedBytes).retry(propertyService.getInt(Props.payoutRetryCount)))
-                .subscribe(response -> onPaidOut(storageService, response, payees, publicKey, transactionFee, 1440, transactionAttachment.array()), this::onPayoutError));
+                .map(response -> burstCrypto.signTransaction(propertyService.getString(Props.passphrase), response))
+                .map(signedBytes -> { // TODO somehow integrate this into burstkit4j
+                    byte[] unsigned = new byte[signedBytes.length];
+                    byte[] signature = new byte[64];
+                    System.arraycopy(signedBytes, 0, unsigned, 0, signedBytes.length);
+                    System.arraycopy(signedBytes, 96, signature, 0, 64);
+                    for (int i = 96; i < 96 + 64; i++) {
+                        unsigned[i] = 0;
+                    }
+                    MessageDigest sha256 = burstCrypto.getSha256();
+                    byte[] signatureHash = sha256.digest(signature);
+                    sha256.update(unsigned);
+                    byte[] fullHash = sha256.digest(signatureHash);
+                    transactionId.set(burstCrypto.hashToId(fullHash));
+                    return signedBytes;
+                })
+                .flatMap(signedBytes -> nodeService.broadcastTransaction(signedBytes)
+                            .retry(propertyService.getInt(Props.payoutRetryCount)))
+                .subscribe(response -> onPaidOut(storageService, transactionId.get(), payees, publicKey, transactionFee, 1440, transactionAttachment.array()), this::onPayoutError));
     }
 
-    private void onPaidOut(StorageService storageService, BroadcastTransactionResponse response, Map<Payable, BurstValue> paidMiners, byte[] senderPublicKey, BurstValue fee, int deadline, byte[] transactionAttachment) {
+    private void onPaidOut(StorageService storageService, BurstID transactionID, Map<Payable, BurstValue> paidMiners, byte[] senderPublicKey, BurstValue fee, int deadline, byte[] transactionAttachment) {
         waitUntilNotProcessingBlock();
         for (Map.Entry<Payable, BurstValue> payment : paidMiners.entrySet()) {
             payment.getKey().decreasePending(payment.getValue());
         }
-        storageService.addPayout(new Payout(response.getTransactionID(), senderPublicKey, fee, deadline, transactionAttachment));
-        logger.info("Paid out, transaction id " + response.getTransactionID());
+        storageService.addPayout(new Payout(transactionID, senderPublicKey, fee, deadline, transactionAttachment));
+        logger.info("Paid out, transaction id " + transactionID);
         payoutSemaphore.release();
     }
 
@@ -192,9 +210,9 @@ public class MinerTracker {
     }
 
 
-    private void onMinerAccount(StorageService storageService, AccountResponse accountResponse) {
+    private void onMinerAccount(StorageService storageService, Account accountResponse) {
         waitUntilNotProcessingBlock();
-        Miner miner = storageService.getMiner(accountResponse.getAccount());
+        Miner miner = storageService.getMiner(accountResponse.getId());
         if (miner == null) return;
         if (accountResponse.getName() == null) return;
         miner.setName(accountResponse.getName());

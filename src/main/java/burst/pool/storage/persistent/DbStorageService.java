@@ -159,7 +159,7 @@ public class DbStorageService implements StorageService {
     }
 
     private Miner minerFromRecord(MinersRecord record) {
-        return new Miner(minerMaths, propertyService, BurstAddress.fromId(new BurstID(record.getAccountId())), new DbMinerStore(record.getAccountId()));
+        return new Miner(minerMaths, propertyService, BurstAddress.fromId(BurstID.fromLong(record.getAccountId())), new DbMinerStore(record.getAccountId()));
     }
 
     @Override
@@ -275,7 +275,7 @@ public class DbStorageService implements StorageService {
         try {
             return getFromCacheOr(BEST_SUBMISSIONS, Long.toString(blockHeight), () -> defaultContext.selectFrom(BEST_SUBMISSIONS)
                     .where(BEST_SUBMISSIONS.HEIGHT.eq(blockHeight))
-                    .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(new BurstID(response.getAccountId())), response.getNonce(), response.getDeadline())));
+                    .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(BurstID.fromLong(response.getAccountId())), new BigInteger(response.getNonce()), response.getDeadline())));
         } catch (NullPointerException e) {
             return null;
         }
@@ -285,7 +285,7 @@ public class DbStorageService implements StorageService {
     public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
         defaultContext.mergeInto(BEST_SUBMISSIONS, BEST_SUBMISSIONS.HEIGHT, BEST_SUBMISSIONS.ACCOUNT_ID, BEST_SUBMISSIONS.NONCE, BEST_SUBMISSIONS.DEADLINE)
                 .key(BEST_SUBMISSIONS.HEIGHT)
-                .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce(), submission.getDeadline())
+                .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce().toString(), submission.getDeadline())
                 .execute();
         storeInCache(BEST_SUBMISSIONS, Long.toUnsignedString(blockHeight), submission);
     }
@@ -302,7 +302,7 @@ public class DbStorageService implements StorageService {
     public void addWonBlock(WonBlock wonBlock) {
         // Won blocks are not cached.
         defaultContext.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
-            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce(), Long.parseUnsignedLong(wonBlock.getFullReward().toPlanck()))
+            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce().toString(), Long.parseUnsignedLong(wonBlock.getFullReward().toPlanck()))
             .execute();
     }
 

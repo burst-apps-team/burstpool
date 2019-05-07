@@ -19,7 +19,7 @@ dependencies {
     implementation "org.jooq:jooq-meta"
     implementation "org.jooq:jooq-codegen"
     implementation "com.h2database:h2:1.4.199"
-    implementation 'com.github.burst-apps-team:burstkit4j:v0.9-beta5'
+    implementation 'com.github.burst-apps-team:burstkit4j:0.10-beta1'
     compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
     jooqRuntime group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
 }

@@ -1,11 +1,9 @@
 package burst.pool.pool;
 
-import burst.kit.burst.BurstCrypto;
+import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
-import burst.kit.entity.response.AccountsWithRewardRecipientResponse;
-import burst.kit.entity.response.MiningInfoResponse;
-import burst.kit.entity.response.SubmitNonceResponse;
+import burst.kit.entity.response.MiningInfo;
 import burst.kit.service.BurstNodeService;
 import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
@@ -19,6 +17,7 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,7 @@ public class Pool {
     // Variables
     private final AtomicReference<Instant> roundStartTime = new AtomicReference<>();
     private final AtomicReference<Submission> bestDeadline = new AtomicReference<>();
-    private final AtomicReference<MiningInfoResponse> miningInfo = new AtomicReference<>();
+    private final AtomicReference<MiningInfo> miningInfo = new AtomicReference<>();
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
 
     public Pool(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService, MinerTracker minerTracker) {
@@ -77,19 +76,14 @@ public class Pool {
     }
 
     private Disposable refreshMiningInfoThread() {
-        return Observable.interval(1, TimeUnit.SECONDS)
-                .flatMapSingle(l -> nodeService.getMiningInfo())
-                .retryWhen(throwableObservable -> throwableObservable.flatMap(throwable -> {
-                    onMiningInfoError(throwable, false);
-                    return Observable.timer(1, TimeUnit.SECONDS);
-                }))
+        return nodeService.getMiningInfo()
                 .subscribe(this::onMiningInfo, e -> onMiningInfoError(e, true));
     }
 
-    private void onMiningInfo(MiningInfoResponse newMiningInfo) {
-        if (miningInfo.get() == null || !Objects.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
+    private void onMiningInfo(MiningInfo newMiningInfo) {
+        if (miningInfo.get() == null || !Arrays.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
                 || !Objects.equals(miningInfo.get().getHeight(), newMiningInfo.getHeight())) {
-            logger.info("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + newMiningInfo.getGenerationSignature() +", diff " + newMiningInfo.getBaseTarget() + ")");
+            logger.info("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + Hex.toHexString(newMiningInfo.getGenerationSignature()) +", diff " + newMiningInfo.getBaseTarget() + ")");
             resetRound(newMiningInfo);
         }
     }
@@ -140,7 +134,7 @@ public class Pool {
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
                     Submission submission = transactionalStorageService.getBestSubmissionForBlock(block.getHeight());
                     if (submission != null && Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
-                        minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getBlock(), block.getNonce(), block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFeeNQT())), fastBlocks);
+                        minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getId(), block.getNonce(), block.getGenerator(), new BurstValue(block.getBlockReward().add(block.getTotalFee())), fastBlocks);
                     } else {
                         minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, fastBlocks);
                     }
@@ -175,7 +169,7 @@ public class Pool {
         minerTracker.payoutIfNeeded(storageService);
     }
 
-    private void resetRound(MiningInfoResponse newMiningInfo) {
+    private void resetRound(MiningInfo newMiningInfo) {
         // Traffic flow - we want to stop new requests but let old ones finish before we go ahead.
         try {
             // Lock the reset round semaphore to stop accepting new requests
@@ -258,29 +252,29 @@ public class Pool {
     }
 
     private void submitDeadline(Submission submission) {
-        disposables.add(nodeService.submitNonce(propertyService.getString(Props.passphrase), submission.getNonce(), submission.getMiner().getBurstID())
+        disposables.add(nodeService.submitNonce(propertyService.getString(Props.passphrase), submission.getNonce().toString(), submission.getMiner().getBurstID()) // TODO burstkit4j accept nonce as bigint
                 .retry(propertyService.getInt(Props.submitNonceRetryCount))
                 .subscribe(this::onNonceSubmitted, this::onSubmitNonceError));
     }
 
-    private void onRewardRecipients(AccountsWithRewardRecipientResponse rewardRecipients) {
+    private void onRewardRecipients(BurstAddress[] rewardRecipients) {
         myRewardRecipients.clear();
-        myRewardRecipients.addAll(Arrays.asList(rewardRecipients.getAccounts()));
+        myRewardRecipients.addAll(Arrays.asList(rewardRecipients));
     }
 
     private void onRewardRecipientsError(Throwable t) {
         logger.error("Error fetching pool's reward recipients", t);
     }
 
-    private void onNonceSubmitted(SubmitNonceResponse response) {
-        logger.debug("Submitted nonce to node. Result is \"" + response.getResult() + "\", deadline is " + Long.toUnsignedString(response.getDeadline()));
+    private void onNonceSubmitted(long deadline) {
+        logger.debug("Submitted nonce to node. Deadline is " + Long.toUnsignedString(deadline));
     }
 
     private void onSubmitNonceError(Throwable t) {
         logger.error("Error submitting nonce to node", t);
     }
 
-    MiningInfoResponse getMiningInfo() {
+    MiningInfo getMiningInfo() {
         return miningInfo.get();
     }
 

@@ -1,13 +1,13 @@
 package burst.pool.brs;
 
-import burst.kit.entity.response.MiningInfoResponse;
+import burst.kit.entity.response.MiningInfo;
 import burst.pool.pool.Submission;
 import burst.pool.pool.SubmissionException;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-public class Generator {
+public class Generator { // TODO move all of this to burstkit4j
 
     public static int calculateScoop(byte[] genSig, long height) {
         ByteBuffer posbuf = ByteBuffer.allocate(32 + 8);
@@ -34,43 +34,14 @@ public class Generator {
         return hit.divide(BigInteger.valueOf(baseTarget));
     }
 
-    /*
-    java.lang.NullPointerException: null
-	at burst.pool.brs.Generator.calcDeadline(Generator.java:53) ~[burstpool.jar:?]
-	at burst.pool.pool.Pool.checkNewSubmission(Pool.java:205) ~[burstpool.jar:?]
-	at burst.pool.pool.Server.handleBurstApiCall(Server.java:74) ~[burstpool.jar:?]
-	at burst.pool.pool.Server.serve(Server.java:50) ~[burstpool.jar:?]
-	at fi.iki.elonen.NanoHTTPD$HTTPSession.execute(NanoHTTPD.java:840) ~[burstpool.jar:?]
-	at fi.iki.elonen.NanoHTTPD$ClientHandler.run(NanoHTTPD.java:189) ~[burstpool.jar:?]
-	at java.lang.Thread.run(Thread.java:834) ~[?:?]
-     */
-
-    public static BigInteger calcDeadline(MiningInfoResponse miningInfo, Submission submission) throws SubmissionException {
+    public static BigInteger calcDeadline(MiningInfo miningInfo, Submission submission) throws SubmissionException {
         if (miningInfo == null) {
             throw new SubmissionException("Pool does not have mining info");
         }
-        return calculateDeadline(submission
-                .getMiner()
-                .getBurstID()
-                .getSignedLongId(), parseUnsignedLong(submission
-                .getNonce()), miningInfo
-                .getGenerationSignature()
-                .getBytes(), calculateScoop(miningInfo
-                .getGenerationSignature()
-                .getBytes(), miningInfo
-                .getHeight()), miningInfo
-                .getBaseTarget(), Math.toIntExact(miningInfo
-                .getHeight())); // todo height -> long
+        return calculateDeadline(submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce().longValue(), miningInfo.getGenerationSignature(), calculateScoop(miningInfo.getGenerationSignature(), miningInfo.getHeight()), miningInfo.getBaseTarget(), Math.toIntExact(miningInfo.getHeight())); // todo height -> long
     }
 
     private static long parseUnsignedLong(String number) {
-        if (number == null) {
-            return 0;
-        }
-        BigInteger bigInt = new BigInteger(number.trim());
-        if (bigInt.signum() < 0 || bigInt.compareTo(new BigInteger("18446744073709551616")) > -1) {
-            throw new IllegalArgumentException("overflow: " + number);
-        }
-        return bigInt.longValue();
+        return Long.parseUnsignedLong(number);
     }
 }

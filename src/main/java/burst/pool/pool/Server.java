@@ -1,9 +1,8 @@
 package burst.pool.pool;
 
-import burst.kit.burst.BurstCrypto;
+import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
-import burst.kit.entity.HexStringByteArray;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.Constants;
 import burst.pool.miners.Miner;
@@ -14,11 +13,13 @@ import burst.pool.storage.persistent.StorageService;
 import com.google.gson.*;
 import fi.iki.elonen.NanoHTTPD;
 import org.bouncycastle.util.encoders.DecoderException;
+import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.math.BigInteger;
 import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -63,13 +64,17 @@ public class Server extends NanoHTTPD {
 
     private String handleBurstApiCall(IHTTPSession session, Map<String, String> params) {
         if (session.getMethod().equals(Method.POST) && Objects.equals(params.get("requestType"), "submitNonce")) {
-            Submission submission = new Submission(BurstAddress.fromEither(params.get("accountId")), params.get("nonce"));
+            BigInteger nonce = null;
+            try {
+                nonce = new BigInteger(params.get("nonce"));
+            } catch (Exception ignored) {}
+            Submission submission = new Submission(BurstAddress.fromEither(params.get("accountId")), nonce);
             try {
                 if (submission.getMiner() == null) {
                     throw new SubmissionException("Account ID not set");
                 }
                 if (submission.getNonce() == null) {
-                    throw new SubmissionException("Nonce not set");
+                    throw new SubmissionException("Nonce not set or invalid");
                 }
                 String userAgent = session.getHeaders().get("user-agent");
                 if (userAgent == null) userAgent = "";
@@ -145,7 +150,7 @@ public class Server extends NanoHTTPD {
             }
             byte[] signatureBytes;
             try {
-                signatureBytes = new HexStringByteArray(signature).getBytes();
+                signatureBytes = Hex.decode(signature);
             } catch (DecoderException e) {
                 return new JsonPrimitive("Could not parse signature").toString();
             }
@@ -154,7 +159,7 @@ public class Server extends NanoHTTPD {
             }
             byte[] publicKeyBytes;
             try {
-                publicKeyBytes = new HexStringByteArray(publicKey).getBytes();
+                publicKeyBytes = Hex.decode(publicKey);
             } catch (DecoderException e) {
                 return new JsonPrimitive("Could not parse publicKey").toString();
             }
