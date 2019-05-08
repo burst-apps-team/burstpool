@@ -28,7 +28,7 @@ public class Props {
     public static final Prop<Float> defaultMinimumPayout = new Prop<>("defaultMinimumPayout", 100f); // Must be > 0
     public static final Prop<Float> minimumMinimumPayout = new Prop<>("minimumMinimumPayout", 100f); // Must be > 0
     public static final Prop<Integer> minPayoutsPerTransaction = new Prop<>("minPayoutsPerTransaction", 10); // Must be 2-64
-    public static final Prop<Float> transactionFee = new Prop<>("transactionFee", 0.1f); // Must be > 0.00735
+    public static final Prop<Float> transactionFee = new Prop<>("transactionFee", 1f); // Must be > 0.00735
     public static final Prop<Integer> payoutRetryCount = new Prop<>("payoutRetryCount", 3);
     public static final Prop<Integer> submitNonceRetryCount = new Prop<>("submitNonceRetryCount", 3);
 
