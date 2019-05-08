@@ -3,6 +3,8 @@ package burst.pool.pool;
 import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstValue;
+import burst.kit.entity.response.MiningInfo;
+import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.Constants;
 import burst.pool.miners.Miner;
@@ -82,7 +84,8 @@ public class Server extends NanoHTTPD {
                 return gson.toJson(new NonceSubmissionResponse(e.getMessage(), null));
             }
         } else if (Objects.equals(params.get("requestType"), "getMiningInfo")) {
-            return gson.toJson(pool.getMiningInfo());
+            MiningInfo miningInfo = pool.getMiningInfo();
+            return gson.toJson(new MiningInfoResponse(Hex.toHexString(pool.getMiningInfo().getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight()));
         } else {
             return "404 not found";
         }
