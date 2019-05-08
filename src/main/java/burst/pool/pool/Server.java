@@ -22,7 +22,6 @@ import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URLConnection;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Server extends NanoHTTPD {
@@ -92,15 +91,17 @@ public class Server extends NanoHTTPD {
     private String handleApiCall(IHTTPSession session, Map<String, String> params) {
         if (session.getUri().startsWith("/api/getMiners")) {
             JsonArray minersJson = new JsonArray();
-            List<Miner> miners = storageService.getMiners();
-            miners.forEach(miner -> minersJson.add(minerToJson(miner)));
+            AtomicReference<Double> poolCapacity = new AtomicReference<>(0d);
+            storageService.getMiners()
+                    .stream()
+                    .sorted(Comparator.comparing(Miner::getCapacity).reversed())
+                    .forEach(miner -> {
+                        poolCapacity.updateAndGet(v -> v + miner.getCapacity());
+                        minersJson.add(minerToJson(miner));
+                    });
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("miners", minersJson);
-            double poolCapacity = 0;
-            for (Miner miner : miners) {
-                poolCapacity += miner.getCapacity();
-            }
-            jsonObject.addProperty("poolCapacity", poolCapacity);
+            jsonObject.addProperty("poolCapacity", poolCapacity.get());
             return jsonObject.toString();
         } else if (session.getUri().startsWith("/api/getMiner/")) {
             BurstAddress minerAddress = BurstAddress.fromEither(session.getUri().substring(14));
