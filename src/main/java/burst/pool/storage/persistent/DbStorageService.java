@@ -340,11 +340,10 @@ public class DbStorageService implements StorageService {
 
         @Override
         public BurstValue getPendingBalance() {
-            return BurstValue.fromPlanck(getFromCacheOr(MINERS, accountIdStr + "pending", () -> defaultContext.select(MINERS.PENDING_BALANCE)
+            return getFromCacheOr(MINERS, accountIdStr + "pending", () -> defaultContext.select(MINERS.PENDING_BALANCE)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
-                    .fetchAny()
-                    .get(MINERS.PENDING_BALANCE)));
+                    .fetchAny(record -> BurstValue.fromPlanck(record.get(MINERS.PENDING_BALANCE))));
         }
 
         @Override
@@ -394,11 +393,10 @@ public class DbStorageService implements StorageService {
 
         @Override
         public BurstValue getMinimumPayout() {
-            return BurstValue.fromPlanck(getFromCacheOr(MINERS, accountIdStr + "minpayout", () -> defaultContext.select(MINERS.MINIMUM_PAYOUT)
+            return getFromCacheOr(MINERS, accountIdStr + "minpayout", () -> defaultContext.select(MINERS.MINIMUM_PAYOUT)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
-                    .fetchAny()
-                    .get(MINERS.MINIMUM_PAYOUT)));
+                    .fetchAny(record -> BurstValue.fromPlanck(record.get(MINERS.MINIMUM_PAYOUT))));
         }
 
         @Override
@@ -501,12 +499,13 @@ public class DbStorageService implements StorageService {
         @Override
         public BurstValue getPendingBalance() {
             try {
-                return BurstValue.fromPlanck((BigInteger) getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> defaultContext.select(POOL_STATE.VALUE)
+                BurstValue pending = getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> defaultContext.select(POOL_STATE.VALUE)
                         .from(POOL_STATE)
                         .where(POOL_STATE.KEY.eq(POOL_STATE_FEE_RECIPIENT_BALANCE))
-                        .fetchAny(record -> new BigInteger(record.get(POOL_STATE.VALUE)))));
+                        .fetchAny(record -> BurstValue.fromPlanck(record.get(POOL_STATE.VALUE))));
+                return pending == null ? BurstValue.ZERO : pending;
             } catch (NullPointerException e) {
-                return BurstValue.fromBurst(0);
+                return BurstValue.fromPlanck(0);
             }
         }
 

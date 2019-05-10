@@ -17,7 +17,8 @@ public class PoolFeeRecipient implements Payable {
 
     @Override
     public void increasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance().add(delta));
+        store.setPendingBalance(store.getPendingBalance()
+                .add(delta));
     }
 
     @Override
