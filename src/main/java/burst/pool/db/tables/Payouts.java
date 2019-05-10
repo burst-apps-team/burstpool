@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payouts extends TableImpl<PayoutsRecord> {
 
-    private static final long serialVersionUID = 2099380996;
+    private static final long serialVersionUID = 1122049568;
 
     /**
      * The reference instance of <code>payouts</code>
@@ -69,7 +69,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
     /**
      * The column <code>payouts.sender_public_key</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> SENDER_PUBLIC_KEY = createField("sender_public_key", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> SENDER_PUBLIC_KEY = createField("sender_public_key", org.jooq.impl.SQLDataType.BINARY(32).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
 
     /**
      * The column <code>payouts.fee</code>.
@@ -84,7 +84,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
     /**
      * The column <code>payouts.attachment</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> ATTACHMENT = createField("attachment", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> ATTACHMENT = createField("attachment", org.jooq.impl.SQLDataType.BLOB.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BLOB)), this, "");
 
     /**
      * Create a <code>payouts</code> table reference

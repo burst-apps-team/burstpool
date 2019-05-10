@@ -17,12 +17,12 @@ public class PoolFeeRecipient implements Payable {
 
     @Override
     public void increasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance() + Double.parseDouble(delta.toPlainString())); // TODO workaround for bug in burstkit4j
+        store.setPendingBalance(store.getPendingBalance().add(delta));
     }
 
     @Override
     public void decreasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance() - Double.parseDouble(delta.toPlainString())); // TODO workaround for bug in burstkit4j
+        store.setPendingBalance(store.getPendingBalance().subtract(delta));
     }
 
     @Override
@@ -37,7 +37,7 @@ public class PoolFeeRecipient implements Payable {
 
     @Override
     public BurstValue getPending() {
-        return BurstValue.fromBurst(store.getPendingBalance());
+        return store.getPendingBalance();
     }
 
     @Override

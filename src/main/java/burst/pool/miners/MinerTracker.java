@@ -65,14 +65,14 @@ public class MinerTracker {
         BurstValue reward = blockReward;
 
         // Take pool fee
-        BurstValue poolTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.poolFeePercentage))));
-        reward = new BurstValue(reward.subtract(poolTake));
+        BurstValue poolTake = reward.multiply(propertyService.getFloat(Props.poolFeePercentage));
+        reward = reward.subtract(poolTake);
         PoolFeeRecipient poolFeeRecipient = transactionalStorageService.getPoolFeeRecipient();
         poolFeeRecipient.increasePending(poolTake);
 
         // Take winner fee
-        BurstValue winnerTake = new BurstValue(reward.multiply(BigDecimal.valueOf(propertyService.getFloat(Props.winnerRewardPercentage))));
-        reward = new BurstValue(reward.subtract(winnerTake));
+        BurstValue winnerTake = reward.multiply(propertyService.getFloat(Props.winnerRewardPercentage));
+        reward = reward.subtract(winnerTake);
         Miner winningMiner = getOrCreate(transactionalStorageService, winner);
         winningMiner.increasePending(winnerTake);
 
@@ -83,12 +83,12 @@ public class MinerTracker {
         // Update each miner's pending
         AtomicReference<BurstValue> amountTaken = new AtomicReference<>(BurstValue.fromBurst(0));
         BurstValue poolReward = reward;
-        miners.forEach(miner -> amountTaken.updateAndGet(a -> new BurstValue(a.add(miner.takeShare(poolReward)))));
+        miners.forEach(miner -> amountTaken.updateAndGet(a -> a.add(miner.takeShare(poolReward))));
 
         // Evenly share result. This makes sure that poolReward is taken, even if the amountTaken was greater than poolReward
         // Essentially prevents the pool from overpaying or underpaying. Even if it gave out too much to the fee recipient and reward recipient, it will now take the extra from the pending of miners.
         if (miners.size() > 0) {
-            BurstValue amountRemainingEach = new BurstValue(poolReward.subtract(amountTaken.get()).divide(BigDecimal.valueOf(miners.size()), 8, RoundingMode.DOWN));
+            BurstValue amountRemainingEach = poolReward.subtract(amountTaken.get()).divide(miners.size());
             logger.info("Amount remaining each is " + amountRemainingEach.toPlanck());
             //miners.forEach(miner -> miner.increasePending(amountRemainingEach));
         }
@@ -117,7 +117,7 @@ public class MinerTracker {
         waitUntilNotProcessingBlock();
         Miner miner = storageService.getMiner(minerAddress);
         if (miner == null) return;
-        miner.setMinimumPayout(Double.parseDouble(amount.toUnformattedString()));
+        miner.setMinimumPayout(amount);
     }
 
     public void payoutIfNeeded(StorageService storageService) {
@@ -152,10 +152,8 @@ public class MinerTracker {
         Payable[] payableMiners = payableMinersSet.size() <= 64 ? payableMinersSet.toArray(new Payable[0]) : Arrays.copyOfRange(payableMinersSet.toArray(new Payable[0]), 0, 64);
 
         BurstValue transactionFee = BurstValue.fromBurst(propertyService.getFloat(Props.transactionFee));
-        BurstValue transactionFeePaidPerMiner = new BurstValue(transactionFee.divide(BigDecimal.valueOf(payableMiners.length), 8, RoundingMode.HALF_UP));
-        BurstValue transactionFeePaidPerMinerOld = new BurstValue(transactionFee.divide(BigDecimal.valueOf(payableMiners.length), RoundingMode.CEILING)); // TODO remove debug
-        logger.info("TFPM is " + transactionFeePaidPerMiner.toPlanck() + ", was " + transactionFeePaidPerMinerOld.toPlanck());
-        System.out.println("TFPM is " + transactionFeePaidPerMiner.toPlanck());
+        BurstValue transactionFeePaidPerMiner = transactionFee.divide(payableMiners.length);
+        logger.info("TFPM is " + transactionFeePaidPerMiner.toPlanck());
         Map<Payable, BurstValue> payees = new HashMap<>(); // Does not have subtracted transaction fee
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
         StringBuilder logMessage = new StringBuilder("Paying out to miners");
@@ -163,10 +161,10 @@ public class MinerTracker {
         for (Payable payable : payableMiners) {
             BurstValue pending = payable.getPending();
             payees.put(payable, pending);
-            BurstValue actualPayout = new BurstValue(pending.subtract(transactionFeePaidPerMiner));
+            BurstValue actualPayout = pending.subtract(transactionFeePaidPerMiner);
             recipients.put(payable.getAddress(), actualPayout);
             transactionAttachment.putLong(payable.getAddress().getBurstID().getSignedLongId());
-            transactionAttachment.putLong(Long.parseUnsignedLong(actualPayout.toPlanck()));
+            transactionAttachment.putLong(actualPayout.toPlanck().longValue());
             logMessage.append(", ").append(payable.getAddress().getFullAddress()).append("(").append(actualPayout.toPlanck()).append("/").append(pending.toPlanck()).append(")");
         }
         logger.info(logMessage.toString());

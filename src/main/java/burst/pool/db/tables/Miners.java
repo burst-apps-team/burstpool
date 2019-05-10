@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Miners extends TableImpl<MinersRecord> {
 
-    private static final long serialVersionUID = -1457120187;
+    private static final long serialVersionUID = 1128856611;
 
     /**
      * The reference instance of <code>miners</code>
@@ -69,7 +69,7 @@ public class Miners extends TableImpl<MinersRecord> {
     /**
      * The column <code>miners.pending_balance</code>.
      */
-    public final TableField<MinersRecord, Double> PENDING_BALANCE = createField("pending_balance", org.jooq.impl.SQLDataType.DOUBLE.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.DOUBLE)), this, "");
+    public final TableField<MinersRecord, Long> PENDING_BALANCE = createField("pending_balance", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>miners.estimated_capacity</code>.
@@ -84,7 +84,7 @@ public class Miners extends TableImpl<MinersRecord> {
     /**
      * The column <code>miners.minimum_payout</code>.
      */
-    public final TableField<MinersRecord, Double> MINIMUM_PAYOUT = createField("minimum_payout", org.jooq.impl.SQLDataType.DOUBLE.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.DOUBLE)), this, "");
+    public final TableField<MinersRecord, Long> MINIMUM_PAYOUT = createField("minimum_payout", org.jooq.impl.SQLDataType.BIGINT.defaultValue(org.jooq.impl.DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
      * The column <code>miners.name</code>.

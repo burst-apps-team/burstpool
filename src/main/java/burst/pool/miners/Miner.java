@@ -93,22 +93,22 @@ public class Miner implements Payable {
 
     @Override
     public void increasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance() + Double.parseDouble(delta.toPlainString())); // TODO workaround for bug in burstkit4j
+        store.setPendingBalance(store.getPendingBalance().add(delta));
     }
 
     @Override
     public void decreasePending(BurstValue delta) {
-        store.setPendingBalance(store.getPendingBalance() - Double.parseDouble(delta.toPlainString())); // TODO workaround for bug in burstkit4j
+        store.setPendingBalance(store.getPendingBalance().subtract(delta));
     }
 
     @Override
     public BurstValue getMinimumPayout() {
-        return BurstValue.fromBurst(store.getMinimumPayout());
+        return store.getMinimumPayout();
     }
 
     @Override
     public BurstValue takeShare(BurstValue availableReward) {
-        BurstValue share = new BurstValue(availableReward.multiply(BigDecimal.valueOf(store.getShare())));
+        BurstValue share = availableReward.multiply(store.getShare());
         increasePending(share);
         return share;
     }
@@ -138,7 +138,7 @@ public class Miner implements Payable {
 
     @Override
     public BurstValue getPending() {
-        return BurstValue.fromBurst(store.getPendingBalance());
+        return store.getPendingBalance();
     }
 
     @Override
@@ -170,7 +170,7 @@ public class Miner implements Payable {
         store.setUserAgent(userAgent);
     }
 
-    public void setMinimumPayout(double minimumPayout) {
+    public void setMinimumPayout(BurstValue minimumPayout) {
         store.setMinimumPayout(minimumPayout);
     }
 }

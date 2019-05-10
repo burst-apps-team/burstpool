@@ -34,7 +34,7 @@ def dbusername = "root"
 dependencies {
     implementation 'org.apache.poi:poi-ooxml:4.1.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.8'
-    implementation 'com.github.burst-apps-team:burstkit4j:v0.10-beta2'
+    implementation 'com.github.burst-apps-team:burstkit4j:v0.10-beta3'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation "org.flywaydb:flyway-core:6.0.0-beta"
     implementation "org.jooq:jooq"
@@ -84,8 +84,8 @@ jooq {
 }
 
 generateBurstPoolJooqSchemaSource.dependsOn flywayMigrate
-generateBurstPoolJooqSchemaSource.onlyIf {project.hasProperty("generateSchema")}
-flywayMigrate.onlyIf {project.hasProperty("generateSchema")}
+generateBurstPoolJooqSchemaSource.onlyIf {System.getProperty("generateSchema") == "true"}
+flywayMigrate.onlyIf {System.getProperty("generateSchema") == "true"}
 
 task buildJar(dependsOn: shadowJar)
 

@@ -146,21 +146,21 @@ public class MemoryStorageService implements StorageService {
     }
 
     private class MemoryMinerStore implements MinerStore {
-        private volatile double pendingBalance;
+        private volatile BurstValue pendingBalance = BurstValue.fromBurst(0);
         private volatile double estimatedCapacity;
         private volatile double share;
-        private volatile double minimumPayout = propertyService.getFloat(Props.defaultMinimumPayout);
+        private volatile BurstValue minimumPayout = BurstValue.fromBurst(propertyService.getFloat(Props.defaultMinimumPayout));
         private volatile String name;
         private volatile String userAgent;
         private final Map<Long, Deadline> deadlines = new ConcurrentHashMap<>();
 
         @Override
-        public double getPendingBalance() {
+        public BurstValue getPendingBalance() {
             return pendingBalance;
         }
 
         @Override
-        public void setPendingBalance(double pendingBalance) {
+        public void setPendingBalance(BurstValue pendingBalance) {
             this.pendingBalance = pendingBalance;
         }
 
@@ -185,12 +185,12 @@ public class MemoryStorageService implements StorageService {
         }
 
         @Override
-        public double getMinimumPayout() {
+        public BurstValue getMinimumPayout() {
             return minimumPayout;
         }
 
         @Override
-        public void setMinimumPayout(double minimumPayout) {
+        public void setMinimumPayout(BurstValue minimumPayout) {
             this.minimumPayout = minimumPayout;
         }
 
@@ -241,15 +241,15 @@ public class MemoryStorageService implements StorageService {
     }
 
     private static class MemoryFeeRecipientStore implements MinerStore.FeeRecipientStore {
-        private AtomicReference<Double> pending = new AtomicReference<>(0d);
+        private AtomicReference<BurstValue> pending = new AtomicReference<>(BurstValue.fromBurst(0));
 
         @Override
-        public double getPendingBalance() {
+        public BurstValue getPendingBalance() {
             return pending.get();
         }
 
         @Override
-        public void setPendingBalance(double pending) {
+        public void setPendingBalance(BurstValue pending) {
             this.pending.set(pending);
         }
     }

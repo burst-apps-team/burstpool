@@ -2,6 +2,7 @@ package burst.pool.storage.persistent;
 
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
+import burst.kit.entity.BurstValue;
 import burst.pool.db.tables.records.MinersRecord;
 import burst.pool.entity.Payout;
 import burst.pool.entity.WonBlock;
@@ -226,7 +227,7 @@ public class DbStorageService implements StorageService {
                 return getMiner(address);
             } else {
                 defaultContext.insertInto(MINERS, MINERS.ACCOUNT_ID, MINERS.PENDING_BALANCE, MINERS.ESTIMATED_CAPACITY, MINERS.SHARE, MINERS.MINIMUM_PAYOUT, MINERS.NAME, MINERS.USER_AGENT)
-                        .values(address.getBurstID().getSignedLongId(), 0d, 0d, 0d, (double) propertyService.getFloat(Props.defaultMinimumPayout), "", "")
+                        .values(address.getBurstID().getSignedLongId(), 0L, 0d, 0d, BurstValue.fromBurst(propertyService.getFloat(Props.defaultMinimumPayout)).toPlanck().longValueExact(), "", "")
                         .execute();
                 recalculateMinerCount();
                 return getMiner(address);
@@ -302,7 +303,7 @@ public class DbStorageService implements StorageService {
     public void addWonBlock(WonBlock wonBlock) {
         // Won blocks are not cached.
         defaultContext.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
-            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce().toString(), Long.parseUnsignedLong(wonBlock.getFullReward().toPlanck()))
+            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce().toString(), wonBlock.getFullReward().toPlanck().longValue())
             .execute();
     }
 
@@ -310,7 +311,7 @@ public class DbStorageService implements StorageService {
     public void addPayout(Payout payout) {
         // Payouts are not cached.
         defaultContext.insertInto(PAYOUTS, PAYOUTS.TRANSACTION_ID, PAYOUTS.SENDER_PUBLIC_KEY, PAYOUTS.FEE, PAYOUTS.DEADLINE, PAYOUTS.ATTACHMENT)
-                .values(payout.getTransactionId().getSignedLongId(), payout.getSenderPublicKey(), Long.parseUnsignedLong(payout.getFee().toPlanck()), (long) payout.getDeadline(), payout.getAttachment())
+                .values(payout.getTransactionId().getSignedLongId(), payout.getSenderPublicKey(), payout.getFee().toPlanck().longValue(), (long) payout.getDeadline(), payout.getAttachment())
                 .execute();
     }
 
@@ -338,18 +339,18 @@ public class DbStorageService implements StorageService {
         }
 
         @Override
-        public double getPendingBalance() {
-            return getFromCacheOr(MINERS, accountIdStr + "pending", () -> defaultContext.select(MINERS.PENDING_BALANCE)
+        public BurstValue getPendingBalance() {
+            return BurstValue.fromPlanck(getFromCacheOr(MINERS, accountIdStr + "pending", () -> defaultContext.select(MINERS.PENDING_BALANCE)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
-                    .get(MINERS.PENDING_BALANCE));
+                    .get(MINERS.PENDING_BALANCE)));
         }
 
         @Override
-        public void setPendingBalance(double pendingBalance) {
+        public void setPendingBalance(BurstValue pendingBalance) {
             defaultContext.update(MINERS)
-                    .set(MINERS.PENDING_BALANCE, pendingBalance)
+                    .set(MINERS.PENDING_BALANCE, pendingBalance.toPlanck().longValueExact())
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
             storeInCache(MINERS, accountIdStr + "pending", pendingBalance);
@@ -392,18 +393,18 @@ public class DbStorageService implements StorageService {
         }
 
         @Override
-        public double getMinimumPayout() {
-            return getFromCacheOr(MINERS, accountIdStr + "minpayout", () -> defaultContext.select(MINERS.MINIMUM_PAYOUT)
+        public BurstValue getMinimumPayout() {
+            return BurstValue.fromPlanck(getFromCacheOr(MINERS, accountIdStr + "minpayout", () -> defaultContext.select(MINERS.MINIMUM_PAYOUT)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
-                    .get(MINERS.MINIMUM_PAYOUT));
+                    .get(MINERS.MINIMUM_PAYOUT)));
         }
 
         @Override
-        public void setMinimumPayout(double minimumPayout) {
+        public void setMinimumPayout(BurstValue minimumPayout) {
             defaultContext.update(MINERS)
-                    .set(MINERS.MINIMUM_PAYOUT, minimumPayout)
+                    .set(MINERS.MINIMUM_PAYOUT, minimumPayout.toPlanck().longValueExact())
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .execute();
             storeInCache(MINERS, accountIdStr + "minpayout", minimumPayout);
@@ -498,22 +499,22 @@ public class DbStorageService implements StorageService {
     private final class DbFeeRecipientStore implements MinerStore.FeeRecipientStore {
 
         @Override
-        public double getPendingBalance() {
+        public BurstValue getPendingBalance() {
             try {
-                return getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> defaultContext.select(POOL_STATE.VALUE)
+                return BurstValue.fromPlanck((BigInteger) getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> defaultContext.select(POOL_STATE.VALUE)
                         .from(POOL_STATE)
                         .where(POOL_STATE.KEY.eq(POOL_STATE_FEE_RECIPIENT_BALANCE))
-                        .fetchAny(record -> Double.parseDouble(record.get(POOL_STATE.VALUE))));
+                        .fetchAny(record -> new BigInteger(record.get(POOL_STATE.VALUE)))));
             } catch (NullPointerException e) {
-                return 0;
+                return BurstValue.fromBurst(0);
             }
         }
 
         @Override
-        public void setPendingBalance(double pending) {
+        public void setPendingBalance(BurstValue pending) {
             defaultContext.mergeInto(POOL_STATE, POOL_STATE.KEY, POOL_STATE.VALUE)
                     .key(POOL_STATE.KEY)
-                    .values(POOL_STATE_FEE_RECIPIENT_BALANCE, Double.toString(pending))
+                    .values(POOL_STATE_FEE_RECIPIENT_BALANCE, pending.toPlanck().toString())
                     .execute();
             storeInCache(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, pending);
         }

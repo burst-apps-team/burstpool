@@ -1,10 +1,10 @@
 CREATE TABLE miners (
   db_id BIGINT AUTO_INCREMENT,
   account_id BIGINT,
-  pending_balance DOUBLE,
+  pending_balance BIGINT,
   estimated_capacity DOUBLE,
   share DOUBLE,
-  minimum_payout DOUBLE,
+  minimum_payout BIGINT,
   name TEXT,
   user_agent TEXT,
   PRIMARY KEY (db_id)
