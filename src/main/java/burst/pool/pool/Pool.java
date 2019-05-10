@@ -3,6 +3,7 @@ package burst.pool.pool;
 import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.response.MiningInfo;
+import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
@@ -294,7 +295,8 @@ public class Pool {
         } else {
             jsonObject.add("bestDeadline", JsonNull.INSTANCE);
         }
-        jsonObject.add("miningInfo", gson.toJsonTree(miningInfo.get()));
+        MiningInfo miningInfo = getMiningInfo();
+        jsonObject.add("miningInfo", gson.toJsonTree(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())));
         return jsonObject;
     }
 
