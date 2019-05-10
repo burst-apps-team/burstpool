@@ -1,6 +1,5 @@
 package burst.pool;
 
-import burst.kit.entity.BurstAddress;
 import burst.kit.service.BurstNodeService;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.MinerTracker;
@@ -18,10 +17,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
 
 public class Launcher {
     public static void main(String[] args) { // todo catch exception
+        if (System.getProperty("log4j.configurationFile") == null) {
+            System.setProperty("log4j.configurationFile", "burstPoolLoggingConfig.xml");
+        }
         Logger logger = LoggerFactory.getLogger(Launcher.class);
         String propertiesFileName = "pool.properties";
         if (args.length > 0) {
