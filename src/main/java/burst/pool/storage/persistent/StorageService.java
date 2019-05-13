@@ -25,10 +25,10 @@ public interface StorageService extends AutoCloseable {
     int getLastProcessedBlock();
     void incrementLastProcessedBlock();
 
-    Map<Long, StoredSubmission> getBestSubmissions();
-    StoredSubmission getBestSubmissionForBlock(long blockHeight);
-    void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission);
-    void removeBestSubmission(long blockHeight);
+    Map<Long, List<StoredSubmission>> getBestSubmissions();
+    List<StoredSubmission> getBestSubmissionsForBlock(long blockHeight);
+    void addBestSubmissionForBlock(long blockHeight, StoredSubmission submission);
+    void removeBestSubmission(long blockHeight); // TODO unused
 
     void addWonBlock(WonBlock wonBlock);
 

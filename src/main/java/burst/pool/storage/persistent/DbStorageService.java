@@ -32,10 +32,7 @@ import org.jooq.tools.jdbc.JDBCUtils;
 
 import java.math.BigInteger;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -263,32 +260,34 @@ public class DbStorageService implements StorageService {
     }
 
     @Override
-    public Map<Long, StoredSubmission> getBestSubmissions() {
+    public Map<Long, List<StoredSubmission>> getBestSubmissions() {
         // We don't need to cache as getBestSubmissionForBlock will read from cache
         return defaultContext.select(BEST_SUBMISSIONS.HEIGHT)
                 .from(BEST_SUBMISSIONS)
                 .fetch()
-                .intoMap(height -> height.get(BEST_SUBMISSIONS.HEIGHT), height -> getBestSubmissionForBlock(height.get(BEST_SUBMISSIONS.HEIGHT)));
+                .intoMap(height -> height.get(BEST_SUBMISSIONS.HEIGHT), height -> getBestSubmissionsForBlock(height.get(BEST_SUBMISSIONS.HEIGHT)));
     }
 
     @Override
-    public StoredSubmission getBestSubmissionForBlock(long blockHeight) {
+    public List<StoredSubmission> getBestSubmissionsForBlock(long blockHeight) {
         try {
             return getFromCacheOr(BEST_SUBMISSIONS, Long.toString(blockHeight), () -> defaultContext.selectFrom(BEST_SUBMISSIONS)
                     .where(BEST_SUBMISSIONS.HEIGHT.eq(blockHeight))
-                    .fetchAny(response -> new StoredSubmission(BurstAddress.fromId(BurstID.fromLong(response.getAccountId())), new BigInteger(response.getNonce()), response.getDeadline())));
+                    .fetch(response -> new StoredSubmission(BurstAddress.fromId(BurstID.fromLong(response.getAccountId())), new BigInteger(response.getNonce()), response.getDeadline())));
         } catch (NullPointerException e) {
             return null;
         }
     }
 
     @Override
-    public void setOrUpdateBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
-        defaultContext.mergeInto(BEST_SUBMISSIONS, BEST_SUBMISSIONS.HEIGHT, BEST_SUBMISSIONS.ACCOUNT_ID, BEST_SUBMISSIONS.NONCE, BEST_SUBMISSIONS.DEADLINE)
-                .key(BEST_SUBMISSIONS.HEIGHT)
+    public void addBestSubmissionForBlock(long blockHeight, StoredSubmission submission) {
+        List<StoredSubmission> submissions = getBestSubmissionsForBlock(blockHeight);
+        if (submissions == null) submissions = new ArrayList<>();
+        defaultContext.insertInto(BEST_SUBMISSIONS, BEST_SUBMISSIONS.HEIGHT, BEST_SUBMISSIONS.ACCOUNT_ID, BEST_SUBMISSIONS.NONCE, BEST_SUBMISSIONS.DEADLINE)
                 .values(blockHeight, submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce().toString(), submission.getDeadline())
                 .execute();
-        storeInCache(BEST_SUBMISSIONS, Long.toUnsignedString(blockHeight), submission);
+        submissions.add(submission);
+        storeInCache(BEST_SUBMISSIONS, Long.toUnsignedString(blockHeight), submissions);
     }
 
     @Override

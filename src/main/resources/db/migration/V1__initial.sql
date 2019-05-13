@@ -29,7 +29,7 @@ CREATE TABLE best_submissions (
   deadline BIGINT,
   PRIMARY KEY (db_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-CREATE UNIQUE INDEX best_submissions_index ON best_submissions (height);
+CREATE INDEX best_submissions_index ON best_submissions (height);
 
 CREATE TABLE pool_state (
   `key` VARCHAR(50),

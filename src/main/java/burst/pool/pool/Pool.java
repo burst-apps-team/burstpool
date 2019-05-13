@@ -120,20 +120,33 @@ public class Pool {
 
         List<Long> fastBlocks = new ArrayList<>();
         transactionalStorageService.getBestSubmissions().forEach((height, deadline) -> {
-            if (deadline.getDeadline() < propertyService.getInt(Props.tMin)) {
+            long lowestDeadline = deadline.stream()
+                    .map(StoredSubmission::getDeadline)
+                    .min(Long::compare)
+                    .orElse((long) propertyService.getInt(Props.tMin));
+            if (lowestDeadline < propertyService.getInt(Props.tMin)) {
                 fastBlocks.add(height);
             }
         });
 
-        if (transactionalStorageService.getBestSubmissionForBlock(transactionalStorageService.getLastProcessedBlock() + 1) == null) {
+        List<StoredSubmission> storedSubmissions = transactionalStorageService.getBestSubmissionsForBlock(transactionalStorageService.getLastProcessedBlock() + 1);
+        if (storedSubmissions == null || storedSubmissions.isEmpty()) {
             onProcessedBlock(transactionalStorageService);
             return Completable.complete();
         }
 
         return nodeService.getBlock(transactionalStorageService.getLastProcessedBlock() + 1)
                 .flatMapCompletable(block -> Completable.fromAction(() -> {
-                    Submission submission = transactionalStorageService.getBestSubmissionForBlock(block.getHeight());
-                    if (submission != null && Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
+                    List<? extends Submission> submissions = transactionalStorageService.getBestSubmissionsForBlock(block.getHeight());
+                    boolean won = false;
+                    if (submissions != null && !submissions.isEmpty()) {
+                        for (Submission submission : submissions) {
+                            if (Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
+                                won = true;
+                            }
+                        }
+                    }
+                    if (won) {
                         minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getId(), block.getNonce(), block.getGenerator(), block.getBlockReward().add(block.getTotalFee()), fastBlocks);
                     } else {
                         minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, fastBlocks);
@@ -248,7 +261,7 @@ public class Pool {
     private void onNewBestDeadline(long blockHeight, Submission submission) throws SubmissionException {
         bestDeadline.set(submission);
         submitDeadline(submission);
-        storageService.setOrUpdateBestSubmissionForBlock(blockHeight, new StoredSubmission(submission.getMiner(), submission.getNonce(), Generator.calcDeadline(miningInfo.get(), submission).longValue()));
+        storageService.addBestSubmissionForBlock(blockHeight, new StoredSubmission(submission.getMiner(), submission.getNonce(), Generator.calcDeadline(miningInfo.get(), submission).longValue()));
     }
 
     private void submitDeadline(Submission submission) {
