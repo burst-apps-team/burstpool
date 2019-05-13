@@ -265,7 +265,9 @@ public class DbStorageService implements StorageService {
         return defaultContext.select(BEST_SUBMISSIONS.HEIGHT)
                 .from(BEST_SUBMISSIONS)
                 .fetch()
-                .intoMap(height -> height.get(BEST_SUBMISSIONS.HEIGHT), height -> getBestSubmissionsForBlock(height.get(BEST_SUBMISSIONS.HEIGHT)));
+                .stream()
+                .distinct()
+                .collect(Collectors.toMap(height -> height.get(BEST_SUBMISSIONS.HEIGHT), height -> getBestSubmissionsForBlock(height.get(BEST_SUBMISSIONS.HEIGHT))));
     }
 
     @Override
