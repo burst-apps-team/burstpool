@@ -55,7 +55,6 @@ public class Keys {
     // -------------------------------------------------------------------------
 
     public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_PRIMARY = UniqueKeys0.KEY_BEST_SUBMISSIONS_PRIMARY;
-    public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = UniqueKeys0.KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX;
     public static final UniqueKey<FlywaySchemaHistoryRecord> KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY = UniqueKeys0.KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY;
     public static final UniqueKey<MinersRecord> KEY_MINERS_PRIMARY = UniqueKeys0.KEY_MINERS_PRIMARY;
     public static final UniqueKey<MinersRecord> KEY_MINERS_MINERS_INDEX = UniqueKeys0.KEY_MINERS_MINERS_INDEX;
@@ -87,7 +86,6 @@ public class Keys {
 
     private static class UniqueKeys0 {
         public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_PRIMARY = Internal.createUniqueKey(BestSubmissions.BEST_SUBMISSIONS, "KEY_best_submissions_PRIMARY", BestSubmissions.BEST_SUBMISSIONS.DB_ID);
-        public static final UniqueKey<BestSubmissionsRecord> KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = Internal.createUniqueKey(BestSubmissions.BEST_SUBMISSIONS, "KEY_best_submissions_best_submissions_index", BestSubmissions.BEST_SUBMISSIONS.HEIGHT);
         public static final UniqueKey<FlywaySchemaHistoryRecord> KEY_FLYWAY_SCHEMA_HISTORY_PRIMARY = Internal.createUniqueKey(FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, "KEY_flyway_schema_history_PRIMARY", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK);
         public static final UniqueKey<MinersRecord> KEY_MINERS_PRIMARY = Internal.createUniqueKey(Miners.MINERS, "KEY_miners_PRIMARY", Miners.MINERS.DB_ID);
         public static final UniqueKey<MinersRecord> KEY_MINERS_MINERS_INDEX = Internal.createUniqueKey(Miners.MINERS, "KEY_miners_miners_index", Miners.MINERS.ACCOUNT_ID);

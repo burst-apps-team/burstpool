@@ -41,7 +41,7 @@ import org.jooq.impl.TableImpl;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class BestSubmissions extends TableImpl<BestSubmissionsRecord> {
 
-    private static final long serialVersionUID = 741745146;
+    private static final long serialVersionUID = 660114278;
 
     /**
      * The reference instance of <code>best_submissions</code>
@@ -151,7 +151,7 @@ public class BestSubmissions extends TableImpl<BestSubmissionsRecord> {
      */
     @Override
     public List<UniqueKey<BestSubmissionsRecord>> getKeys() {
-        return Arrays.<UniqueKey<BestSubmissionsRecord>>asList(Keys.KEY_BEST_SUBMISSIONS_PRIMARY, Keys.KEY_BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX);
+        return Arrays.<UniqueKey<BestSubmissionsRecord>>asList(Keys.KEY_BEST_SUBMISSIONS_PRIMARY);
     }
 
     /**

@@ -56,7 +56,7 @@ public class Indexes {
     // -------------------------------------------------------------------------
 
     private static class Indexes0 {
-        public static Index BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = Internal.createIndex("best_submissions_index", BestSubmissions.BEST_SUBMISSIONS, new OrderField[] { BestSubmissions.BEST_SUBMISSIONS.HEIGHT }, true);
+        public static Index BEST_SUBMISSIONS_BEST_SUBMISSIONS_INDEX = Internal.createIndex("best_submissions_index", BestSubmissions.BEST_SUBMISSIONS, new OrderField[] { BestSubmissions.BEST_SUBMISSIONS.HEIGHT }, false);
         public static Index BEST_SUBMISSIONS_PRIMARY = Internal.createIndex("PRIMARY", BestSubmissions.BEST_SUBMISSIONS, new OrderField[] { BestSubmissions.BEST_SUBMISSIONS.DB_ID }, true);
         public static Index FLYWAY_SCHEMA_HISTORY_FLYWAY_SCHEMA_HISTORY_S_IDX = Internal.createIndex("flyway_schema_history_s_idx", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.SUCCESS }, false);
         public static Index FLYWAY_SCHEMA_HISTORY_PRIMARY = Internal.createIndex("PRIMARY", FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY, new OrderField[] { FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY.INSTALLED_RANK }, true);
