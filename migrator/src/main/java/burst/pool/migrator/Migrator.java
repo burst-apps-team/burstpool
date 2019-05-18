@@ -1,5 +1,6 @@
 package burst.pool.migrator;
 
+import org.flywaydb.core.Flyway;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
@@ -19,7 +20,15 @@ public class Migrator {
         }
         DSLContext source, target;
         try {
+            System.err.println("Connecting to source...");
             source = openSourceConnection(args);
+            System.err.println("Migrating target schema...");
+            Flyway flyway = Flyway.configure()
+                    .locations("classpath:/")
+                    .dataSource(args[3], args[4], args[5])
+                    .baselineOnMigrate(true).load();
+            flyway.migrate();
+            System.err.println("Connecting to target...");
             target = openTargetConnection(args);
         } catch (SQLException e) {
             System.err.println("Error opening database connection: ");

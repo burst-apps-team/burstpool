@@ -117,3 +117,6 @@ build/
 .idea/
 .gradle/
 !gradle-wrapper.jar
+
+*.log
+pool.properties

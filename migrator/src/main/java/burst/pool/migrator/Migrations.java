@@ -11,10 +11,9 @@ import burst.pool.migrator.nogroddb.tables.records.NonceSubmissionRecord;
 import org.jooq.DSLContext;
 import org.jooq.types.ULong;
 
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static burst.pool.migrator.db.tables.MinerDeadlines.MINER_DEADLINES;
 import static burst.pool.migrator.db.tables.Miners.MINERS;
@@ -29,21 +28,12 @@ public class Migrations implements Runnable {
     private final BurstNodeService burstNodeService;
     private final DSLContext source;
     private final DSLContext target;
-    private final Map<Integer, Long> baseTargetsAtHeight;
+    private final Map<Integer, Block> blocksAtHeights = new HashMap<>();
 
     public Migrations(DSLContext source, DSLContext target) {
         this.source = source;
         this.target = target;
         burstNodeService = BurstNodeService.getInstance("https://wallet1.burst-team.us:2083");
-        baseTargetsAtHeight = burstNodeService
-                .getBlocks(0, 10000)
-                .map(blocks -> Arrays.stream(blocks).collect(Collectors.toMap(Block::getHeight, Block::getBaseTarget)))
-                .blockingGet();
-        try {
-            Thread.sleep(Long.MAX_VALUE);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -96,7 +86,7 @@ public class Migrations implements Runnable {
         List<NonceSubmissionRecord> nonceSubmissions = source.selectFrom(NONCE_SUBMISSION)
                 .fetch();
         nonceSubmissions.forEach(nonceSubmission -> target.insertInto(MINER_DEADLINES, MINER_DEADLINES.ACCOUNT_ID, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE, MINER_DEADLINES.BASE_TARGET)
-                        .values(getMinerAccountIdFromTableId(nonceSubmission.getMinerId()), nonceSubmission.getBlockHeight().longValue(), nonceSubmission.getDeadline().longValue(), baseTargetsAtHeight.get(nonceSubmission.getBlockHeight().intValue()))
+                        .values(getMinerAccountIdFromTableId(nonceSubmission.getMinerId()), nonceSubmission.getBlockHeight().longValue(), nonceSubmission.getDeadline().longValue(), getBaseTarget(nonceSubmission.getBlockHeight().intValue()))
                 .execute());
     }
 
@@ -124,9 +114,26 @@ public class Migrations implements Runnable {
     }
 
     private long getBlockId(int height) {
-        return burstNodeService
-                .getBlockId(height)
-                .map(BurstID::getSignedLongId)
+        if (blocksAtHeights.containsKey(height)) {
+            return blocksAtHeights.get(height).getId().getSignedLongId();
+        }
+        System.err.println("Fetch height " + height);
+        Block block = burstNodeService
+                .getBlock(height)
                 .blockingGet();
+        blocksAtHeights.put(height, block);
+        return block.getId().getSignedLongId();
+    }
+
+    private long getBaseTarget(int height) {
+        if (blocksAtHeights.containsKey(height)) {
+            return blocksAtHeights.get(height).getBaseTarget();
+        }
+        System.err.println("Fetch height " + height);
+        Block block = burstNodeService
+                .getBlock(height)
+                .blockingGet();
+        blocksAtHeights.put(height, block);
+        return block.getBaseTarget();
     }
 }
