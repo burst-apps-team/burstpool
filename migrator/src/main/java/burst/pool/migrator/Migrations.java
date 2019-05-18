@@ -1,6 +1,9 @@
 package burst.pool.migrator;
 
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.BurstID;
+import burst.kit.entity.response.Block;
+import burst.kit.service.BurstNodeService;
 import burst.pool.migrator.entity.MinerWithCapacity;
 import burst.pool.migrator.nogroddb.tables.records.BlockRecord;
 import burst.pool.migrator.nogroddb.tables.records.MinerRecord;
@@ -8,36 +11,39 @@ import burst.pool.migrator.nogroddb.tables.records.NonceSubmissionRecord;
 import org.jooq.DSLContext;
 import org.jooq.types.ULong;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import static burst.pool.migrator.db.tables.Minerdeadlines.MINERDEADLINES;
+import static burst.pool.migrator.db.tables.MinerDeadlines.MINER_DEADLINES;
 import static burst.pool.migrator.db.tables.Miners.MINERS;
-import static burst.pool.migrator.db.tables.Poolstate.POOLSTATE;
-import static burst.pool.migrator.db.tables.Wonblocks.WONBLOCKS;
+import static burst.pool.migrator.db.tables.PoolState.POOL_STATE;
+import static burst.pool.migrator.db.tables.WonBlocks.WON_BLOCKS;
 import static burst.pool.migrator.nogroddb.tables.Account.ACCOUNT;
 import static burst.pool.migrator.nogroddb.tables.Block.BLOCK;
 import static burst.pool.migrator.nogroddb.tables.Miner.MINER;
 import static burst.pool.migrator.nogroddb.tables.NonceSubmission.NONCE_SUBMISSION;
 
 public class Migrations implements Runnable {
+    private final BurstNodeService burstNodeService;
     private final DSLContext source;
     private final DSLContext target;
-    private final Map<Long, Long> baseTargetsAtHeight;
+    private final Map<Integer, Long> baseTargetsAtHeight;
 
     public Migrations(DSLContext source, DSLContext target) {
         this.source = source;
         this.target = target;
-        this.baseTargetsAtHeight = null /*BurstNodeService.getInstance("https://wallet1.burst-team.us:2083")
+        burstNodeService = BurstNodeService.getInstance("https://wallet1.burst-team.us:2083");
+        baseTargetsAtHeight = burstNodeService
                 .getBlocks(0, 10000)
-                .map(blocks -> Arrays.stream(blocks.getBlocks()).collect(Collectors.toMap(BlockResponse::getHeight, BlockResponse::getBaseTarget)))
+                .map(blocks -> Arrays.stream(blocks).collect(Collectors.toMap(Block::getHeight, Block::getBaseTarget)))
                 .blockingGet();
-        System.out.println(baseTargetsAtHeight);
         try {
             Thread.sleep(Long.MAX_VALUE);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }*/; // TODO
+        }
     }
 
     @Override
@@ -56,10 +62,10 @@ public class Migrations implements Runnable {
                 .map(account -> new MinerWithCapacity(account, getAccountCapacity(account.getId())));
         sourceMiners.forEach(miner -> target.insertInto(MINERS, MINERS.ACCOUNT_ID, MINERS.PENDING_BALANCE, MINERS.ESTIMATED_CAPACITY, MINERS.SHARE, MINERS.MINIMUM_PAYOUT, MINERS.NAME, MINERS.USER_AGENT)
                 .values(BurstAddress.fromRs(miner.getAccount().getAddress()).getBurstID().getSignedLongId(),
-                        ((double) miner.getAccount().getPending()), // TODO This needs to go from long to double??
-                        ((double) miner.getCapacity()), // TODO This needs to go from long to double??
+                        (miner.getAccount().getPending()),
+                        (((double) miner.getCapacity()) / 1000.0),
                         0d, // TODO Nogrod does not store share?
-                        ((double) (miner.getAccount().getMinPayoutValue() == null ? 100 : miner.getAccount().getMinPayoutValue())), // TODO This needs to go from long to double??
+                        (miner.getAccount().getMinPayoutValue() == null ? 10000000000L : miner.getAccount().getMinPayoutValue()),
                         miner.getAccount().getName(),
                         "") // TODO Nogrod does not store user agent?
                 .execute());
@@ -73,15 +79,15 @@ public class Migrations implements Runnable {
             if (highestHeight <= block.getHeight().longValue()) {
                 highestHeight = Math.toIntExact(block.getHeight().longValue());
             }
-            target.insertInto(WONBLOCKS, WONBLOCKS.BLOCKHEIGHT, WONBLOCKS.BLOCKID, WONBLOCKS.GENERATORID, WONBLOCKS.NONCE, WONBLOCKS.FULLREWARD)
+            target.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
                     .values(block.getHeight().longValue(),
-                            0L, // TODO Nogrod does not record block ID?
+                            getBlockId(block.getHeight().intValue()),
                             block.getWinnerId() == null ? 0 : block.getWinnerId().longValue(),
                             block.getBestNonceSubmissionId() == null ? "0" : getNonce(block.getBestNonceSubmissionId()),
-                            block.getReward()) // TODO check this is in planck
+                            block.getReward())
                     .execute();
         }
-        target.insertInto(POOLSTATE, POOLSTATE.KEY, POOLSTATE.VALUE)
+        target.insertInto(POOL_STATE, POOL_STATE.KEY, POOL_STATE.VALUE)
                 .values("lastProcessedBlock", Integer.toString(highestHeight))
                 .execute();
     }
@@ -89,9 +95,8 @@ public class Migrations implements Runnable {
     private void migrateMinerDeadlines() {
         List<NonceSubmissionRecord> nonceSubmissions = source.selectFrom(NONCE_SUBMISSION)
                 .fetch();
-        nonceSubmissions.forEach(nonceSubmission -> target.insertInto(MINERDEADLINES, MINERDEADLINES.ACCOUNT_ID, MINERDEADLINES.HEIGHT, MINERDEADLINES.DEADLINE, MINERDEADLINES.BASETARGET)
-                // TODO Lack of baseTarget is a SERIOUS PROBLEM for calculating hitSum and therefore capacity
-                        .values(getMinerAccountIdFromTableId(nonceSubmission.getMinerId()), nonceSubmission.getBlockHeight().longValue(), nonceSubmission.getDeadline().longValue(), 0L /* TODO Nogrod does not store basetarget? */)
+        nonceSubmissions.forEach(nonceSubmission -> target.insertInto(MINER_DEADLINES, MINER_DEADLINES.ACCOUNT_ID, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE, MINER_DEADLINES.BASE_TARGET)
+                        .values(getMinerAccountIdFromTableId(nonceSubmission.getMinerId()), nonceSubmission.getBlockHeight().longValue(), nonceSubmission.getDeadline().longValue(), baseTargetsAtHeight.get(nonceSubmission.getBlockHeight().intValue()))
                 .execute());
     }
 
@@ -116,5 +121,12 @@ public class Migrations implements Runnable {
                 .fetchAny()
                 .getAddress();
         return BurstAddress.fromRs(address).getBurstID().getSignedLongId();
+    }
+
+    private long getBlockId(int height) {
+        return burstNodeService
+                .getBlockId(height)
+                .map(BurstID::getSignedLongId)
+                .blockingGet();
     }
 }

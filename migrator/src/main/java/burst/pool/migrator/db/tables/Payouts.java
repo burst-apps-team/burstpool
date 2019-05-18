@@ -4,9 +4,9 @@
 package burst.pool.migrator.db.tables;
 
 
+import burst.pool.migrator.db.DefaultSchema;
 import burst.pool.migrator.db.Indexes;
 import burst.pool.migrator.db.Keys;
-import burst.pool.migrator.db.Pooldb;
 import burst.pool.migrator.db.tables.records.PayoutsRecord;
 import org.jooq.*;
 import org.jooq.impl.DSL;
@@ -30,10 +30,10 @@ import java.util.List;
 @SuppressWarnings({ "all", "unchecked", "rawtypes" })
 public class Payouts extends TableImpl<PayoutsRecord> {
 
-    private static final long serialVersionUID = -1403221501;
+    private static final long serialVersionUID = -119035423;
 
     /**
-     * The reference instance of <code>pooldb.payouts</code>
+     * The reference instance of <code>payouts</code>
      */
     public static final Payouts PAYOUTS = new Payouts();
 
@@ -46,51 +46,51 @@ public class Payouts extends TableImpl<PayoutsRecord> {
     }
 
     /**
-     * The column <code>pooldb.payouts.db_id</code>.
+     * The column <code>payouts.db_id</code>.
      */
     public final TableField<PayoutsRecord, Long> DB_ID = createField("db_id", org.jooq.impl.SQLDataType.BIGINT.nullable(false).identity(true), this, "");
 
     /**
-     * The column <code>pooldb.payouts.transactionId</code>.
+     * The column <code>payouts.transaction_id</code>.
      */
-    public final TableField<PayoutsRecord, Long> TRANSACTIONID = createField("transactionId", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
+    public final TableField<PayoutsRecord, Long> TRANSACTION_ID = createField("transaction_id", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.payouts.senderPublicKey</code>.
+     * The column <code>payouts.sender_public_key</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> SENDERPUBLICKEY = createField("senderPublicKey", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> SENDER_PUBLIC_KEY = createField("sender_public_key", org.jooq.impl.SQLDataType.BINARY(32).defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
 
     /**
-     * The column <code>pooldb.payouts.fee</code>.
+     * The column <code>payouts.fee</code>.
      */
     public final TableField<PayoutsRecord, Long> FEE = createField("fee", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.payouts.deadline</code>.
+     * The column <code>payouts.deadline</code>.
      */
     public final TableField<PayoutsRecord, Long> DEADLINE = createField("deadline", org.jooq.impl.SQLDataType.BIGINT.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BIGINT)), this, "");
 
     /**
-     * The column <code>pooldb.payouts.attachment</code>.
+     * The column <code>payouts.attachment</code>.
      */
-    public final TableField<PayoutsRecord, byte[]> ATTACHMENT = createField("attachment", org.jooq.impl.SQLDataType.BINARY(1).defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BINARY)), this, "");
+    public final TableField<PayoutsRecord, byte[]> ATTACHMENT = createField("attachment", org.jooq.impl.SQLDataType.BLOB.defaultValue(DSL.field("NULL", org.jooq.impl.SQLDataType.BLOB)), this, "");
 
     /**
-     * Create a <code>pooldb.payouts</code> table reference
+     * Create a <code>payouts</code> table reference
      */
     public Payouts() {
         this(DSL.name("payouts"), null);
     }
 
     /**
-     * Create an aliased <code>pooldb.payouts</code> table reference
+     * Create an aliased <code>payouts</code> table reference
      */
     public Payouts(String alias) {
         this(DSL.name(alias), PAYOUTS);
     }
 
     /**
-     * Create an aliased <code>pooldb.payouts</code> table reference
+     * Create an aliased <code>payouts</code> table reference
      */
     public Payouts(Name alias) {
         this(alias, PAYOUTS);
@@ -113,7 +113,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
      */
     @Override
     public Schema getSchema() {
-        return Pooldb.POOLDB;
+        return DefaultSchema.DEFAULT_SCHEMA;
     }
 
     /**
@@ -121,7 +121,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
      */
     @Override
     public List<Index> getIndexes() {
-        return Arrays.<Index>asList(Indexes.PAYOUTS_PRIMARY);
+        return Arrays.<Index>asList(Indexes.PAYOUTS_PAYOUTS_INDEX, Indexes.PAYOUTS_PRIMARY);
     }
 
     /**
@@ -145,7 +145,7 @@ public class Payouts extends TableImpl<PayoutsRecord> {
      */
     @Override
     public List<UniqueKey<PayoutsRecord>> getKeys() {
-        return Arrays.<UniqueKey<PayoutsRecord>>asList(Keys.KEY_PAYOUTS_PRIMARY);
+        return Arrays.<UniqueKey<PayoutsRecord>>asList(Keys.KEY_PAYOUTS_PRIMARY, Keys.KEY_PAYOUTS_PAYOUTS_INDEX);
     }
 
     /**

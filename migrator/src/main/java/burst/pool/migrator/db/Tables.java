@@ -10,7 +10,7 @@ import javax.annotation.Generated;
 
 
 /**
- * Convenience access to all tables in pooldb
+ * Convenience access to all tables in 
  */
 @Generated(
     value = {
@@ -23,37 +23,37 @@ import javax.annotation.Generated;
 public class Tables {
 
     /**
-     * The table <code>pooldb.bestsubmissions</code>.
+     * The table <code>best_submissions</code>.
      */
-    public static final Bestsubmissions BESTSUBMISSIONS = burst.pool.migrator.db.tables.Bestsubmissions.BESTSUBMISSIONS;
+    public static final BestSubmissions BEST_SUBMISSIONS = BestSubmissions.BEST_SUBMISSIONS;
 
     /**
-     * The table <code>pooldb.flyway_schema_history</code>.
+     * The table <code>flyway_schema_history</code>.
      */
     public static final FlywaySchemaHistory FLYWAY_SCHEMA_HISTORY = FlywaySchemaHistory.FLYWAY_SCHEMA_HISTORY;
 
     /**
-     * The table <code>pooldb.minerdeadlines</code>.
-     */
-    public static final Minerdeadlines MINERDEADLINES = Minerdeadlines.MINERDEADLINES;
-
-    /**
-     * The table <code>pooldb.miners</code>.
+     * The table <code>miners</code>.
      */
     public static final Miners MINERS = Miners.MINERS;
 
     /**
-     * The table <code>pooldb.payouts</code>.
+     * The table <code>miner_deadlines</code>.
+     */
+    public static final MinerDeadlines MINER_DEADLINES = burst.pool.migrator.db.tables.MinerDeadlines.MINER_DEADLINES;
+
+    /**
+     * The table <code>payouts</code>.
      */
     public static final Payouts PAYOUTS = Payouts.PAYOUTS;
 
     /**
-     * The table <code>pooldb.poolstate</code>.
+     * The table <code>pool_state</code>.
      */
-    public static final Poolstate POOLSTATE = burst.pool.migrator.db.tables.Poolstate.POOLSTATE;
+    public static final PoolState POOL_STATE = PoolState.POOL_STATE;
 
     /**
-     * The table <code>pooldb.wonblocks</code>.
+     * The table <code>won_blocks</code>.
      */
-    public static final Wonblocks WONBLOCKS = Wonblocks.WONBLOCKS;
+    public static final WonBlocks WON_BLOCKS = WonBlocks.WON_BLOCKS;
 }
