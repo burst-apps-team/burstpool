@@ -252,10 +252,19 @@ public class Server extends NanoHTTPD {
         while ((len = inputStream.read(buffer)) != -1) {
             stringWriter.write(new String(buffer), 0, len);
         }
-        String response = stringWriter.toString()
+        String response = stringWriter.toString() // TODO cache files
+                // Minimizing
+                .replace("    ", "")
+                .replace(" + ", "+")
+                .replace(" = ", "=")
+                .replace(" == ", "==")
+                .replace(" === ", "===")
+                .replace(" (", "(")
+                .replace(") ", ")")
+                .replace(", ", ",")
                 .replace("\r", "")
                 .replace("\n", "")
-                .replace("    ", "")
+                // Replace links
                 .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
                 .replace("<<<EXPLORER>>>", propertyService.getString(Props.siteExplorerAddress))
                 .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
