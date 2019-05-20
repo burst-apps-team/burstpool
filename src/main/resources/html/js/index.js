@@ -279,6 +279,6 @@ getCurrentRound();
 getMiners();
 getTop10Miners();
 
-setInterval(getCurrentRound, 500);
-setInterval(getMiners, 10000);
-setInterval(getTop10Miners, 10000);
+setInterval(getCurrentRound, 1000);
+setInterval(getMiners, 60000); // TODO only refresh this when we detect that we forged a block
+setInterval(getTop10Miners, 60000);
