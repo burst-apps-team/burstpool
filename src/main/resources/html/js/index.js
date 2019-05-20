@@ -231,11 +231,17 @@ function getCookie(name) {
 }
 
 function generateSetMinimumMessage() {
+    let address = document.getElementById("setMinimumAddress").value;
+    let newPayout = document.getElementById("setMinimumAmount").value;
     if (document.getElementById("setMinimumAmount").value === "") {
         alert("Please set new minimum payout");
         return;
     }
-    document.getElementById("setMinimumMessage").value = document.getElementById("setMinimumAddress").value + ":" + document.getElementById("setMinimumAmount").value;
+    fetch("/api/getSetMinimumMessage?address="+address+"&newPayout="+newPayout).then(http => {
+        return http.json();
+    }).then(response => {
+        document.getElementById("setMinimumMessage").value = response.message;
+    });
 }
 
 function setMinimumPayout() {

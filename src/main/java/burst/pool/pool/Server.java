@@ -2,6 +2,7 @@ package burst.pool.pool;
 
 import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.BurstTimestamp;
 import burst.kit.entity.BurstValue;
 import burst.kit.entity.response.MiningInfo;
 import burst.kit.entity.response.http.MiningInfoResponse;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.math.BigInteger;
 import java.net.URLConnection;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -141,13 +143,21 @@ public class Server extends NanoHTTPD {
                 return new JsonPrimitive("Missing parameter").toString();
             }
             StringTokenizer stringTokenizer = new StringTokenizer(assignment, ":");
-            if (stringTokenizer.countTokens() != 2) {
+            if (stringTokenizer.countTokens() != 4) {
                 return new JsonPrimitive("Incorrect assignment").toString();
             }
             BurstAddress minerAddress = BurstAddress.fromEither(stringTokenizer.nextToken());
-            BurstValue newMinimumPayout = BurstValue.fromBurst(stringTokenizer.nextToken());
+            BurstAddress poolAddress = BurstAddress.fromEither(stringTokenizer.nextToken());
+            long currentTime = Long.parseLong(stringTokenizer.nextToken());
+            BurstValue newMinimumPayout = BurstValue.fromPlanck(stringTokenizer.nextToken());
             if (minerAddress == null || storageService.getMiner(minerAddress) == null) {
                 return new JsonPrimitive("Address not found").toString();
+            }
+            if (!Objects.equals(poolAddress, burstCrypto.getBurstAddressFromPassphrase(propertyService.getString(Props.passphrase)))) {
+                return new JsonPrimitive("Address does not match pool").toString();
+            }
+            if (Instant.now().getEpochSecond() - currentTime > 60*60) { // 1 Hour
+                return new JsonPrimitive("Assignment has expired").toString();
             }
             if (Float.parseFloat(newMinimumPayout.toUnformattedString()) < propertyService.getFloat(Props.minimumMinimumPayout)) { // TODO to bypass burstkit4j bug
                 return new JsonPrimitive("New minimum payout is below the amount allowed by the pool").toString();
@@ -192,6 +202,14 @@ public class Server extends NanoHTTPD {
             response.add("topMiners", topMiners);
             response.addProperty("othersShare", othersShare.get());
             return response.toString();
+        } else if (session.getUri().startsWith("/api/getSetMinimumMessage")) {
+            String currentTime = Long.toString(Instant.now().getEpochSecond());
+            String address = BurstAddress.fromEither(params.get("address")).getFullAddress();
+            String newPayout = BurstValue.fromBurst(params.get("newPayout")).toPlanck().toString();
+            String poolAddress = burstCrypto.getBurstAddressFromPassphrase(propertyService.getString(Props.passphrase)).getFullAddress();
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("message", address + ":" + poolAddress + ":" + currentTime + ":" + newPayout);
+            return jsonObject.toString();
         } else {
             return "null";
         }
