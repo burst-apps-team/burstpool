@@ -14,8 +14,9 @@ import java.sql.SQLException;
 
 public class Migrator {
     public static void main(String[] args) {
-        if (args.length < 6) {
+        if (args.length < 4) {
             System.out.println("Not enough arguments");
+            System.out.println("Usage: java -jar migrator.jar (source url) (target url) (username) (password)");
             return;
         }
         DSLContext source, target;
@@ -25,7 +26,7 @@ public class Migrator {
             System.err.println("Migrating target schema...");
             Flyway flyway = Flyway.configure()
                     .locations("classpath:/")
-                    .dataSource(args[3], args[4], args[5])
+                    .dataSource(args[1], args[2], args[3])
                     .baselineOnMigrate(true).load();
             flyway.migrate();
             System.err.println("Connecting to target...");
@@ -40,15 +41,15 @@ public class Migrator {
 
     private static DSLContext openSourceConnection(String[] args) throws SQLException {
         String sourceUrl = args[0];
-        String sourceUsername = args[1];
-        String sourcePassword = args[2];
+        String sourceUsername = args[2];
+        String sourcePassword = args[3];
         return connect(sourceUrl, sourceUsername, sourcePassword);
     }
 
     private static DSLContext openTargetConnection(String[] args) throws SQLException {
-        String targetUrl = args[3];
-        String targetUsername = args[4];
-        String targetPassword = args[5];
+        String targetUrl = args[1];
+        String targetUsername = args[2];
+        String targetPassword = args[3];
         return connect(targetUrl, targetUsername, targetPassword);
     }
 
