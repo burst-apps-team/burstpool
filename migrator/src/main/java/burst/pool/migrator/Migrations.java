@@ -63,14 +63,13 @@ public class Migrations implements Runnable {
 
     @Override
     public void run() {
+        int nConf = 360;
         long start = System.currentTimeMillis();
         System.err.println("Migrating...");
-        new Thread(() -> {
-            migrateMiners();
-            migrateMinerDeadlines();
-        }).start();
-        new Thread(this::migrateWonBlocks).start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> System.err.println("Total time: " + (System.currentTimeMillis() - start) + "ms")));
+        int highestHeight = migrateWonBlocks();
+        migrateMiners();
+        migrateMinerDeadlines(highestHeight - nConf);
+        System.err.println("Total time: " + (System.currentTimeMillis() - start) + "ms");
     }
 
     private void migrateMiners() {
@@ -92,8 +91,9 @@ public class Migrations implements Runnable {
         System.err.println("Migrating miners done.");
     }
 
-    private void migrateWonBlocks() {
+    private int migrateWonBlocks() {
         List<BlockRecord> blocks = source.selectFrom(BLOCK)
+                .where(BLOCK.WINNER_ID.isNotNull())
                 .fetch();
         AtomicInteger highestHeight = new AtomicInteger();
         BatchBindStep batch = target.batch(target.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
@@ -115,10 +115,12 @@ public class Migrations implements Runnable {
                 .values("lastProcessedBlock", Integer.toString(highestHeight.get()))
                 .execute();
         System.err.println("Migrating won blocks done.");
+        return highestHeight.get();
     }
 
-    private void migrateMinerDeadlines() {
+    private void migrateMinerDeadlines(int minHeight) {
         List<NonceSubmissionRecord> nonceSubmissions = source.selectFrom(NONCE_SUBMISSION)
+                .where(NONCE_SUBMISSION.BLOCK_HEIGHT.ge(ULong.valueOf(minHeight)))
                 .fetch();
         BatchBindStep batch = target.batch(target.insertInto(MINER_DEADLINES, MINER_DEADLINES.ACCOUNT_ID, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE, MINER_DEADLINES.BASE_TARGET).values((Long) null, null, null, null));
         System.err.println("Compiling deadlines...");
