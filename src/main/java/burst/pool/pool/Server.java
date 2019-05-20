@@ -8,6 +8,7 @@ import burst.kit.entity.response.MiningInfo;
 import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.Constants;
+import burst.pool.entity.WonBlock;
 import burst.pool.miners.Miner;
 import burst.pool.miners.MinerTracker;
 import burst.pool.storage.config.PropertyService;
@@ -210,6 +211,20 @@ public class Server extends NanoHTTPD {
             JsonObject jsonObject = new JsonObject();
             jsonObject.addProperty("message", address + ":" + poolAddress + ":" + currentTime + ":" + newPayout);
             return jsonObject.toString();
+        } else if (session.getUri().startsWith("/api/getWonBlocks")) {
+            JsonArray wonBlocks = new JsonArray();
+            storageService.getWonBlocks(100)
+                    .forEach(wonBlock -> {
+                        JsonObject wonBlockJson = new JsonObject();
+                        wonBlockJson.addProperty("height", wonBlock.getBlockHeight());
+                        wonBlockJson.addProperty("id", wonBlock.getBlockId().getID());
+                        wonBlockJson.addProperty("generator", wonBlock.getGeneratorId().getFullAddress());
+                        wonBlockJson.addProperty("reward", wonBlock.getFullReward().toFormattedString());
+                        wonBlocks.add(wonBlockJson);
+                    });
+            JsonObject response = new JsonObject();
+            response.add("wonBlocks", wonBlocks);
+            return response.toString();
         } else {
             return "null";
         }

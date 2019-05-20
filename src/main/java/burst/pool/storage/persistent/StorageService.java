@@ -31,6 +31,7 @@ public interface StorageService extends AutoCloseable {
     void removeBestSubmission(long blockHeight); // TODO unused
 
     void addWonBlock(WonBlock wonBlock);
+    List<WonBlock> getWonBlocks(int limit);
 
     void addPayout(Payout payout);
 }

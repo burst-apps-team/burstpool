@@ -244,6 +244,30 @@ function generateSetMinimumMessage() {
     });
 }
 
+function getWonBlocks() {
+    fetch("/api/getWonBlocks").then(response => {
+        return response.json();
+    }).then(response => {
+        let wonBlocks = response.wonBlocks;
+        let table = document.getElementById("wonBlocksTable");
+        table.innerHTML = "<tr><th>Height</th><th>ID</th><th>Winner Name</th><th>Winner Address</th><th>Reward + Fees</th></tr>";
+        for (let i = 0; i < wonBlocks.length; i++) {
+            let wonBlock = wonBlocks[i];
+            let height = wonBlock.height;
+            let id = wonBlock.id;
+            let winner = wonBlock.generator;
+            let reward = wonBlock.reward;
+            let minerName = "";
+            miners.forEach(miner => {
+                if (miner.addressRS === winner) {
+                    minerName = miner.name;
+                }
+            });
+            table.innerHTML += "<tr><td>"+height+"</td><td>"+id+"</td><td>"+minerName+"</td><td>"+winner+"</td><td>"+reward+"</td></tr>";
+        }
+    });
+}
+
 function setMinimumPayout() {
     var message = document.getElementById("setMinimumMessage").value;
     var publicKey = document.getElementById("setMinimumPublicKey").value;

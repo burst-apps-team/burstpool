@@ -304,8 +304,16 @@ public class DbStorageService implements StorageService {
     public void addWonBlock(WonBlock wonBlock) {
         // Won blocks are not cached.
         defaultContext.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
-            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getSignedLongId(), wonBlock.getNonce().toString(), wonBlock.getFullReward().toPlanck().longValue())
+            .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getBurstID().getSignedLongId(), wonBlock.getNonce().toString(), wonBlock.getFullReward().toPlanck().longValue())
             .execute();
+    }
+
+    @Override
+    public List<WonBlock> getWonBlocks(int limit) {
+        return defaultContext.selectFrom(WON_BLOCKS)
+                .orderBy(WON_BLOCKS.BLOCK_HEIGHT.desc())
+                .limit(limit)
+                .fetch(record -> new WonBlock(record.getBlockHeight().intValue(), BurstID.fromLong(record.getBlockId()), BurstAddress.fromId(BurstID.fromLong(record.getGeneratorId())), new BigInteger(record.getNonce()), BurstValue.fromPlanck(record.getFullReward())));
     }
 
     @Override

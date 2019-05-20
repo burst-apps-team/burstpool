@@ -1,5 +1,6 @@
 package burst.pool.entity;
 
+import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
 import burst.kit.entity.BurstValue;
 
@@ -8,11 +9,11 @@ import java.math.BigInteger;
 public class WonBlock {
     private final int blockHeight;
     private final BurstID blockId;
-    private final BurstID generatorId;
+    private final BurstAddress generatorId;
     private final BigInteger nonce;
     private final BurstValue fullReward;
 
-    public WonBlock(int blockHeight, BurstID blockId, BurstID generatorId, BigInteger nonce, BurstValue fullReward) {
+    public WonBlock(int blockHeight, BurstID blockId, BurstAddress generatorId, BigInteger nonce, BurstValue fullReward) {
         this.blockHeight = blockHeight;
         this.blockId = blockId;
         this.generatorId = generatorId;
@@ -28,7 +29,7 @@ public class WonBlock {
         return blockId;
     }
 
-    public BurstID getGeneratorId() {
+    public BurstAddress getGeneratorId() {
         return generatorId;
     }
 

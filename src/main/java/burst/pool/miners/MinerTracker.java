@@ -60,7 +60,7 @@ public class MinerTracker {
     public void onBlockWon(StorageService transactionalStorageService, long blockHeight, BurstID blockId, BigInteger nonce, BurstAddress winner, BurstValue blockReward, List<Long> fastBlocks) {
         logger.info("Block won! Block height: " + blockHeight + ", forger: " + winner.getFullAddress());
 
-        transactionalStorageService.addWonBlock(new WonBlock((int) blockHeight, blockId, winner.getBurstID(), nonce, blockReward));
+        transactionalStorageService.addWonBlock(new WonBlock((int) blockHeight, blockId, winner, nonce, blockReward));
 
         BurstValue reward = blockReward;
 
