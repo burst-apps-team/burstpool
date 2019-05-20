@@ -32,6 +32,12 @@ public class Props {
     public static final Prop<Integer> payoutRetryCount = new Prop<>("payoutRetryCount", 3);
     public static final Prop<Integer> submitNonceRetryCount = new Prop<>("submitNonceRetryCount", 3);
 
+    public static final Prop<String> siteIcon = new Prop<>("site.icon", "favicon.ico");
+    public static final Prop<String> siteNodeAddress = new Prop<>("site.nodeAddress", "https://wallet.burst-alliance.org:8125/");
+    public static final Prop<String> siteExplorerAddress = new Prop<>("site.explorerAddress", "https://explore.burstcoin.network/");
+    public static final Prop<String> softwarePackagesAddress = new Prop<>("site.softwarePackagesAddress", "https://github.com/burst-apps-team");
+    public static final Prop<String> siteDiscordLink = new Prop<>("site.discord", "https://discord.gg/ms6eagX");
+
     public static void validateProperties(PropertyService propertyService) {
         int serverPort = propertyService.getInt(Props.serverPort);
         if (serverPort <= 0 || serverPort >= Math.pow(2, 16)) {

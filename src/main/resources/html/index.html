@@ -16,13 +16,25 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="#" onclick="switchTheme();">Toggle Theme</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="getWonBlocks()" data-toggle="modal" data-target="#wonBlocksModal">Won Blocks</a>
+            <li class="nav-item active">
+                <a class="nav-link" href="#" onclick="getWonBlocks()" data-toggle="modal" data-target="#wonBlocksModal">Won Blocks</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" onclick="switchTheme();">Switch Theme</a>
+            <li class="nav-item active">
+                <a class="nav-link" href="#" data-toggle="modal" data-target="#infoModal">Info</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="<<<PUBLICNODE>>>">Wallet</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="<<<EXPLORER>>>">Explorer</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="<<<SOFTWARE>>>">Software Packages</a>
+            </li>
+            <li class="nav-item active">
+                <a class="nav-link" href="<<<DISCORD>>>">Discord</a>
             </li>
         </ul>
     </div>
@@ -130,6 +142,7 @@
             <td colspan="6">Loading...</td>
         </tr>
     </table>
+    <p><a href="https://github.com/burst-apps-team/burstpool">Powered by the Burst Apps Team.</a></p>
 </div>
 
 <!-- Modals -->
@@ -297,6 +310,24 @@
                 <div class="table-responsive w-100">
                     <table class="table table-striped" id="wonBlocksTable"></table>
                 </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="helpTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="helpTitle">Help / Info</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <b>Coming Soon!</b>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>

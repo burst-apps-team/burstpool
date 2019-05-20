@@ -20,6 +20,7 @@ import org.bouncycastle.util.encoders.DecoderException;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -238,10 +239,10 @@ public class Server extends NanoHTTPD {
         for (String extension : allowedFileExtensions) {
             if (session.getUri().endsWith(extension)) allowedFile = true;
         }
-        if (!allowedFile) {
+        if (!allowedFile || session.getUri().contains("../")) {
             return NanoHTTPD.newFixedLengthResponse(Response.Status.FORBIDDEN, "text/html", "<h1>Access Forbidden</h1>");
         }
-        InputStream inputStream = getClass().getResourceAsStream("/html" + session.getUri());
+        InputStream inputStream = session.getUri().contains("favicon.ico") ? new FileInputStream(propertyService.getString(Props.siteIcon)) : getClass().getResourceAsStream("/html" + session.getUri());
         if (inputStream == null) {
             return redirect("/404.html");
         }
@@ -251,7 +252,14 @@ public class Server extends NanoHTTPD {
         while ((len = inputStream.read(buffer)) != -1) {
             stringWriter.write(new String(buffer), 0, len);
         }
-        String response = stringWriter.toString().replace("\n", "").replace("    ", "");
+        String response = stringWriter.toString()
+                .replace("\r", "")
+                .replace("\n", "")
+                .replace("    ", "")
+                .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
+                .replace("<<<EXPLORER>>>", propertyService.getString(Props.siteExplorerAddress))
+                .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
+                .replace("<<<DISCORD>>>", propertyService.getString(Props.siteDiscordLink));
         return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), response);
     }
 

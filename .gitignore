@@ -119,4 +119,3 @@ build/
 !gradle-wrapper.jar
 
 *.log
-pool.properties
