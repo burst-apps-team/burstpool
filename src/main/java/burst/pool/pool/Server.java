@@ -20,18 +20,16 @@ import org.bouncycastle.util.encoders.DecoderException;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.io.*;
 import java.math.BigInteger;
 import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Server extends NanoHTTPD {
-    private static final String[] allowedFileExtensions = new String[]{".html", ".css", ".js", ".ico"};
+    private static final String[] allowedFileExtensions = new String[]{".html", ".css", ".js", ".png", ".ico"};
 
     private final StorageService storageService;
     private final PropertyService propertyService;
@@ -242,32 +240,56 @@ public class Server extends NanoHTTPD {
         if (!allowedFile || session.getUri().contains("../")) {
             return NanoHTTPD.newFixedLengthResponse(Response.Status.FORBIDDEN, "text/html", "<h1>Access Forbidden</h1>");
         }
-        InputStream inputStream = session.getUri().contains("favicon.ico") ? new FileInputStream(propertyService.getString(Props.siteIcon)) : getClass().getResourceAsStream("/html" + session.getUri());
+
+        InputStream inputStream;
+        if (session.getUri().contains("favicon.ico")) {
+            inputStream = new FileInputStream(propertyService.getString(Props.siteIconIco));
+        } else if (session.getUri().equals("/img/poolIcon.png")) {
+            inputStream = new FileInputStream(propertyService.getString(Props.siteIconPng));
+        } else {
+            inputStream = getClass().getResourceAsStream("/html" + session.getUri());
+        }
+
         if (inputStream == null) {
             return redirect("/404.html");
         }
-        StringWriter stringWriter = new StringWriter();
-        byte[] buffer = new byte[1024];
+
+        if (session.getUri().contains(".png") || session.getUri().contains(".ico")) {
+            return NanoHTTPD.newChunkedResponse(Response.Status.OK, session.getUri().contains(".ico") ? "image/x-icon" : "image/png", inputStream);
+        }
+
+        StringWriter stringWriter = new StringWriter(inputStream.available());
+        byte[] buffer = new byte[1024*1024];
         int len;
         while ((len = inputStream.read(buffer)) != -1) {
-            stringWriter.write(new String(buffer), 0, len);
+            stringWriter.write(new String(buffer, StandardCharsets.UTF_8), 0, len);
         }
-        String response = stringWriter.toString() // TODO cache files
-                // Minimizing
-                .replace("    ", "")
-                .replace(" + ", "+")
-                .replace(" = ", "=")
-                .replace(" == ", "==")
-                .replace(" === ", "===")
-                .replace("\r", "")
-                .replace("\n", "")
-                /*.replace(" (", "(")
-                .replace(") ", ")")
-                .replace(", ", ",") TODO this minimization is messing up strings */
-                // Replace links TODO strip tags in links
-                .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
-                .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
-                .replace("<<<DISCORD>>>", propertyService.getString(Props.siteDiscordLink));
+        String response = stringWriter.toString();
+
+        // TODO cache files
+
+        boolean minimize = true;
+
+        if (session.getUri().contains(".png") || session.getUri().contains(".ico")) minimize = false;
+
+        if (minimize) {
+            response = response
+                    // Minimizing
+                    .replace("    ", "")
+                    .replace(" + ", "+")
+                    .replace(" = ", "=")
+                    .replace(" == ", "==")
+                    .replace(" === ", "===")
+                    .replace("\r", "")
+                    .replace("\n", "")
+                    /*.replace(" (", "(")
+                    .replace(") ", ")")
+                    .replace(", ", ",") TODO this minimization is messing up strings */
+                    // Replace links TODO strip tags in links
+                    .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
+                    .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
+                    .replace("<<<DISCORD>>>", propertyService.getString(Props.siteDiscordLink));
+        }
         return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), response);
     }
 

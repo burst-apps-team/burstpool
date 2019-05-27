@@ -32,7 +32,8 @@ public class Props {
     public static final Prop<Integer> payoutRetryCount = new Prop<>("payoutRetryCount", 3);
     public static final Prop<Integer> submitNonceRetryCount = new Prop<>("submitNonceRetryCount", 3);
 
-    public static final Prop<String> siteIcon = new Prop<>("site.icon", "favicon.ico");
+    public static final Prop<String> siteIconIco = new Prop<>("site.icon.ico", "icon.ico");
+    public static final Prop<String> siteIconPng = new Prop<>("site.icon.png", "icon.png");
     public static final Prop<String> siteNodeAddress = new Prop<>("site.nodeAddress", "https://wallet.burst-alliance.org:8125/");
     public static final Prop<String> softwarePackagesAddress = new Prop<>("site.softwarePackagesAddress", "https://github.com/burst-apps-team");
     public static final Prop<String> siteDiscordLink = new Prop<>("site.discord", "https://discord.gg/ms6eagX");
