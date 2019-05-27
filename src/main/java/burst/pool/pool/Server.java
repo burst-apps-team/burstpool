@@ -264,7 +264,7 @@ public class Server extends NanoHTTPD {
                 .replace(", ", ",")
                 .replace("\r", "")
                 .replace("\n", "")
-                // Replace links
+                // Replace links TODO strip tags in links
                 .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
                 .replace("<<<EXPLORER>>>", propertyService.getString(Props.siteExplorerAddress))
                 .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
