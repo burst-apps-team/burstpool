@@ -3,11 +3,28 @@ const loading = "Loading...";
 const minerNotFound = "Miner not found";
 
 let miners = new Array(0);
-let colors = new Array(11);
-
-for (let i = 0; i < colors.length; i++) {
-    colors[i] = generateColour();
-}
+let colors = [
+    "#3366CC",
+    "#DC3912",
+    "#FF9900",
+    "#109618",
+    "#990099",
+    "#3B3EAC",
+    "#0099C6",
+    "#DD4477",
+    "#66AA00",
+    "#B82E2E",
+    "#316395",
+    "#994499",
+    "#22AA99",
+    "#AAAA11",
+    "#6633CC",
+    "#E67300",
+    "#8B0707",
+    "#329262",
+    "#5574A6",
+    "#3B3EAC"
+];
 
 var entityMap = {
     '&': '&amp;',
@@ -27,10 +44,6 @@ function escapeHtml(string) {
 }
 
 let chart = null;
-
-function generateColour() {
-    return "rgb(" + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + "," + Math.floor(Math.random() * 255) + ")";
-}
 
 function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
@@ -207,43 +220,6 @@ function onPageLoad() {
     })
 }
 
-function loadCss(file) {
-    const fileref = document.createElement("link");
-    fileref.setAttribute("rel", "stylesheet");
-    fileref.setAttribute("type", "text/css");
-    fileref.setAttribute("href", file);
-    if (typeof fileref !== "undefined") document.getElementsByTagName("head")[0].appendChild(fileref)
-}
-
-function switchTheme() {
-    if (getCookie("theme") === "light") {
-        setCookie("theme", "dark");
-    } else {
-        setCookie("theme", "light");
-    }
-    location.reload(true);
-}
-
-function setCookie(name, value) {
-    document.cookie = name + "=" + value + ";";
-}
-
-function getCookie(name) {
-    name += "=";
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca =decodedCookie.split(';');
-    for(let i = 0; i <ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) === 0) {
-            return c.substring(name.length, c.length);
-        }
-    }
-    return "";
-}
-
 function generateSetMinimumMessage() {
     let address = escapeHtml(document.getElementById("setMinimumAddress").value);
     let newPayout = escapeHtml(document.getElementById("setMinimumAmount").value);
@@ -304,12 +280,6 @@ function setMinimumPayout() {
         document.getElementById("setMinimumResultText").innerText = escapeHtml(response);
         $("#setMinimumResult").show();
     });
-}
-
-if (getCookie("theme") === "light") {
-    loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/flatly/bootstrap.min.css");
-} else {
-    loadCss("https://stackpath.bootstrapcdn.com/bootswatch/4.3.1/darkly/bootstrap.min.css");
 }
 
 getPoolInfo();

@@ -266,7 +266,6 @@ public class Server extends NanoHTTPD {
                 .replace("\n", "")
                 // Replace links TODO strip tags in links
                 .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
-                .replace("<<<EXPLORER>>>", propertyService.getString(Props.siteExplorerAddress))
                 .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
                 .replace("<<<DISCORD>>>", propertyService.getString(Props.siteDiscordLink));
         return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), response);
