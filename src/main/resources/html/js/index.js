@@ -52,7 +52,7 @@ function getPoolInfo() {
         document.getElementById("poolNameTitle").innerText = escapeHtml(response.poolName);
         document.title = escapeHtml("Burst Pool (" + response.poolName + ")");
         document.getElementById("poolName").innerText = escapeHtml(response.poolName);
-        document.getElementById("poolAccount").innerText = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
+        document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = escapeHtml(response.nAvg);
         document.getElementById("nMin").innerText = escapeHtml(response.nMin);
         document.getElementById("maxDeadline").innerText = escapeHtml(response.maxDeadline);

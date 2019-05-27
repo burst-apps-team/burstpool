@@ -14,8 +14,13 @@
 </head>
 <body onload="onPageLoad();">
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <h1 class="navbar-brand ">Burstcoin Pool (<span id="poolNameTitle"></span>)</h1>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <h1 class="navbar-brand">Burstcoin Pool (<span id="poolNameTitle"></span>)</h1>
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+    <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
                 <a class="nav-link" href="#" onclick="getWonBlocks()" data-toggle="modal" data-target="#wonBlocksModal">Won Blocks</a>
@@ -146,7 +151,7 @@
 
 <!-- Modals -->
 <div class="modal fade" id="minerInfoModal" tabindex="-1" role="dialog" aria-labelledby="minerInfoTitle" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="minerInfoTitle">Miner Info</h5>
@@ -196,7 +201,7 @@
     </div>
 </div>
 <div class="modal fade" id="poolInfoModal" tabindex="-1" role="dialog" aria-labelledby="poolInfoTitle" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="poolInfoTitle">Pool Info</h5>
@@ -297,7 +302,7 @@
     </div>
 </div>
 <div class="modal fade" id="wonBlocksModal" tabindex="-1" role="dialog" aria-labelledby="wonBlocksTitle" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="wonBlocksTitle">Won Blocks</h5>
