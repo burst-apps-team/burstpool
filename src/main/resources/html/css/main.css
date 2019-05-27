@@ -1,0 +1,18 @@
+h1, h5, li, th, td, p, span, input, .nav-link {
+    color: #dddddd !important;
+}
+
+a, a:visited, a:hover {
+    color: #337ab7;
+}
+
+input[type=text],
+input[type=text]:focus,
+input[type=text]:disabled {
+    background-color: #303030;
+    transition: border-color ease-in-out .15s,box-shadow ease-in-out .15s;
+}
+
+.darkText, .darkText:focus, .darkText:disabled {
+    background-color: #222222 !important;
+}

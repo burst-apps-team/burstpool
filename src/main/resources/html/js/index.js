@@ -52,7 +52,7 @@ function getPoolInfo() {
         document.getElementById("poolNameTitle").innerText = escapeHtml(response.poolName);
         document.title = escapeHtml("Burst Pool (" + response.poolName + ")");
         document.getElementById("poolName").innerText = escapeHtml(response.poolName);
-        document.getElementById("poolAccount").innerText = escapeHtml(response.poolAccountRS + " (" + response.poolAccount + ")");
+        document.getElementById("poolAccount").innerText = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = escapeHtml(response.nAvg);
         document.getElementById("nMin").innerText = escapeHtml(response.nMin);
         document.getElementById("maxDeadline").innerText = escapeHtml(response.maxDeadline);
@@ -86,6 +86,15 @@ function getCurrentRound() {
     });
 }
 
+function formatMinerName(rs, id, name, includeLink) {
+    name = escapeHtml(name);
+    rs = escapeHtml(rs);
+    if (includeLink) {
+        rs = "<a href=\"https://explorer.burstcoin.network/?action=account&account=" + id + "\">" + rs + "</a>";
+    }
+    return name == null || name === "" ? rs : rs + " (" + name + ")";
+}
+
 function getTop10Miners() {
     fetch("api/getTop10Miners").then(http => {
         return http.json();
@@ -96,7 +105,7 @@ function getTop10Miners() {
         let minerColors = colors.slice(0, topTenMiners.length + 1);
         for (let i = 0; i < topTenMiners.length; i++) {
             let miner = topTenMiners[i];
-            topMinerNames.push(escapeHtml(miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")"));
+            topMinerNames.push(formatMinerName(miner.addressRS, miner.address, miner.name, false));
             topMinerShares.push(miner.share);
         }
         topMinerNames.push("Other");
@@ -136,8 +145,8 @@ function getMiners() {
         let table = document.getElementById("miners");
         table.innerHTML = "<tr><th>Miner</th><th>Pending Balance</th><th>Effective Capacity</th><th>nConf (Last (nAvg + processLag) rounds)</th><th>Share</th><th>Software</th></tr>";
         for (let i = 0; i < response.miners.length; i++) {
-            let miner = escapeHtml(response.miners[i]);
-            let minerAddress = escapeHtml(miner.name == null ? miner.addressRS : miner.addressRS + " (" + miner.name + ")");
+            let miner = response.miners[i];
+            let minerAddress = formatMinerName(miner.addressRS, miner.address, miner.name, true);
             let userAgent = escapeHtml(miner.userAgent == null? "Unknown" : miner.userAgent);
             table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+(parseFloat(miner.share)*100).toFixed(3)+"%</td><td>"+userAgent+"</td></tr>";
         }
