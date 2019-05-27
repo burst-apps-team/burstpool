@@ -226,7 +226,10 @@ function onPageLoad() {
             event.preventDefault();
             document.getElementById("getMinerButton").click();
         }
-    })
+    });
+    document.getElementById("icon").onerror = function () {
+        this.style.display = "none";
+    }
 }
 
 function generateSetMinimumMessage() {
