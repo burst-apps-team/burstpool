@@ -49,21 +49,21 @@ function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
         return http.json();
     }).then(response => {
-        document.getElementById("poolNameTitle").innerText = escapeHtml(response.poolName);
+        document.getElementById("poolNameTitle").innerText = response.poolName;
         document.title = escapeHtml("Burst Pool (" + response.poolName + ")");
-        document.getElementById("poolName").innerText = escapeHtml(response.poolName);
+        document.getElementById("poolName").innerText = response.poolName;
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
-        document.getElementById("nAvg").innerText = escapeHtml(response.nAvg);
-        document.getElementById("nMin").innerText = escapeHtml(response.nMin);
-        document.getElementById("maxDeadline").innerText = escapeHtml(response.maxDeadline);
-        document.getElementById("processLag").innerText = escapeHtml(response.processLag + " Blocks");
-        document.getElementById("feeRecipient").innerText = escapeHtml(response.feeRecipientRS);
-        document.getElementById("poolFee").innerText = escapeHtml((parseFloat(response.poolFeePercentage)*100).toFixed(3) + "%");
-        document.getElementById("winnerReward").innerText = escapeHtml((parseFloat(response.winnerRewardPercentage)*100).toFixed(3) + "%");
-        document.getElementById("minimumPayout").innerText = escapeHtml(response.defaultMinimumPayout + " BURST");
-        document.getElementById("minPayoutsAtOnce").innerText = escapeHtml(response.minPayoutsPerTransaction);
-        document.getElementById("payoutTxFee").innerText = escapeHtml(response.transactionFee + " BURST");
-        document.getElementById("poolVersion").innerText = escapeHtml(response.version);
+        document.getElementById("nAvg").innerText = response.nAvg;
+        document.getElementById("nMin").innerText = response.nMin;
+        document.getElementById("maxDeadline").innerText = response.maxDeadline;
+        document.getElementById("processLag").innerText = response.processLag + " Blocks";
+        document.getElementById("feeRecipient").innerText = response.feeRecipientRS;
+        document.getElementById("poolFee").innerText = (parseFloat(response.poolFeePercentage)*100).toFixed(3) + "%";
+        document.getElementById("winnerReward").innerText = (parseFloat(response.winnerRewardPercentage)*100).toFixed(3) + "%";
+        document.getElementById("minimumPayout").innerText = response.defaultMinimumPayout + " BURST";
+        document.getElementById("minPayoutsAtOnce").innerText = response.minPayoutsPerTransaction;
+        document.getElementById("payoutTxFee").innerText = response.transactionFee + " BURST";
+        document.getElementById("poolVersion").innerText = response.version;
     });
 }
 
@@ -71,17 +71,17 @@ function getCurrentRound() {
     fetch("/api/getCurrentRound").then(http => {
         return http.json();
     }).then(response => {
-        document.getElementById("currentRoundElapsed").innerText = escapeHtml(response.roundElapsed);
-        document.getElementById("blockHeight").innerText = escapeHtml(response.miningInfo.height);
-        document.getElementById("baseTarget").innerText = escapeHtml(response.miningInfo.baseTarget);
+        document.getElementById("currentRoundElapsed").innerText = response.roundElapsed;
+        document.getElementById("blockHeight").innerText = response.miningInfo.height;
+        document.getElementById("baseTarget").innerText = response.miningInfo.baseTarget;
         if (response.bestDeadline != null) {
-            document.getElementById("bestDeadline").innerText = escapeHtml(response.bestDeadline.deadline);
-            document.getElementById("bestMiner").innerText = escapeHtml(response.bestDeadline.minerRS);
-            document.getElementById("bestNonce").innerText = escapeHtml(response.bestDeadline.nonce);
+            document.getElementById("bestDeadline").innerText = response.bestDeadline.deadline;
+            document.getElementById("bestMiner").innerText = response.bestDeadline.minerRS;
+            document.getElementById("bestNonce").innerText = response.bestDeadline.nonce;
         } else {
-            document.getElementById("bestDeadline").innerText = escapeHtml(noneFoundYet);
-            document.getElementById("bestMiner").innerText = escapeHtml(noneFoundYet);
-            document.getElementById("bestNonce").innerText = escapeHtml(noneFoundYet);
+            document.getElementById("bestDeadline").innerText = noneFoundYet;
+            document.getElementById("bestMiner").innerText = noneFoundYet;
+            document.getElementById("bestNonce").innerText = noneFoundYet;
         }
     });
 }
@@ -167,14 +167,14 @@ function prepareMinerInfo(address) {
     let minerSoftware = escapeHtml(document.getElementById("minerSoftware"));
     let setMinimumPayoutButton = $("#setMinimumPayoutButton");
     
-    minerAddress.innerText = escapeHtml(address);
-    minerName.innerText = escapeHtml(loading);
-    minerPending.innerText = escapeHtml(loading);
-    minerMinimumPayout.innerText = escapeHtml(loading);
-    minerCapacity.innerText = escapeHtml(loading);
-    minerNConf.innerText = escapeHtml(loading);
-    minerShare.innerText = escapeHtml(loading);
-    minerSoftware.innerText = escapeHtml(loading);
+    minerAddress.innerText = address;
+    minerName.innerText = loading;
+    minerPending.innerText = loading;
+    minerMinimumPayout.innerText = loading;
+    minerCapacity.innerText = loading;
+    minerNConf.innerText = loading;
+    minerShare.innerText = loading;
+    minerSoftware.innerText = loading;
 
     let miner = null;
     miners.forEach(aMiner => {
@@ -184,13 +184,13 @@ function prepareMinerInfo(address) {
     });
 
     if (miner == null) {
-        minerName.innerText = escapeHtml(minerNotFound);
-        minerPending.innerText = escapeHtml(minerNotFound);
-        minerMinimumPayout.innerText = escapeHtml(minerNotFound);
-        minerCapacity.innerText = escapeHtml(minerNotFound);
-        minerNConf.innerText = escapeHtml(minerNotFound);
-        minerShare.innerText = escapeHtml(minerNotFound);
-        minerSoftware.innerText = escapeHtml(minerNotFound);
+        minerName.innerText = minerNotFound;
+        minerPending.innerText = minerNotFound;
+        minerMinimumPayout.innerText = minerNotFound;
+        minerCapacity.innerText = minerNotFound;
+        minerNConf.innerText = minerNotFound;
+        minerShare.innerText = minerNotFound;
+        minerSoftware.innerText = minerNotFound;
         setMinimumPayoutButton.hide();
         return;
     }
@@ -198,14 +198,14 @@ function prepareMinerInfo(address) {
     let name = escapeHtml(miner.name == null ? "Not Set" : miner.name);
     let userAgent = escapeHtml(miner.userAgent == null ? "Unknown" : miner.userAgent);
 
-    minerAddress.innerText = escapeHtml(miner.addressRS);
-    minerName.innerText = escapeHtml(name);
-    minerPending.innerText = escapeHtml(miner.pendingBalance);
-    minerMinimumPayout.innerText = escapeHtml(miner.minimumPayout);
+    minerAddress.innerText = miner.addressRS;
+    minerName.innerText = name;
+    minerPending.innerText = miner.pendingBalance;
+    minerMinimumPayout.innerText = miner.minimumPayout;
     minerCapacity.innerText = formatCapacity(miner.estimatedCapacity);
-    minerNConf.innerText = escapeHtml(miner.nConf);
-    minerShare.innerText = escapeHtml((parseFloat(miner.share)*100).toFixed(3) + "%");
-    minerSoftware.innerText = escapeHtml(userAgent);
+    minerNConf.innerText = miner.nConf;
+    minerShare.innerText = (parseFloat(miner.share)*100).toFixed(3) + "%";
+    minerSoftware.innerText = userAgent;
     setMinimumPayoutButton.show();
 }
 
@@ -286,7 +286,7 @@ function setMinimumPayout() {
     fetch("/api/setMinerMinimumPayout?assignment="+message+"&publicKey="+publicKey+"&signature="+signature, { method: "POST" }).then(http => {
         return http.json();
     }).then(response => {
-        document.getElementById("setMinimumResultText").innerText = escapeHtml(response);
+        document.getElementById("setMinimumResultText").innerText = response;
         $("#setMinimumResult").show();
     });
 }
