@@ -2,13 +2,11 @@ package burst.pool.pool;
 
 import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
-import burst.kit.entity.BurstTimestamp;
 import burst.kit.entity.BurstValue;
 import burst.kit.entity.response.MiningInfo;
 import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.util.BurstKitUtils;
 import burst.pool.Constants;
-import burst.pool.entity.WonBlock;
 import burst.pool.miners.Miner;
 import burst.pool.miners.MinerTracker;
 import burst.pool.storage.config.PropertyService;
@@ -18,6 +16,10 @@ import com.google.gson.*;
 import fi.iki.elonen.NanoHTTPD;
 import org.bouncycastle.util.encoders.DecoderException;
 import org.bouncycastle.util.encoders.Hex;
+import org.ehcache.Cache;
+import org.ehcache.config.builders.CacheConfigurationBuilder;
+import org.ehcache.config.builders.CacheManagerBuilder;
+import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -37,6 +39,7 @@ public class Server extends NanoHTTPD {
     private final MinerTracker minerTracker;
     private final Gson gson = BurstKitUtils.buildGson().create();
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
+    private final Cache<String, String> fileCache;
 
     public Server(StorageService storageService, PropertyService propertyService, Pool pool, MinerTracker minerTracker) {
         super(propertyService.getInt(Props.serverPort));
@@ -44,6 +47,10 @@ public class Server extends NanoHTTPD {
         this.propertyService = propertyService;
         this.pool = pool;
         this.minerTracker = minerTracker;
+        this.fileCache = CacheManagerBuilder.newCacheManagerBuilder()
+                .withCache("file", CacheConfigurationBuilder.newCacheConfigurationBuilder(String.class, String.class, ResourcePoolsBuilder.heap(1024*1024)))
+                .build(true)
+                .getCache("file", String.class, String.class);
     }
 
     @Override
@@ -241,6 +248,10 @@ public class Server extends NanoHTTPD {
             return NanoHTTPD.newFixedLengthResponse(Response.Status.FORBIDDEN, "text/html", "<h1>Access Forbidden</h1>");
         }
 
+        if (fileCache.containsKey(session.getUri())) {
+            return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), fileCache.get(session.getUri()));
+        }
+
         InputStream inputStream;
         if (session.getUri().contains("favicon.ico")) {
             inputStream = new FileInputStream(propertyService.getString(Props.siteIconIco));
@@ -266,8 +277,6 @@ public class Server extends NanoHTTPD {
         }
         String response = stringWriter.toString();
 
-        // TODO cache files
-
         boolean minimize = true;
 
         if (session.getUri().contains(".png") || session.getUri().contains(".ico")) minimize = false;
@@ -290,6 +299,7 @@ public class Server extends NanoHTTPD {
                     .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
                     .replace("<<<DISCORD>>>", propertyService.getString(Props.siteDiscordLink));
         }
+        fileCache.put(session.getUri(), response);
         return NanoHTTPD.newFixedLengthResponse(Response.Status.OK, URLConnection.guessContentTypeFromName(session.getUri()), response);
     }
 
