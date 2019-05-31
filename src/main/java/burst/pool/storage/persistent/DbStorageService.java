@@ -23,13 +23,17 @@ import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.Table;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
+import org.mariadb.jdbc.MariaDbDataSource;
+import org.mariadb.jdbc.UrlParser;
 
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.sql.SQLException;
 import java.util.*;
@@ -82,7 +86,7 @@ public class DbStorageService implements StorageService {
             throw new SQLException("Could not find SQL driver: " + driverClass + ". If you want to use this Database type, please check if it is supported by JDBC and jOOQ, and then add the driver to the classpath.");
         }
 
-        Flyway flyway = Flyway.configure().dataSource(url, username, password).load();
+        Flyway flyway = sqlDialect == SQLDialect.MARIADB ? flywayHack(Flyway.configure(), url, username, password).load() : Flyway.configure().dataSource(url, username, password).load();
         flyway.migrate();
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(url);
@@ -105,6 +109,28 @@ public class DbStorageService implements StorageService {
             cacheLocks.put(table, new Semaphore(1));
         }
         this.cacheManager = cacheManager.build(true);
+    }
+
+    private static FluentConfiguration flywayHack(FluentConfiguration flywayBuilder, String dbUrl, String dbUsername, String dbPassword) {
+        MariaDbDataSource flywayDataSource = new MariaDbDataSource(dbUrl) {
+            @Override
+            protected synchronized void initialize() throws SQLException {
+                super.initialize();
+                Properties props = new Properties();
+                props.setProperty("user", dbUsername);
+                props.setProperty("password", dbPassword);
+                props.setProperty("useMysqlMetadata", "true");
+                try {
+                    Field f = MariaDbDataSource.class.getDeclaredField("urlParser");
+                    f.setAccessible(true);
+                    f.set(this, UrlParser.parse(dbUrl, props));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        flywayBuilder.dataSource(flywayDataSource); // TODO Remove this hack once a stable version of Flyway has this bug fixed
+        return flywayBuilder;
     }
 
     DbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, DSLContext defaultContext, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) {

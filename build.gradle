@@ -36,7 +36,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxjava:2.2.9'
     implementation 'com.github.burst-apps-team:burstkit4j:0.10-beta4.1'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
-    implementation "org.flywaydb:flyway-core:6.0.0-beta"
+    implementation "org.flywaydb:flyway-core:5.2.4"
     implementation "org.jooq:jooq"
     implementation "org.jooq:jooq-meta"
     implementation "org.jooq:jooq-codegen"

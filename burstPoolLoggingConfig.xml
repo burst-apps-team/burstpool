@@ -15,9 +15,9 @@
     </Appenders>
     <Loggers>
         <Logger name="burst.pool" level="info" additivity="true">
-            <appender-ref ref="fileLogger" level="debug" />
+            <appender-ref ref="fileLogger" level="info" />
         </Logger>
-        <Root level="debug" additivity="false">
+        <Root level="info" additivity="false">
             <appender-ref ref="console" />
         </Root>
     </Loggers>
