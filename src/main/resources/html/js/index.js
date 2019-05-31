@@ -50,7 +50,7 @@ function getPoolInfo() {
         return http.json();
     }).then(response => {
         document.getElementById("poolNameTitle").innerText = response.poolName;
-        document.title = escapeHtml("Burst Pool (" + response.poolName + ")");
+        document.title = "Burst Pool (" + response.poolName + ")";
         document.getElementById("poolName").innerText = response.poolName;
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = response.nAvg;
