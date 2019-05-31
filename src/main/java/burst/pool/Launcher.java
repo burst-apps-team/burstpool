@@ -37,8 +37,7 @@ public class Launcher {
             logger.error("Could not open database connection", e);
             System.exit(-1);
         }
-        //StorageService storageService = new MemoryStorageService(propertyService, minerMaths);
-        BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress));
+        BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress), Constants.USER_AGENT);
         MinerTracker minerTracker = new MinerTracker(nodeService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);
         Server server = new Server(storageService, propertyService, pool, minerTracker);
