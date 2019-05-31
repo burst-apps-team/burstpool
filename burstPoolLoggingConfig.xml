@@ -1,41 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="debug" strict="true" name="BurstPool" packages="burst.pool">
-    <Properties>
-        <Property name="filename">burstpool.log</Property>
-    </Properties>
-    <Filter type="ThresholdFilter" level="trace"/>
-
+<Configuration status="warn">
     <Appenders>
-        <Appender type="Console" name="STDOUT">
-            <Layout type="PatternLayout" pattern="%m MDC%X%n"/>
-            <Filters>
-                <Filter type="MarkerFilter" marker="FLOW" onMatch="DENY" onMismatch="NEUTRAL"/>
-                <Filter type="MarkerFilter" marker="EXCEPTION" onMatch="DENY" onMismatch="ACCEPT"/>
-            </Filters>
-        </Appender>
-        <Appender type="Console" name="FLOW">
-            <Layout type="PatternLayout" pattern="%C{1}.%M %m %ex%n"/><!-- class and line number -->
-            <Filters>
-                <Filter type="MarkerFilter" marker="FLOW" onMatch="ACCEPT" onMismatch="NEUTRAL"/>
-                <Filter type="MarkerFilter" marker="EXCEPTION" onMatch="ACCEPT" onMismatch="DENY"/>
-            </Filters>
-        </Appender>
-        <Appender type="File" name="File" fileName="${filename}">
-            <Layout type="PatternLayout">
-                <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
-            </Layout>
-        </Appender>
+        <RollingFile name="fileLogger" fileName="burstpool.log" filePattern="burstpool-%d{yyyy-MM-dd}.log">
+            <PatternLayout>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%t] %c{1} - %msg%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+        </RollingFile>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%t] %c{1} - %msg%n" />
+        </Console>
     </Appenders>
-
     <Loggers>
-        <Logger name="burst.pool" level="debug" additivity="false">
-            <AppenderRef ref="File"/>
-            <AppenderRef ref="STDOUT"/>
+        <Logger name="burst.pool" level="info" additivity="true">
+            <appender-ref ref="fileLogger" level="debug" />
         </Logger>
-
-        <Root level="info">
-            <AppenderRef ref="STDOUT"/>
+        <Root level="debug" additivity="false">
+            <appender-ref ref="console" />
         </Root>
     </Loggers>
-
 </Configuration>
