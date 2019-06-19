@@ -1,16 +1,20 @@
 package burst.pool.migrator;
 
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.jooq.impl.DSL;
 import org.jooq.tools.jdbc.JDBCUtils;
 import org.mariadb.jdbc.MariaDbDataSource;
 import org.mariadb.jdbc.MariaDbPoolDataSource;
+import org.mariadb.jdbc.UrlParser;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 public class Migrator {
     public static void main(String[] args) {
@@ -24,10 +28,10 @@ public class Migrator {
             System.err.println("Connecting to source...");
             source = openSourceConnection(args);
             System.err.println("Migrating target schema...");
-            Flyway flyway = Flyway.configure()
+            FluentConfiguration flywayConfig = Flyway.configure()
                     .locations("classpath:/")
-                    .dataSource(args[1], args[2], args[3])
-                    .baselineOnMigrate(true).load();
+                    .baselineOnMigrate(true);
+            Flyway flyway = JDBCUtils.dialect(args[1]) == SQLDialect.MARIADB ? flywayHack(flywayConfig, args[1], args[2], args[3]).load() : flywayConfig.dataSource(args[1], args[2], args[3]).load();
             flyway.migrate();
             System.err.println("Connecting to target...");
             target = openTargetConnection(args);
@@ -37,6 +41,28 @@ public class Migrator {
             return;
         }
         new Migrations(source, target).run();
+    }
+
+    private static FluentConfiguration flywayHack(FluentConfiguration flywayBuilder, String dbUrl, String dbUsername, String dbPassword) {
+        MariaDbDataSource flywayDataSource = new MariaDbDataSource(dbUrl) {
+            @Override
+            protected synchronized void initialize() throws SQLException {
+                super.initialize();
+                Properties props = new Properties();
+                props.setProperty("user", dbUsername);
+                props.setProperty("password", dbPassword);
+                props.setProperty("useMysqlMetadata", "true");
+                try {
+                    Field f = MariaDbDataSource.class.getDeclaredField("urlParser");
+                    f.setAccessible(true);
+                    f.set(this, UrlParser.parse(dbUrl, props));
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+        flywayBuilder.dataSource(flywayDataSource); // TODO Remove this hack once a stable version of Flyway has this bug fixed
+        return flywayBuilder;
     }
 
     private static DSLContext openSourceConnection(String[] args) throws SQLException {

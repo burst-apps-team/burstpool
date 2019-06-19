@@ -67,7 +67,7 @@ public class Server extends NanoHTTPD {
                 return handleCall(session, params);
             }
         } catch (Throwable t) {
-            LoggerFactory.getLogger(Server.class).error("Error getting response", t);
+            LoggerFactory.getLogger(Server.class).warn("Error getting response", t);
             return NanoHTTPD.newFixedLengthResponse(t.getMessage());
         }
     }

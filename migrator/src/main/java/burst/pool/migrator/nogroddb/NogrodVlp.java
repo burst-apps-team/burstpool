@@ -82,7 +82,7 @@ public class NogrodVlp extends SchemaImpl {
      * No further instances allowed
      */
     private NogrodVlp() {
-        super("nogrod_vlp", null);
+        super("burstpool", null);
     }
 
 

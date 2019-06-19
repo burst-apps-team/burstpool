@@ -49,7 +49,6 @@ function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
         return http.json();
     }).then(response => {
-        document.getElementById("poolNameTitle").innerText = response.poolName;
         document.title = "Burst Pool (" + response.poolName + ")";
         document.getElementById("poolName").innerText = response.poolName;
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
@@ -67,11 +66,17 @@ function getPoolInfo() {
     });
 }
 
+let roundStart = 0;
+
+function updateRoundElapsed() {
+    document.getElementById("currentRoundElapsed").innerText = parseInt((new Date().getTime() / 1000).toFixed()) - roundStart;
+}
+
 function getCurrentRound() {
     fetch("/api/getCurrentRound").then(http => {
         return http.json();
     }).then(response => {
-        document.getElementById("currentRoundElapsed").innerText = response.roundElapsed;
+        roundStart = response.roundStart;
         document.getElementById("blockHeight").innerText = response.miningInfo.height;
         document.getElementById("baseTarget").innerText = response.miningInfo.baseTarget;
         if (response.bestDeadline != null) {
@@ -299,6 +304,7 @@ getCurrentRound();
 getMiners();
 getTop10Miners();
 
-setInterval(getCurrentRound, 1000);
-setInterval(getMiners, 60000); // TODO only refresh this when we detect that we forged a block
+setInterval(updateRoundElapsed, 1000);
+setInterval(getCurrentRound, 10000);
+setInterval(getMiners, 60000); /* TODO only refresh this when we detect that we forged a block */
 setInterval(getTop10Miners, 60000);

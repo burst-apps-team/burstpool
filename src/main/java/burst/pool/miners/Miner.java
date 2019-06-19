@@ -48,7 +48,10 @@ public class Miner implements Payable {
             }
         });
         // Calculate estimated capacity
-        store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(deadlines.size(), deadlineCount.get(), hitSum.get()));
+        try {
+            store.setEstimatedCapacity(minerMaths.estimatedEffectivePlotSize(deadlines.size(), deadlineCount.get(), hitSum.get()));
+        } catch (ArithmeticException ignored) {
+        }
     }
 
     public List<Long> calculateOutliers(List<Deadline> input) {

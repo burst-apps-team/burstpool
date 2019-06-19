@@ -291,10 +291,9 @@ public class Pool {
         return miningInfo.get();
     }
 
-    public JsonObject getCurrentRoundInfo(Gson gson) {
+    public JsonObject getCurrentRoundInfo(Gson gson) { // TODO minimize computations
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("roundStart", roundStartTime.get().getEpochSecond());
-        jsonObject.addProperty("roundElapsed", Instant.now().getEpochSecond() - roundStartTime.get().getEpochSecond());
         if (bestDeadline.get() != null) {
             JsonObject bestDeadlineJson = new JsonObject();
             bestDeadlineJson.addProperty("miner", bestDeadline.get().getMiner().getID());

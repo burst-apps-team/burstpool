@@ -16,11 +16,13 @@ import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 public class TransactionalDbStorageService extends DbStorageService {
+    private final HikariDataSource connectionPool;
     private final Connection connection;
     private final DSLContext dslContext;
 
     private TransactionalDbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, Connection connection, DSLContext context, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
         super(propertyService, minerMaths, settings, connectionPool, context, sqlDialect, cacheManager, cacheLocks);
+        this.connectionPool = connectionPool;
         this.connection = connection;
         this.dslContext = context;
     }
@@ -43,7 +45,7 @@ public class TransactionalDbStorageService extends DbStorageService {
 
     @Override
     public void close() throws Exception {
-        dslContext.close();
-        connection.close();
+        // dslContext.close(); TODO this is allegedly not necessary
+        connectionPool.evictConnection(connection);
     }
 }

@@ -51,6 +51,10 @@ import static burst.pool.db.tables.WonBlocks.WON_BLOCKS;
 
 public class DbStorageService implements StorageService {
 
+    // TODO unknown column nan in fieldlist. mariadb 10.1
+    // TODO unknown column infinity in fieldlist. mariadb 10.1
+    // TODO client side countdown
+
     private static final String POOL_STATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
     private static final String POOL_STATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";
 
@@ -352,7 +356,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     public void close() throws Exception {
-        defaultContext.close();
+        // TODO defaultContext.close(); allegedly unnecessary
         connectionPool.close();
         cacheManager.close();
     }
