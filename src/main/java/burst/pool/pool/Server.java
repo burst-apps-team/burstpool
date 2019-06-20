@@ -295,6 +295,7 @@ public class Server extends NanoHTTPD {
                     .replace(") ", ")")
                     .replace(", ", ",") TODO this minimization is messing up strings */
                     // Replace links TODO strip tags in links
+                    .replace("<<<TITLE>>>", propertyService.getString(Props.siteTitle))
                     .replace("<<<PUBLICNODE>>>", propertyService.getString(Props.siteNodeAddress))
                     .replace("<<<SOFTWARE>>>", propertyService.getString(Props.softwarePackagesAddress))
                     .replace("<<<DISCORD>>>", propertyService.getString(Props.siteDiscordLink));
