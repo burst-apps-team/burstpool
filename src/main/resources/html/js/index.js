@@ -49,7 +49,6 @@ function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
         return http.json();
     }).then(response => {
-        document.title = "Burst Pool (" + response.poolName + ")";
         document.getElementById("poolName").innerText = response.poolName;
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = response.nAvg;
