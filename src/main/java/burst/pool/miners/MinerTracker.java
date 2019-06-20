@@ -90,7 +90,7 @@ public class MinerTracker {
         if (miners.size() > 0) {
             BurstValue amountRemainingEach = poolReward.subtract(amountTaken.get()).divide(miners.size());
             logger.info("Amount remaining each is " + amountRemainingEach.toPlanck());
-            //miners.forEach(miner -> miner.increasePending(amountRemainingEach));
+            miners.forEach(miner -> miner.increasePending(amountRemainingEach));
         }
 
         logger.info("Finished processing winnings for block " + blockHeight + ". Reward ( + fees) is " + blockReward + ", pool fee is " + poolTake + ", forger take is " + winnerTake + ", miners took " + amountTaken.get());
@@ -98,7 +98,6 @@ public class MinerTracker {
 
     public void onBlockNotWon(StorageService transactionalStorageService, long blockHeight, List<Long> fastBlocks) {
         updateMiners(transactionalStorageService.getMiners(), blockHeight, fastBlocks);
-        logger.error("Did not win block at height " + blockHeight);
     }
 
     private void updateMiners(List<Miner> miners, long blockHeight, List<Long> fastBlocks) {
