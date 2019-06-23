@@ -120,6 +120,7 @@ public class MinerTracker {
     }
 
     public void payoutIfNeeded(StorageService storageService) {
+        logger.info("Attempting payout...");
         if (payoutSemaphore.availablePermits() == 0) {
             logger.info("Cannot payout - payout is already in progress.");
             return;
@@ -145,6 +146,7 @@ public class MinerTracker {
 
         if (payableMinersSet.size() < 2 || (payableMinersSet.size() < propertyService.getInt(Props.minPayoutsPerTransaction) && payableMinersSet.size() < storageService.getMinerCount())) {
             payoutSemaphore.release();
+            logger.info("Cannot payout. There are {} payable miners, required {}, miner count {}", payableMinersSet.size(), propertyService.getInt(Props.minPayoutsPerTransaction), storageService.getMinerCount());
             return;
         }
 
@@ -152,7 +154,7 @@ public class MinerTracker {
 
         BurstValue transactionFee = BurstValue.fromBurst(propertyService.getFloat(Props.transactionFee));
         BurstValue transactionFeePaidPerMiner = transactionFee.divide(payableMiners.length);
-        logger.info("TFPM is " + transactionFeePaidPerMiner.toPlanck());
+        logger.info("TFPM is {}", transactionFeePaidPerMiner.toPlanck());
         Map<Payable, BurstValue> payees = new HashMap<>(); // Does not have subtracted transaction fee
         Map<BurstAddress, BurstValue> recipients = new HashMap<>();
         StringBuilder logMessage = new StringBuilder("Paying out to miners");

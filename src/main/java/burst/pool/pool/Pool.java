@@ -179,8 +179,8 @@ public class Pool {
                                     }
                                     minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, nextBlockPreProcess.fastBlocks);
                                 }
+                                onProcessedBlock(transactionalStorageService);
                             }))
-                            .doOnComplete(() -> onProcessedBlock(transactionalStorageService))
                             .onErrorComplete(t -> {
                                 logger.warn("Error processing block " + transactionalStorageService.getLastProcessedBlock() + 1, t);
                                 try {
