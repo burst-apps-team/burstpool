@@ -65,6 +65,7 @@ public class Pool {
                     onProcessBlocksError(e, false);
                     return true;
                 }))
+                .retry()
                 .subscribe(() -> {}, e -> onProcessBlocksError(e, true));
     }
 
@@ -78,6 +79,7 @@ public class Pool {
 
     private Disposable refreshMiningInfoThread() {
         return nodeService.getMiningInfo()
+                .retry()
                 .subscribe(this::onMiningInfo, e -> onMiningInfoError(e, true));
     }
 
