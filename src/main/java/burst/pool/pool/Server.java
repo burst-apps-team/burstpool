@@ -20,10 +20,12 @@ import org.ehcache.Cache;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.math.BigInteger;
+import java.net.SocketException;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -31,6 +33,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Server extends NanoHTTPD {
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+
     private static final String[] allowedFileExtensions = new String[]{".html", ".css", ".js", ".png", ".ico"};
 
     private final StorageService storageService;
@@ -66,9 +70,12 @@ public class Server extends NanoHTTPD {
             } else {
                 return handleCall(session, params);
             }
-        } catch (Throwable t) {
-            LoggerFactory.getLogger(Server.class).warn("Error getting response", t);
-            return NanoHTTPD.newFixedLengthResponse(t.getMessage());
+        } catch (SocketException e) {
+            logger.warn("SocketException for {}", session.getRemoteIpAddress());
+            return NanoHTTPD.newFixedLengthResponse(e.getMessage());
+        } catch (Exception e) {
+            logger.warn("Error getting response", e);
+            return NanoHTTPD.newFixedLengthResponse(e.getMessage());
         }
     }
 
