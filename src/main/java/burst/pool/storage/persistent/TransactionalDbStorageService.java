@@ -18,19 +18,26 @@ import java.util.concurrent.Semaphore;
 public class TransactionalDbStorageService extends DbStorageService {
     private final HikariDataSource connectionPool;
     private final Connection connection;
-    private final DSLContext dslContext;
+    private final Settings settings;
+    private final SQLDialect sqlDialect;
 
-    private TransactionalDbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, Connection connection, DSLContext context, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
-        super(propertyService, minerMaths, settings, connectionPool, context, sqlDialect, cacheManager, cacheLocks);
+    private TransactionalDbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, Connection connection, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
+        super(propertyService, minerMaths, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
         this.connectionPool = connectionPool;
         this.connection = connection;
-        this.dslContext = context;
+        this.settings = settings;
+        this.sqlDialect = sqlDialect;
     }
 
     protected static TransactionalDbStorageService create(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
         Connection connection = connectionPool.getConnection();
         connection.setAutoCommit(false);
-        return new TransactionalDbStorageService(propertyService, minerMaths, settings, connectionPool, connection, DSL.using(connection, sqlDialect, settings), sqlDialect, cacheManager, cacheLocks);
+        return new TransactionalDbStorageService(propertyService, minerMaths, settings, connectionPool, connection, sqlDialect, cacheManager, cacheLocks);
+    }
+
+    @Override
+    protected DSLContext getDslContext() {
+        return DSL.using(connection, sqlDialect, settings);
     }
 
     @Override
@@ -44,8 +51,7 @@ public class TransactionalDbStorageService extends DbStorageService {
     }
 
     @Override
-    public void close() throws Exception {
-        // dslContext.close(); TODO this is allegedly not necessary
+    public void close() {
         connectionPool.evictConnection(connection);
     }
 }
