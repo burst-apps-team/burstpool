@@ -94,7 +94,8 @@ public class Server extends NanoHTTPD {
             }
         } else if (Objects.equals(params.get("requestType"), "getMiningInfo")) {
             MiningInfo miningInfo = pool.getMiningInfo();
-            return gson.toJson(new MiningInfoResponse(Hex.toHexString(pool.getMiningInfo().getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight()));
+            if (miningInfo == null) return gson.toJson(JsonNull.INSTANCE);
+            return gson.toJson(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight()));
         } else {
             return "404 not found";
         }
