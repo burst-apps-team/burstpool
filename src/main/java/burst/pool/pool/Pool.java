@@ -241,7 +241,6 @@ public class Pool {
     }
 
     BigInteger checkNewSubmission(Submission submission, String userAgent) throws SubmissionException {
-        long a = System.currentTimeMillis();
         if (miningInfo.get() == null) {
             throw new SubmissionException("Pool does not have mining info");
         }
@@ -254,11 +253,8 @@ public class Pool {
         if (resetRoundSemaphore.availablePermits() < 0) {
             throw new SubmissionException("Cannot submit - new round starting");
         }
-        long b = System.currentTimeMillis();
 
         BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
-
-        long c = System.currentTimeMillis();
 
         if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");
@@ -290,18 +286,13 @@ public class Pool {
             }
 
             minerTracker.onMinerSubmittedDeadline(storageService, submission.getMiner(), deadline, BigInteger.valueOf(miningInfo.get().getBaseTarget()), miningInfo.get().getHeight(), userAgent);
-
-            System.err.println("a " + (b - a) + " ms");
-            System.err.println("b " + (c - b) + " ms");
-            System.err.println("c " + (System.currentTimeMillis() - c) + " ms");
-            System.err.println("total " + (System.currentTimeMillis() - a) + " ms");
             return deadline;
         } finally {
             processDeadlineSemaphore.release();
         }
     }
 
-    private void onNewBestDeadline(long blockHeight, Submission submission, BigInteger deadline) throws SubmissionException {
+    private void onNewBestDeadline(long blockHeight, Submission submission, BigInteger deadline) {
         bestSubmission.set(submission);
         bestDeadline.set(deadline);
         submitDeadline(submission);
