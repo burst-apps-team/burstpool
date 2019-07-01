@@ -335,9 +335,9 @@ public class Pool {
             bestDeadlineJson.addProperty("minerRS", bestSubmission.get().getMiner().getFullAddress());
             bestDeadlineJson.addProperty("nonce", bestSubmission.get().getNonce());
             bestDeadlineJson.addProperty("deadline", bestDeadline.get());
-            jsonObject.add("bestSubmission", bestDeadlineJson);
+            jsonObject.add("bestDeadline", bestDeadlineJson);
         } else {
-            jsonObject.add("bestSubmission", JsonNull.INSTANCE);
+            jsonObject.add("bestDeadline", JsonNull.INSTANCE);
         }
         MiningInfo miningInfo = getMiningInfo();
         jsonObject.add("miningInfo", gson.toJsonTree(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())));
