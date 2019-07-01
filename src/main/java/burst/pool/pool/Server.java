@@ -112,7 +112,7 @@ public class Server extends NanoHTTPD {
         if (session.getUri().startsWith("/api/getMiners")) {
             JsonArray minersJson = new JsonArray();
             AtomicReference<Double> poolCapacity = new AtomicReference<>(0d);
-            storageService.getMiners()
+            storageService.getMinersFiltered()
                     .stream()
                     .sorted(Comparator.comparing(Miner::getCapacity).reversed())
                     .forEach(miner -> {
@@ -206,7 +206,7 @@ public class Server extends NanoHTTPD {
         } else if (session.getUri().startsWith("/api/getTop10Miners")) {
             AtomicReference<Double> othersShare = new AtomicReference<>(1d);
             JsonArray topMiners = new JsonArray();
-            storageService.getMiners().stream()
+            storageService.getMinersFiltered().stream()
                     .sorted((m1, m2) -> Double.compare(m2.getShare(), m1.getShare())) // Reverse order - highest to lowest
                     .limit(10)
                     .forEach(miner -> {

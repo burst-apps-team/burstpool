@@ -87,9 +87,11 @@ public class MinerTracker {
 
         // Evenly share result. This makes sure that poolReward is taken, even if the amountTaken was greater than poolReward
         // Essentially prevents the pool from overpaying or underpaying. Even if it gave out too much to the fee recipient and reward recipient, it will now take the extra from the pending of miners.
-        if (miners.size() > 0) {
+        if (!miners.isEmpty()) {
             BurstValue amountRemainingEach = poolReward.subtract(amountTaken.get()).divide(miners.size());
-            logger.info("Amount remaining each is " + amountRemainingEach.toPlanck());
+            if (logger.isInfoEnabled()) {
+                logger.info("Amount remaining each is {}", amountRemainingEach.toPlanck());
+            }
             miners.forEach(miner -> miner.increasePending(amountRemainingEach));
         }
 

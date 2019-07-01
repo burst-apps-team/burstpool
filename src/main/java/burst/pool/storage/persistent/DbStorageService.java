@@ -234,6 +234,13 @@ public class DbStorageService implements StorageService {
     public List<Miner> getMiners() {
         return useDslContext(context -> context.select(MINERS.ACCOUNT_ID)
                 .from(MINERS)
+                .fetch(id -> getMiner(id.get(MINERS.ACCOUNT_ID))));
+    }
+
+    @Override
+    public List<Miner> getMinersFiltered() {
+        return useDslContext(context -> context.select(MINERS.ACCOUNT_ID)
+                .from(MINERS)
                 .fetch(id -> getMiner(id.get(MINERS.ACCOUNT_ID)))
                 .stream()
                 .filter(miner -> miner.getNConf() >= nMin)

@@ -17,6 +17,7 @@ public interface StorageService extends AutoCloseable {
 
     int getMinerCount();
     List<Miner> getMiners();
+    List<Miner> getMinersFiltered();
     Miner getMiner(BurstAddress address);
     Miner newMiner(BurstAddress address);
 
