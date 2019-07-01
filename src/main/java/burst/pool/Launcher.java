@@ -1,6 +1,8 @@
 package burst.pool;
 
 import burst.kit.service.BurstNodeService;
+import burst.kit.service.impl.DefaultSchedulerAssigner;
+import burst.kit.service.impl.GrpcBurstNodeService;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.MinerTracker;
 import burst.pool.pool.Pool;
@@ -37,7 +39,12 @@ public class Launcher {
             logger.error("Could not open database connection", e);
             System.exit(-1);
         }
-        BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress), Constants.USER_AGENT);
+        BurstNodeService nodeService;
+        if (propertyService.getBoolean(Props.useGrpcApi)) {
+            nodeService = new GrpcBurstNodeService(propertyService.getString(Props.nodeAddress), new DefaultSchedulerAssigner());
+        } else {
+            nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress), Constants.USER_AGENT);
+        }
         MinerTracker minerTracker = new MinerTracker(nodeService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);
         Server server = new Server(storageService, propertyService, pool, minerTracker);

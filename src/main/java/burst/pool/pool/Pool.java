@@ -5,7 +5,6 @@ import burst.kit.entity.BurstAddress;
 import burst.kit.entity.response.MiningInfo;
 import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.service.BurstNodeService;
-import burst.pool.brs.Generator;
 import burst.pool.miners.MinerTracker;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
@@ -254,7 +253,9 @@ public class Pool {
             throw new SubmissionException("Cannot submit - new round starting");
         }
 
-        BigInteger deadline = Generator.calcDeadline(miningInfo.get(), submission);
+        MiningInfo localMiningInfo = miningInfo.get();
+        // TODO poc2 switch
+        BigInteger deadline = burstCrypto.calculateDeadline(submission.getMiner(), submission.getNonce().longValueExact(), localMiningInfo.getGenerationSignature(), burstCrypto.calculateScoop(localMiningInfo.getGenerationSignature(), localMiningInfo.getHeight()), localMiningInfo.getBaseTarget(), 2);
 
         if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");
