@@ -1,9 +1,11 @@
 package burst.pool.brs;
 
+import burst.kit.crypto.BurstCrypto;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-public class MiningPlot {
+public class MiningPlot { // TODO move into burstkit4j
   private static final int HASH_SIZE = 32;
   private static final int HASHES_PER_SCOOP = 2;
   public static final int SCOOP_SIZE = HASHES_PER_SCOOP * HASH_SIZE;
@@ -14,7 +16,7 @@ public class MiningPlot {
 
   private final byte[] data = new byte[PLOT_SIZE];
 
-    public MiningPlot(long addr, long nonce, int blockHeight) {
+    public MiningPlot(long addr, long nonce) {
       ByteBuffer base_buffer = ByteBuffer.allocate(16);
     base_buffer.putLong(addr);
     base_buffer.putLong(nonce);
@@ -37,8 +39,7 @@ public class MiningPlot {
     for (int i = 0; i < PLOT_SIZE; i++) {
       data[i] = (byte) (gendata[i] ^ finalhash[i % HASH_SIZE]);
     }
-    //PoC2 Rearrangement
-    if (true) { // todo poc2 switch
+    //PoC2 Rearrangement TODO add a poc2 switch
       byte[] hashBuffer = new byte[HASH_SIZE];
       int revPos = PLOT_SIZE - HASH_SIZE; //Start at second hash in last scoop
       for (int pos = 32; pos < (PLOT_SIZE / 2); pos += 64) { //Start at second hash in first scoop
@@ -47,7 +48,6 @@ public class MiningPlot {
         System.arraycopy(hashBuffer, 0, data, revPos, HASH_SIZE); //Copy buffer to high scoop second hash
         revPos -= 64; //move backwards
       }
-    }
   }
 
   public byte[] getScoop(int pos) {

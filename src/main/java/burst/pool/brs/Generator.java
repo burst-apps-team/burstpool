@@ -20,8 +20,8 @@ public class Generator { // TODO move all of this to burstkit4j
         return hashnum.mod(BigInteger.valueOf(MiningPlot.SCOOPS_PER_PLOT)).intValue();
     }
 
-    public static BigInteger calculateHit(long accountId, long nonce, byte[] genSig, int scoop, int blockHeight) {
-        MiningPlot plot = new MiningPlot(accountId, nonce, blockHeight);
+    public static BigInteger calculateHit(long accountId, long nonce, byte[] genSig, int scoop) {
+        MiningPlot plot = new MiningPlot(accountId, nonce);
         Shabal256 md = new Shabal256();
         md.update(genSig);
         plot.hashScoop(md, scoop);
@@ -29,8 +29,8 @@ public class Generator { // TODO move all of this to burstkit4j
         return new BigInteger(1, new byte[] { hash[7], hash[6], hash[5], hash[4], hash[3], hash[2], hash[1], hash[0] });
     }
 
-    public static BigInteger calculateDeadline(long accountId, long nonce, byte[] genSig, int scoop, long baseTarget, int blockHeight) {
-        BigInteger hit = calculateHit(accountId, nonce, genSig, scoop, blockHeight);
+    public static BigInteger calculateDeadline(long accountId, long nonce, byte[] genSig, int scoop, long baseTarget) {
+        BigInteger hit = calculateHit(accountId, nonce, genSig, scoop);
         return hit.divide(BigInteger.valueOf(baseTarget));
     }
 
@@ -38,10 +38,6 @@ public class Generator { // TODO move all of this to burstkit4j
         if (miningInfo == null) {
             throw new SubmissionException("Pool does not have mining info");
         }
-        return calculateDeadline(submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce().longValue(), miningInfo.getGenerationSignature(), calculateScoop(miningInfo.getGenerationSignature(), miningInfo.getHeight()), miningInfo.getBaseTarget(), Math.toIntExact(miningInfo.getHeight())); // todo height -> long
-    }
-
-    private static long parseUnsignedLong(String number) {
-        return Long.parseUnsignedLong(number);
+        return calculateDeadline(submission.getMiner().getBurstID().getSignedLongId(), submission.getNonce().longValue(), miningInfo.getGenerationSignature(), calculateScoop(miningInfo.getGenerationSignature(), miningInfo.getHeight()), miningInfo.getBaseTarget());
     }
 }
