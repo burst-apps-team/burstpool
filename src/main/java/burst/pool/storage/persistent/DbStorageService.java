@@ -51,7 +51,7 @@ import static burst.pool.db.tables.Payouts.PAYOUTS;
 import static burst.pool.db.tables.PoolState.POOL_STATE;
 import static burst.pool.db.tables.WonBlocks.WON_BLOCKS;
 
-public class DbStorageService implements StorageService { // TODO refator so that we do not use dsl context when loading from cache
+public class DbStorageService implements StorageService {
 
     private static final String POOL_STATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
     private static final String POOL_STATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";
@@ -225,7 +225,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
     @Override
     public int getMinerCount() {
-        return useDslContext(context -> getFromCacheOr(MINERS, "count", () -> context.selectCount()
+        return getFromCacheOr(MINERS, "count", () -> useDslContext(context -> context.selectCount()
                 .from(MINERS)
                 .fetchOne(0, int.class)));
     }
@@ -254,7 +254,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
     private Miner getMiner(long id) {
         try {
-            return useDslContext(context -> getFromCacheOr(MINERS, Long.toUnsignedString(id), () -> context.selectFrom(MINERS)
+            return getFromCacheOr(MINERS, Long.toUnsignedString(id), () -> useDslContext(context -> context.selectFrom(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(id))
                     .fetchAny(this::minerFromRecord)));
         } catch (NullPointerException e) {
@@ -302,7 +302,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
     @Override
     public int getLastProcessedBlock() {
         try {
-            int lastProcessedBlock = useDslContext(context -> getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> context.select(POOL_STATE.VALUE)
+            int lastProcessedBlock = getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> useDslContext(context -> context.select(POOL_STATE.VALUE)
                     .from(POOL_STATE)
                     .where(POOL_STATE.KEY.eq(POOL_STATE_LAST_PROCESSED_BLOCK))
                     .fetchAny(result -> Integer.parseInt(result.get(POOL_STATE.VALUE)))));
@@ -338,7 +338,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
     @Override
     public List<StoredSubmission> getBestSubmissionsForBlock(long blockHeight) {
         try {
-            return useDslContext(context -> getFromCacheOr(BEST_SUBMISSIONS, Long.toString(blockHeight), () -> context.selectFrom(BEST_SUBMISSIONS)
+            return getFromCacheOr(BEST_SUBMISSIONS, Long.toString(blockHeight), () -> useDslContext(context -> context.selectFrom(BEST_SUBMISSIONS)
                     .where(BEST_SUBMISSIONS.HEIGHT.eq(blockHeight))
                     .fetch(response -> new StoredSubmission(BurstAddress.fromId(BurstID.fromLong(response.getAccountId())), new BigInteger(response.getNonce()), response.getDeadline()))));
         } catch (NullPointerException e) {
@@ -367,14 +367,14 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
     @Override
     public void addWonBlock(WonBlock wonBlock) {
-        // Won blocks are not cached.
+        // Won blocks are not cached. TODO cache!
         useDslContextVoid(context -> context.insertInto(WON_BLOCKS, WON_BLOCKS.BLOCK_HEIGHT, WON_BLOCKS.BLOCK_ID, WON_BLOCKS.GENERATOR_ID, WON_BLOCKS.NONCE, WON_BLOCKS.FULL_REWARD)
             .values((long) wonBlock.getBlockHeight(), wonBlock.getBlockId().getSignedLongId(), wonBlock.getGeneratorId().getBurstID().getSignedLongId(), wonBlock.getNonce().toString(), wonBlock.getFullReward().toPlanck().longValue())
             .execute());
     }
 
     @Override
-    public List<WonBlock> getWonBlocks(int limit) {
+    public List<WonBlock> getWonBlocks(int limit) { // TODO cache
         return useDslContext(context -> context.selectFrom(WON_BLOCKS)
                 .orderBy(WON_BLOCKS.BLOCK_HEIGHT.desc())
                 .limit(limit)
@@ -383,7 +383,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
     @Override
     public void addPayout(Payout payout) {
-        // Payouts are not cached.
+        // Payouts are not cached. TODO cache them!
         useDslContextVoid(context -> context.insertInto(PAYOUTS, PAYOUTS.TRANSACTION_ID, PAYOUTS.SENDER_PUBLIC_KEY, PAYOUTS.FEE, PAYOUTS.DEADLINE, PAYOUTS.ATTACHMENT)
                 .values(payout.getTransactionId().getSignedLongId(), payout.getSenderPublicKey(), payout.getFee().toPlanck().longValue(), (long) payout.getDeadline(), payout.getAttachment())
                 .execute());
@@ -413,7 +413,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public BurstValue getPendingBalance() {
-            return useDslContext(context -> getFromCacheOr(MINERS, accountIdStr + "pending", () -> context.select(MINERS.PENDING_BALANCE)
+            return getFromCacheOr(MINERS, accountIdStr + "pending", () -> useDslContext(context -> context.select(MINERS.PENDING_BALANCE)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny(record -> BurstValue.fromPlanck(record.get(MINERS.PENDING_BALANCE)))));
@@ -430,7 +430,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public double getEstimatedCapacity() {
-            return useDslContext(context -> getFromCacheOr(MINERS, accountIdStr + "estimated", () -> context.select(MINERS.ESTIMATED_CAPACITY)
+            return getFromCacheOr(MINERS, accountIdStr + "estimated", () -> useDslContext(context -> context.select(MINERS.ESTIMATED_CAPACITY)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -448,7 +448,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public double getShare() {
-            return useDslContext(context -> getFromCacheOr(MINERS, accountIdStr + "share", () -> context.select(MINERS.SHARE)
+            return getFromCacheOr(MINERS, accountIdStr + "share", () -> useDslContext(context -> context.select(MINERS.SHARE)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -466,7 +466,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public BurstValue getMinimumPayout() {
-            return useDslContext(context -> getFromCacheOr(MINERS, accountIdStr + "minpayout", () -> context.select(MINERS.MINIMUM_PAYOUT)
+            return getFromCacheOr(MINERS, accountIdStr + "minpayout", () -> useDslContext(context -> context.select(MINERS.MINIMUM_PAYOUT)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny(record -> BurstValue.fromPlanck(record.get(MINERS.MINIMUM_PAYOUT)))));
@@ -483,7 +483,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public String getName() {
-            return useDslContext(context -> getFromCacheOr(MINERS, accountIdStr + "name", () -> context.select(MINERS.NAME)
+            return getFromCacheOr(MINERS, accountIdStr + "name", () -> useDslContext(context -> context.select(MINERS.NAME)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -501,7 +501,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public String getUserAgent() {
-            return useDslContext(context -> getFromCacheOr(MINERS, accountIdStr + "userAgent", () -> context.select(MINERS.USER_AGENT)
+            return getFromCacheOr(MINERS, accountIdStr + "userAgent", () -> useDslContext(context -> context.select(MINERS.USER_AGENT)
                     .from(MINERS)
                     .where(MINERS.ACCOUNT_ID.eq(accountId))
                     .fetchAny()
@@ -528,7 +528,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public int getDeadlineCount() {
-            return useDslContext(context -> getFromCacheOr(MINER_DEADLINES, accountIdStr + "dlcount", () -> context.selectCount()
+            return getFromCacheOr(MINER_DEADLINES, accountIdStr + "dlcount", () -> useDslContext(context -> context.selectCount()
                     .from(MINER_DEADLINES)
                     .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId))
                     .fetchAny(0, int.class)));
@@ -546,7 +546,7 @@ public class DbStorageService implements StorageService { // TODO refator so tha
         @Override
         public Deadline getDeadline(long height) {
             try {
-                return useDslContext(context -> getFromCacheOr(MINER_DEADLINES, accountIdStr + "deadline" + Long.toString(height), () -> context.select(MINER_DEADLINES.BASE_TARGET, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE)
+                return getFromCacheOr(MINER_DEADLINES, accountIdStr + "deadline" + Long.toString(height), () -> useDslContext(context -> context.select(MINER_DEADLINES.BASE_TARGET, MINER_DEADLINES.HEIGHT, MINER_DEADLINES.DEADLINE)
                         .from(MINER_DEADLINES)
                         .where(MINER_DEADLINES.ACCOUNT_ID.eq(accountId), MINER_DEADLINES.HEIGHT.eq(height))
                         .fetchAny()
@@ -571,17 +571,15 @@ public class DbStorageService implements StorageService { // TODO refator so tha
 
         @Override
         public BurstValue getPendingBalance() {
-            return useDslContext(context -> {
-                try {
-                    BurstValue pending = getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> context.select(POOL_STATE.VALUE)
-                            .from(POOL_STATE)
-                            .where(POOL_STATE.KEY.eq(POOL_STATE_FEE_RECIPIENT_BALANCE))
-                            .fetchAny(record -> BurstValue.fromPlanck(record.get(POOL_STATE.VALUE))));
-                    return pending == null ? BurstValue.ZERO : pending;
-                } catch (NullPointerException e) {
-                    return BurstValue.fromPlanck(0);
-                }
-            });
+            try {
+                BurstValue pending = getFromCacheOr(POOL_STATE, POOL_STATE_FEE_RECIPIENT_BALANCE, () -> useDslContext(context -> context.select(POOL_STATE.VALUE)
+                        .from(POOL_STATE)
+                        .where(POOL_STATE.KEY.eq(POOL_STATE_FEE_RECIPIENT_BALANCE))
+                        .fetchAny(record -> BurstValue.fromPlanck(record.get(POOL_STATE.VALUE)))));
+                return pending == null ? BurstValue.ZERO : pending;
+            } catch (NullPointerException e) {
+                return BurstValue.fromPlanck(0);
+            }
         }
 
         @Override
