@@ -32,18 +32,18 @@ public class Launcher {
         }
         PropertyService propertyService = new PropertyServiceImpl(propertiesFileName);
         MinerMaths minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
-        StorageService storageService = null;
-        try {
-            storageService = new DbStorageService(propertyService, minerMaths);
-        } catch (SQLException | FlywayException e) {
-            logger.error("Could not open database connection", e);
-            System.exit(-1);
-        }
         BurstNodeService nodeService;
         if (propertyService.getBoolean(Props.useGrpcApi)) {
             nodeService = new GrpcBurstNodeService(propertyService.getString(Props.nodeAddress), new DefaultSchedulerAssigner());
         } else {
             nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress), Constants.USER_AGENT);
+        }
+        StorageService storageService = null;
+        try {
+            storageService = new DbStorageService(propertyService, minerMaths, nodeService);
+        } catch (SQLException | FlywayException e) {
+            logger.error("Could not open database connection", e);
+            System.exit(-1);
         }
         MinerTracker minerTracker = new MinerTracker(nodeService, propertyService);
         Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);

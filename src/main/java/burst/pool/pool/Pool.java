@@ -327,7 +327,7 @@ public class Pool {
         return miningInfo.get();
     }
 
-    public JsonObject getCurrentRoundInfo(Gson gson) { // TODO minimize computations
+    public JsonObject getCurrentRoundInfo(Gson gson) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("roundStart", roundStartTime.get().getEpochSecond());
         if (bestSubmission.get() != null) {
@@ -340,8 +340,10 @@ public class Pool {
         } else {
             jsonObject.add("bestDeadline", JsonNull.INSTANCE);
         }
-        MiningInfo miningInfo = getMiningInfo();
-        jsonObject.add("miningInfo", gson.toJsonTree(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())));
+        MiningInfo miningInfo = Pool.this.miningInfo.get();
+        if (miningInfo != null) {
+            jsonObject.add("miningInfo", gson.toJsonTree(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())));
+        }
         return jsonObject;
     }
 

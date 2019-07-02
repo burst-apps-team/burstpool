@@ -3,6 +3,7 @@ package burst.pool.storage.persistent;
 import burst.kit.entity.BurstAddress;
 import burst.kit.entity.BurstID;
 import burst.kit.entity.BurstValue;
+import burst.kit.service.BurstNodeService;
 import burst.pool.db.tables.records.MinersRecord;
 import burst.pool.entity.Payout;
 import burst.pool.entity.WonBlock;
@@ -50,17 +51,14 @@ import static burst.pool.db.tables.Payouts.PAYOUTS;
 import static burst.pool.db.tables.PoolState.POOL_STATE;
 import static burst.pool.db.tables.WonBlocks.WON_BLOCKS;
 
-public class DbStorageService implements StorageService {
-
-    // TODO unknown column nan in fieldlist. mariadb 10.1
-    // TODO unknown column infinity in fieldlist. mariadb 10.1
-    // TODO client side countdown
+public class DbStorageService implements StorageService { // TODO refator so that we do not use dsl context when loading from cache
 
     private static final String POOL_STATE_FEE_RECIPIENT_BALANCE = "feeRecipientBalance";
     private static final String POOL_STATE_LAST_PROCESSED_BLOCK = "lastProcessedBlock";
 
     private final PropertyService propertyService;
     private final MinerMaths minerMaths;
+    private final BurstNodeService burstNodeService;
 
     private final int nMin;
 
@@ -71,12 +69,13 @@ public class DbStorageService implements StorageService {
     private final CacheManager cacheManager;
     private final Map<Table<?>, Semaphore> cacheLocks;
 
-    public DbStorageService(PropertyService propertyService, MinerMaths minerMaths) throws SQLException, FlywayException {
+    public DbStorageService(PropertyService propertyService, MinerMaths minerMaths, BurstNodeService burstNodeService) throws SQLException, FlywayException {
         String url = propertyService.getString(Props.dbUrl);
         String username = propertyService.getString(Props.dbUsername);
         String password = propertyService.getString(Props.dbPassword);
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
+        this.burstNodeService = burstNodeService;
 
         nMin = propertyService.getInt(Props.nMin);
 
@@ -150,9 +149,10 @@ public class DbStorageService implements StorageService {
         return flywayBuilder;
     }
 
-    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) {
+    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, BurstNodeService burstNodeService, Settings settings, HikariDataSource connectionPool, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) {
         this.propertyService = propertyService;
         this.minerMaths = minerMaths;
+        this.burstNodeService = burstNodeService;
         this.settings = settings;
         this.connectionPool = connectionPool;
         this.sqlDialect = sqlDialect;
@@ -204,7 +204,7 @@ public class DbStorageService implements StorageService {
 
     @Override
     public StorageService beginTransaction() throws SQLException {
-        return TransactionalDbStorageService.create(propertyService, minerMaths, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
+        return TransactionalDbStorageService.create(propertyService, minerMaths, burstNodeService, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
     }
 
     @Override
@@ -289,13 +289,30 @@ public class DbStorageService implements StorageService {
         return new PoolFeeRecipient(propertyService, new DbFeeRecipientStore());
     }
 
+    private void setLastProcessedBlock(int block) {
+        useDslContextVoid(context -> {
+            context.mergeInto(POOL_STATE, POOL_STATE.KEY, POOL_STATE.VALUE)
+                    .key(POOL_STATE.KEY)
+                    .values(POOL_STATE_LAST_PROCESSED_BLOCK, Integer.toString(block))
+                    .execute();
+            storeInCache(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, block);
+        });
+    }
+
     @Override
     public int getLastProcessedBlock() {
         try {
-            return useDslContext(context -> getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> context.select(POOL_STATE.VALUE)
+            int lastProcessedBlock = useDslContext(context -> getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> context.select(POOL_STATE.VALUE)
                     .from(POOL_STATE)
                     .where(POOL_STATE.KEY.eq(POOL_STATE_LAST_PROCESSED_BLOCK))
                     .fetchAny(result -> Integer.parseInt(result.get(POOL_STATE.VALUE)))));
+            if (lastProcessedBlock == 0) { // First run? Don't bother processing potentially hundreds of thousands of blocks that we weren't even running for
+                int height = (int) burstNodeService.getMiningInfo().blockingFirst().getHeight() - propertyService.getInt(Props.nMin);
+                setLastProcessedBlock(height);
+                return height;
+            } else {
+                return lastProcessedBlock;
+            }
         } catch (NullPointerException e) {
             return 0;
         }
@@ -304,13 +321,7 @@ public class DbStorageService implements StorageService {
     @Override
     public void incrementLastProcessedBlock() {
         int block = getLastProcessedBlock() + 1;
-        useDslContextVoid(context -> {
-            context.mergeInto(POOL_STATE, POOL_STATE.KEY, POOL_STATE.VALUE)
-                    .key(POOL_STATE.KEY)
-                    .values(POOL_STATE_LAST_PROCESSED_BLOCK, Integer.toString(block))
-                    .execute();
-            storeInCache(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, block);
-        });
+        setLastProcessedBlock(block);
     }
 
     @Override

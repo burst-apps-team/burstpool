@@ -1,5 +1,6 @@
 package burst.pool.storage.persistent;
 
+import burst.kit.service.BurstNodeService;
 import burst.pool.miners.MinerMaths;
 import burst.pool.storage.config.PropertyService;
 import com.zaxxer.hikari.HikariDataSource;
@@ -22,18 +23,18 @@ public class TransactionalDbStorageService extends DbStorageService {
     private final SQLDialect sqlDialect;
     private boolean isClosed = false;
 
-    private TransactionalDbStorageService(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, Connection connection, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
-        super(propertyService, minerMaths, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
+    private TransactionalDbStorageService(PropertyService propertyService, MinerMaths minerMaths, BurstNodeService burstNodeService, Settings settings, HikariDataSource connectionPool, Connection connection, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
+        super(propertyService, minerMaths, burstNodeService, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
         this.connectionPool = connectionPool;
         this.connection = connection;
         this.settings = settings;
         this.sqlDialect = sqlDialect;
     }
 
-    protected static TransactionalDbStorageService create(PropertyService propertyService, MinerMaths minerMaths, Settings settings, HikariDataSource connectionPool, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
+    protected static TransactionalDbStorageService create(PropertyService propertyService, MinerMaths minerMaths, BurstNodeService burstNodeService, Settings settings, HikariDataSource connectionPool, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
         Connection connection = connectionPool.getConnection();
         connection.setAutoCommit(false);
-        return new TransactionalDbStorageService(propertyService, minerMaths, settings, connectionPool, connection, sqlDialect, cacheManager, cacheLocks);
+        return new TransactionalDbStorageService(propertyService, minerMaths, burstNodeService, settings, connectionPool, connection, sqlDialect, cacheManager, cacheLocks);
     }
 
     @Override
