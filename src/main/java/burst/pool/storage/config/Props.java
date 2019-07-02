@@ -7,7 +7,7 @@ import java.util.Objects;
 public class Props {
     public static final Prop<Integer> serverPort = new Prop<>("serverPort", 80); // Must be > 0, < 2^16
     public static final Prop<Boolean> useGrpcApi = new Prop<>("useGrpcApi", true); // Must be non-empty
-    public static final Prop<String> nodeAddress = new Prop<>("nodeAddress", ""); // Must be non-empty
+    public static final Prop<String> nodeAddresses = new Prop<>("nodeAddresses", ""); // Must be non-empty
     public static final Prop<String> poolName = new Prop<>("poolName", "");
 
     public static final Prop<String> passphrase = new Prop<>("passphrase", ""); // Must be non-empty
@@ -46,7 +46,7 @@ public class Props {
             throw new IllegalArgumentException("Illegal server port: " + serverPort + " (Must be 0-2^16 exclusive)");
         }
 
-        String nodeAddress = propertyService.getString(Props.nodeAddress);
+        String nodeAddress = propertyService.getString(Props.nodeAddresses);
         if (nodeAddress == null || Objects.equals(nodeAddress, "")) {
             throw new IllegalArgumentException("Illegal node address (empty)");
         }

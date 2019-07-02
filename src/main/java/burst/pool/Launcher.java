@@ -32,12 +32,7 @@ public class Launcher {
         }
         PropertyService propertyService = new PropertyServiceImpl(propertiesFileName);
         MinerMaths minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
-        BurstNodeService nodeService;
-        if (propertyService.getBoolean(Props.useGrpcApi)) {
-            nodeService = new GrpcBurstNodeService(propertyService.getString(Props.nodeAddress), new DefaultSchedulerAssigner());
-        } else {
-            nodeService = BurstNodeService.getInstance(propertyService.getString(Props.nodeAddress), Constants.USER_AGENT);
-        }
+        BurstNodeService nodeService = BurstNodeService.getCompositeInstance(propertyService.getStringList(Props.nodeAddresses));
         StorageService storageService = null;
         try {
             storageService = new DbStorageService(propertyService, minerMaths, nodeService);

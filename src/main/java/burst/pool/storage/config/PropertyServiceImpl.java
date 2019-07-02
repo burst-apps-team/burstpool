@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 public class PropertyServiceImpl implements PropertyService {
     private static final Logger logger = LoggerFactory.getLogger(PropertyServiceImpl.class);
@@ -72,6 +73,16 @@ public class PropertyServiceImpl implements PropertyService {
     @Override
     public String getString(Prop<String> prop) {
         return valueOrDefault(prop);
+    }
+
+    @Override
+    public String[] getStringList(Prop<String> prop) {
+        StringTokenizer stringTokenizer = new StringTokenizer(valueOrDefault(prop), ";");
+        String[] strings = new String[stringTokenizer.countTokens()];
+        for (int i = 0; i < strings.length; i++) {
+            strings[i] = stringTokenizer.nextToken().trim();
+        }
+        return strings;
     }
 
     @Override

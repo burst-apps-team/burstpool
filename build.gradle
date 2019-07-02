@@ -34,7 +34,7 @@ def dbusername = "root"
 dependencies {
     implementation 'org.apache.poi:poi-ooxml:4.1.0'
     implementation 'io.reactivex.rxjava2:rxjava:2.2.10'
-    implementation 'com.github.burst-apps-team:burstkit4j:v0.12.0'
+    implementation 'com.github.burst-apps-team:burstkit4j:v0.12.2'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation "org.flywaydb:flyway-core:5.2.4"
     implementation "org.jooq:jooq"
@@ -45,8 +45,6 @@ dependencies {
     implementation "org.slf4j:slf4j-api:1.7.26"
     implementation 'com.zaxxer:HikariCP:3.3.1'
     implementation group: 'org.ehcache', name: 'ehcache', version: '3.7.1'
-
-    implementation "io.grpc:grpc-netty-shaded:1.21.0" // TODO remove
 
     // Needed for build script so "compile" needed
     //compile "com.h2database:h2:1.4.197"

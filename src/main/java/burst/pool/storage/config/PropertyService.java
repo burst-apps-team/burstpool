@@ -8,5 +8,6 @@ public interface PropertyService {
     long getLong(Prop<Long> prop);
     float getFloat(Prop<Float> prop);
     String getString(Prop<String> prop);
+    String[] getStringList(Prop<String> prop);
     BurstAddress getBurstAddress(Prop<BurstAddress> prop);
 }
