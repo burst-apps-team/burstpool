@@ -1,8 +1,6 @@
 package burst.pool;
 
 import burst.kit.service.BurstNodeService;
-import burst.kit.service.impl.DefaultSchedulerAssigner;
-import burst.kit.service.impl.GrpcBurstNodeService;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.MinerTracker;
 import burst.pool.pool.Pool;
@@ -32,7 +30,7 @@ public class Launcher {
         }
         PropertyService propertyService = new PropertyServiceImpl(propertiesFileName);
         MinerMaths minerMaths = new MinerMaths(propertyService.getInt(Props.nAvg), propertyService.getInt(Props.nMin));
-        BurstNodeService nodeService = BurstNodeService.getCompositeInstance(propertyService.getStringList(Props.nodeAddresses));
+        BurstNodeService nodeService = BurstNodeService.getInstance(propertyService.getStringList(Props.nodeAddresses)[0]); // TODO use composite instance        StorageService storageService = null;
         StorageService storageService = null;
         try {
             storageService = new DbStorageService(propertyService, minerMaths, nodeService);

@@ -93,7 +93,7 @@ public class DbStorageService implements StorageService {
         hikariConfig.setJdbcUrl(url);
         hikariConfig.setUsername(username);
         hikariConfig.setPassword(password);
-        hikariConfig.setMaximumPoolSize(32);
+        hikariConfig.setMaximumPoolSize(8);
         hikariConfig.setAutoCommit(true);
 
         settings = new Settings();

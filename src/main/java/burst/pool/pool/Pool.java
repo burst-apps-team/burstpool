@@ -17,6 +17,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +67,7 @@ public class Pool {
                     return true;
                 }))
                 .retry()
+                .subscribeOn(Schedulers.io())
                 .subscribe(() -> {}, e -> onProcessBlocksError(e, true));
     }
 
@@ -80,6 +82,7 @@ public class Pool {
     private Disposable refreshMiningInfoThread() {
         return nodeService.getMiningInfo()
                 .retry()
+                .subscribeOn(Schedulers.io())
                 .subscribe(this::onMiningInfo, e -> onMiningInfoError(e, true));
     }
 
@@ -255,7 +258,7 @@ public class Pool {
 
         MiningInfo localMiningInfo = miningInfo.get();
         // TODO poc2 switch
-        BigInteger deadline = burstCrypto.calculateDeadline(submission.getMiner(), submission.getNonce().longValueExact(), localMiningInfo.getGenerationSignature(), burstCrypto.calculateScoop(localMiningInfo.getGenerationSignature(), localMiningInfo.getHeight()), localMiningInfo.getBaseTarget(), 2);
+        BigInteger deadline = burstCrypto.calculateDeadline(submission.getMiner(), Long.parseUnsignedLong(submission.getNonce().toString()), localMiningInfo.getGenerationSignature(), burstCrypto.calculateScoop(localMiningInfo.getGenerationSignature(), localMiningInfo.getHeight()), localMiningInfo.getBaseTarget(), 2);
 
         if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
             throw new SubmissionException("Deadline exceeds maximum allowed deadline");

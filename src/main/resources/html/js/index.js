@@ -2,8 +2,10 @@ const noneFoundYet = "None found yet!";
 const loading = "Loading...";
 const minerNotFound = "Miner not found";
 
+const genesisBaseTarget = 4398046511104 / 240;
+
 let miners = new Array(0);
-let colors = [
+const colors = [
     "#3366CC",
     "#DC3912",
     "#FF9900",
@@ -26,7 +28,7 @@ let colors = [
     "#3B3EAC"
 ];
 
-var entityMap = {
+const entityMap = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
@@ -44,6 +46,16 @@ function escapeHtml(string) {
 }
 
 let chart = null;
+
+function formatTime(seconds) {
+    const date = new Date(null);
+    date.setSeconds(parseInt(seconds));
+    return date.toISOString().substr(11, 8);
+}
+
+function formatBaseTarget(baseTarget) {
+    return (genesisBaseTarget / baseTarget).toFixed(3) + " TB"
+}
 
 function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
@@ -68,7 +80,7 @@ function getPoolInfo() {
 let roundStart = 0;
 
 function updateRoundElapsed() {
-    document.getElementById("currentRoundElapsed").innerText = parseInt((new Date().getTime() / 1000).toFixed()) - roundStart;
+    document.getElementById("currentRoundElapsed").innerText = formatTime(parseInt((new Date().getTime() / 1000).toFixed()) - roundStart);
 }
 
 function getCurrentRound() {
@@ -77,10 +89,10 @@ function getCurrentRound() {
     }).then(response => {
         roundStart = response.roundStart;
         document.getElementById("blockHeight").innerText = response.miningInfo.height;
-        document.getElementById("baseTarget").innerText = response.miningInfo.baseTarget;
+        document.getElementById("netDiff").innerText = formatBaseTarget(response.miningInfo.baseTarget);
         if (response.bestDeadline != null) {
-            document.getElementById("bestDeadline").innerText = response.bestDeadline.deadline;
-            document.getElementById("bestMiner").innerText = response.bestDeadline.minerRS;
+            document.getElementById("bestDeadline").innerText = formatTime(response.bestDeadline.deadline);
+            document.getElementById("bestMiner").innerText = formatMinerName(response.bestDeadline.minerRS, response.bestDeadline.miner, null, true);
             document.getElementById("bestNonce").innerText = response.bestDeadline.nonce;
         } else {
             document.getElementById("bestDeadline").innerText = noneFoundYet;
@@ -90,11 +102,22 @@ function getCurrentRound() {
     });
 }
 
+function getAccountExplorerLink(id) {
+    return "https://explorer.burstcoin.network/?action=account&account=" + id;
+}
+
 function formatMinerName(rs, id, name, includeLink) {
+    if (name == null) {
+        miners.forEach(miner => {
+            if (miner.address === id || miner.addressRS === rs) {
+                name = miner.name;
+            }
+        })
+    }
     name = escapeHtml(name);
     rs = escapeHtml(rs);
     if (includeLink) {
-        rs = "<a href=\"https://explorer.burstcoin.network/?action=account&account=" + id + "\">" + rs + "</a>";
+        rs = "<a href=\"" + getAccountExplorerLink(id) + "\">" + rs + "</a>";
     }
     return name == null || name === "" ? rs : rs + " (" + name + ")";
 }
