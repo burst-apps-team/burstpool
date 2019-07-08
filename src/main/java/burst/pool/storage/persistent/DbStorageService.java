@@ -36,6 +36,7 @@ import org.mariadb.jdbc.UrlParser;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Semaphore;
@@ -59,6 +60,8 @@ public class DbStorageService implements StorageService {
     private final PropertyService propertyService;
     private final MinerMaths minerMaths;
     private final BurstNodeService burstNodeService;
+
+    private final ThreadLocal<Connection> localConnection = new ThreadLocal<>();
 
     private final int nMin;
 
@@ -112,7 +115,12 @@ public class DbStorageService implements StorageService {
     }
 
     protected DSLContext getDslContext() {
-        return DSL.using(connectionPool, sqlDialect, settings);
+        Connection connection = localConnection.get();
+        if (connection == null) {
+            return DSL.using(connectionPool, sqlDialect, settings);
+        } else {
+            return DSL.using(connection, sqlDialect, settings);
+        }
     }
 
     private <T> T useDslContext(Function<DSLContext, T> function) {
@@ -147,18 +155,6 @@ public class DbStorageService implements StorageService {
         };
         flywayBuilder.dataSource(flywayDataSource); // TODO Remove this hack once a stable version of Flyway has this bug fixed
         return flywayBuilder;
-    }
-
-    DbStorageService(PropertyService propertyService, MinerMaths minerMaths, BurstNodeService burstNodeService, Settings settings, HikariDataSource connectionPool, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) {
-        this.propertyService = propertyService;
-        this.minerMaths = minerMaths;
-        this.burstNodeService = burstNodeService;
-        this.settings = settings;
-        this.connectionPool = connectionPool;
-        this.sqlDialect = sqlDialect;
-        this.cacheManager = cacheManager;
-        this.cacheLocks = cacheLocks;
-        nMin = propertyService.getInt(Props.nMin);
     }
 
     private <T> T doOnCache(Table<?> table, Function<Cache<String, Object>, T> operation) {
@@ -202,19 +198,43 @@ public class DbStorageService implements StorageService {
         return new Miner(minerMaths, propertyService, BurstAddress.fromId(BurstID.fromLong(record.getAccountId())), new DbMinerStore(record.getAccountId()));
     }
 
+    private void resetCache() {
+        synchronized (cacheManager) {
+            cacheManager.close();
+            cacheManager.init();
+        }
+    }
+
     @Override
     public StorageService beginTransaction() throws SQLException {
-        return TransactionalDbStorageService.create(propertyService, minerMaths, burstNodeService, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
+        if (localConnection.get() != null) {
+            throw new IllegalStateException("Already in transaction");
+        }
+
+        Connection connection = connectionPool.getConnection();
+        connection.setAutoCommit(false);
+        localConnection.set(connection);
+
+        return this;
     }
 
     @Override
     public void commitTransaction() throws Exception {
-        throw new UnsupportedOperationException();
+        if (localConnection.get() != null) {
+            localConnection.get().commit();
+        } else {
+            throw new IllegalStateException("Not in transaction");
+        }
     }
 
     @Override
     public void rollbackTransaction() throws Exception {
-        throw new UnsupportedOperationException();
+        if (localConnection.get() != null) {
+            localConnection.get().rollback();
+            resetCache();
+        } else {
+            throw new IllegalStateException("Not in transaction");
+        }
     }
 
     private void recalculateMinerCount() { // TODO increment would be faster...
@@ -391,8 +411,13 @@ public class DbStorageService implements StorageService {
 
     @Override
     public void close() throws Exception {
-        connectionPool.close();
-        cacheManager.close();
+        if (localConnection.get() != null) {
+            localConnection.get().close();
+            localConnection.set(null);
+        } else {
+            connectionPool.close();
+            cacheManager.close();
+        }
     }
 
     private class DbMinerStore implements MinerStore {

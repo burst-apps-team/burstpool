@@ -2,6 +2,7 @@ package burst.pool.pool;
 
 import burst.kit.crypto.BurstCrypto;
 import burst.kit.entity.BurstAddress;
+import burst.kit.entity.response.Block;
 import burst.kit.entity.response.MiningInfo;
 import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.service.BurstNodeService;
@@ -25,6 +26,8 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -102,101 +105,81 @@ public class Pool {
         }
     }
 
-    private static final class NextBlockPreProcess {
-        private final boolean shouldProcess;
-        private final StorageService transactionalStorageService;
-        private final List<Long> fastBlocks;
-
-        public NextBlockPreProcess(boolean shouldProcess, StorageService transactionalStorageService, List<Long> fastBlocks) {
-            this.shouldProcess = shouldProcess;
-            this.transactionalStorageService = transactionalStorageService;
-            this.fastBlocks = fastBlocks;
-        }
-
-        public static NextBlockPreProcess shouldNotProcess() {
-            return new NextBlockPreProcess(false, null, null);
-        }
-    }
-
     private Completable processNextBlock() {
-        return Single.fromCallable(() -> {
-            if (miningInfo.get() == null || processBlockSemaphore.availablePermits() == 0 || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
-                return NextBlockPreProcess.shouldNotProcess();
-            }
-
+        return Completable.fromAction(() -> {
+            StorageService transactionalStorageService = null;
             try {
-                processBlockSemaphore.acquire();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-
-            StorageService transactionalStorageService;
-            try {
-                transactionalStorageService = storageService.beginTransaction();
-            } catch (Exception e) {
-                logger.error("Could not open transactional storage service", e);
-                processBlockSemaphore.release();
-                return NextBlockPreProcess.shouldNotProcess();
-            }
-
-            minerTracker.setCurrentlyProcessingBlock(true);
-
-            List<Long> fastBlocks = new ArrayList<>();
-            transactionalStorageService.getBestSubmissions().forEach((height, deadline) -> {
-                long lowestDeadline = deadline.stream()
-                        .map(StoredSubmission::getDeadline)
-                        .min(Long::compare)
-                        .orElse((long) propertyService.getInt(Props.tMin));
-                if (lowestDeadline < propertyService.getInt(Props.tMin)) {
-                    fastBlocks.add(height);
+                if (miningInfo.get() == null || processBlockSemaphore.availablePermits() == 0 || miningInfo.get().getHeight() - 1 <= storageService.getLastProcessedBlock() + propertyService.getInt(Props.processLag)) {
+                    return;
                 }
-            });
 
-            List<StoredSubmission> storedSubmissions = transactionalStorageService.getBestSubmissionsForBlock(transactionalStorageService.getLastProcessedBlock() + 1);
-            if (storedSubmissions == null || storedSubmissions.isEmpty()) {
-                onProcessedBlock(transactionalStorageService, false);
-                return NextBlockPreProcess.shouldNotProcess();
-            }
+                try {
+                    processBlockSemaphore.acquire();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
 
-            return new NextBlockPreProcess(true, transactionalStorageService, fastBlocks);
-        })
-                .flatMapCompletable(nextBlockPreProcess -> {
-                    if (!nextBlockPreProcess.shouldProcess || nextBlockPreProcess.transactionalStorageService == null || nextBlockPreProcess.fastBlocks == null) return Completable.complete();
-                    StorageService transactionalStorageService = nextBlockPreProcess.transactionalStorageService;
-                    return nodeService.getBlock(transactionalStorageService.getLastProcessedBlock() + 1)
-                            .flatMapCompletable(block -> Completable.fromAction(() -> {
-                                List<? extends Submission> submissions = transactionalStorageService.getBestSubmissionsForBlock(block.getHeight());
-                                boolean won = false;
-                                if (submissions != null && !submissions.isEmpty()) {
-                                    for (Submission submission : submissions) {
-                                        if (Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
-                                            won = true;
-                                        }
-                                    }
-                                }
-                                if (won) {
-                                    minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getId(), block.getNonce(), block.getGenerator(), block.getBlockReward().add(block.getTotalFee()), nextBlockPreProcess.fastBlocks);
-                                } else {
-                                    if (myRewardRecipients.contains(block.getGenerator())) {
-                                        logger.error("Our miner forged but did not detect block won. Height " + block.getHeight());
-                                    }
-                                    minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, nextBlockPreProcess.fastBlocks);
-                                }
-                                onProcessedBlock(transactionalStorageService, true);
-                            }))
-                            .onErrorComplete(t -> {
-                                logger.warn("Error processing block " + transactionalStorageService.getLastProcessedBlock() + 1, t);
-                                try {
-                                    transactionalStorageService.rollbackTransaction();
-                                    transactionalStorageService.close();
-                                } catch (Exception e) {
-                                    logger.error("Error rolling back transaction", e);
-                                }
-                                minerTracker.setCurrentlyProcessingBlock(false);
-                                processBlockSemaphore.release();
-                                return true;
-                            });
+                try {
+                    transactionalStorageService = storageService.beginTransaction();
+                } catch (Exception e) {
+                    logger.error("Could not open transactional storage service", e);
+                    processBlockSemaphore.release();
+                    return;
+                }
+
+                minerTracker.setCurrentlyProcessingBlock(true);
+
+                List<Long> fastBlocks = new ArrayList<>();
+                transactionalStorageService.getBestSubmissions().forEach((height, deadline) -> {
+                    long lowestDeadline = deadline.stream()
+                            .map(StoredSubmission::getDeadline)
+                            .min(Long::compare)
+                            .orElse((long) propertyService.getInt(Props.tMin));
+                    if (lowestDeadline < propertyService.getInt(Props.tMin)) {
+                        fastBlocks.add(height);
+                    }
                 });
+
+                List<StoredSubmission> storedSubmissions = transactionalStorageService.getBestSubmissionsForBlock(transactionalStorageService.getLastProcessedBlock() + 1);
+                if (storedSubmissions == null || storedSubmissions.isEmpty()) {
+                    onProcessedBlock(transactionalStorageService, false);
+                    return;
+                }
+
+                Block block = nodeService.getBlock(transactionalStorageService.getLastProcessedBlock() + 1).blockingGet();
+
+                List<? extends Submission> submissions = transactionalStorageService.getBestSubmissionsForBlock(block.getHeight());
+                boolean won = false;
+                if (submissions != null && !submissions.isEmpty()) {
+                    for (Submission submission : submissions) {
+                        if (Objects.equals(block.getGenerator(), submission.getMiner()) && Objects.equals(block.getNonce(), submission.getNonce())) {
+                            won = true;
+                        }
+                    }
+                }
+                if (won) {
+                    minerTracker.onBlockWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, block.getId(), block.getNonce(), block.getGenerator(), block.getBlockReward().add(block.getTotalFee()), fastBlocks);
+                } else {
+                    if (myRewardRecipients.contains(block.getGenerator())) {
+                        logger.error("Our miner forged but did not detect block won. Height " + block.getHeight());
+                    }
+                    minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, fastBlocks);
+                }
+                onProcessedBlock(transactionalStorageService, true);
+            } catch (Exception e) {
+                if (transactionalStorageService != null) {
+                    logger.warn("Error processing block " + transactionalStorageService.getLastProcessedBlock() + 1, e);
+                    try {
+                        transactionalStorageService.rollbackTransaction();
+                        transactionalStorageService.close();
+                    } catch (Exception e1) {
+                        logger.error("Error rolling back transaction", e1);
+                    }
+                }
+                minerTracker.setCurrentlyProcessingBlock(false);
+                processBlockSemaphore.release();
+            }
+        });
     }
 
     private void onProcessedBlock(StorageService transactionalStorageService, boolean actuallyProcessed) {
