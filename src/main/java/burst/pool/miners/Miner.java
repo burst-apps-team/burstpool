@@ -88,6 +88,7 @@ public class Miner implements Payable {
     public void recalculateShare(double poolCapacity) {
         if (poolCapacity == 0d) {
             store.setShare(0d);
+            return;
         }
         double newShare = store.getEstimatedCapacity() / poolCapacity;
         if (Double.isNaN(newShare)) newShare = 0d;
@@ -175,5 +176,10 @@ public class Miner implements Payable {
 
     public void setMinimumPayout(BurstValue minimumPayout) {
         store.setMinimumPayout(minimumPayout);
+    }
+
+    public BigInteger getBestDeadline(long height) {
+        Deadline deadline = store.getDeadline(height);
+        return deadline == null ? null : deadline.getDeadline();
     }
 }

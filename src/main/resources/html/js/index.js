@@ -133,10 +133,10 @@ function getTop10Miners() {
         for (let i = 0; i < topTenMiners.length; i++) {
             let miner = topTenMiners[i];
             topMinerNames.push(formatMinerName(miner.addressRS, miner.address, miner.name, false));
-            topMinerShares.push(miner.share);
+            topMinerShares.push(miner.share * 100);
         }
         topMinerNames.push("Other");
-        topMinerShares.push(response.othersShare);
+        topMinerShares.push(response.othersShare * 100);
         if (chart == null) {
             chart = new Chart(document.getElementById("sharesChart"), {
                 type: "pie",
@@ -170,12 +170,13 @@ function getMiners() {
         return http.json();
     }).then(response => {
         let table = document.getElementById("miners");
-        table.innerHTML = "<tr><th>Miner</th><th>Pending Balance</th><th>Effective Capacity</th><th>nConf (Last (nAvg + processLag) rounds)</th><th>Share</th><th>Software</th></tr>";
+        table.innerHTML = "<tr><th>Miner</th><th>Current Deadline</th><th>Pending Balance</th><th>Effective Capacity</th><th>nConf (Last (nAvg + processLag) rounds)</th><th>Share</th><th>Software</th></tr>";
         for (let i = 0; i < response.miners.length; i++) {
             let miner = response.miners[i];
+            let currentRoundDeadline = miner.currentRoundBestDeadline == null ? "" : formatTime(miner.currentRoundBestDeadline);
             let minerAddress = formatMinerName(miner.addressRS, miner.address, miner.name, true);
             let userAgent = escapeHtml(miner.userAgent == null? "Unknown" : miner.userAgent);
-            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+(parseFloat(miner.share)*100).toFixed(3)+"%</td><td>"+userAgent+"</td></tr>";
+            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+(parseFloat(miner.share)*100).toFixed(3)+"%</td><td>"+userAgent+"</td></tr>";
         }
         document.getElementById("minerCount").innerText = response.miners.length;
         document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
@@ -279,20 +280,14 @@ function getWonBlocks() {
     }).then(response => {
         let wonBlocks = response.wonBlocks;
         let table = document.getElementById("wonBlocksTable");
-        table.innerHTML = "<tr><th>Height</th><th>ID</th><th>Winner Name</th><th>Winner Address</th><th>Reward + Fees</th></tr>";
+        table.innerHTML = "<tr><th>Height</th><th>ID</th><th>Winner</th><th>Reward + Fees</th></tr>";
         for (let i = 0; i < wonBlocks.length; i++) {
             let wonBlock = wonBlocks[i];
             let height = escapeHtml(wonBlock.height);
             let id = escapeHtml(wonBlock.id);
-            let winner = escapeHtml(wonBlock.generator);
             let reward = escapeHtml(wonBlock.reward);
-            let minerName = "";
-            miners.forEach(miner => {
-                if (miner.addressRS === winner) {
-                    minerName = escapeHtml(miner.name);
-                }
-            });
-            table.innerHTML += "<tr><td>"+height+"</td><td>"+id+"</td><td>"+minerName+"</td><td>"+winner+"</td><td>"+reward+"</td></tr>";
+            let minerName = formatMinerName(wonBlock.generator, wonBlock.generatorRS, null, true);
+            table.innerHTML += "<tr><td>"+height+"</td><td>"+id+"</td><td>"+minerName+"</td><td>"+reward+"</td></tr>";
         }
     });
 }
