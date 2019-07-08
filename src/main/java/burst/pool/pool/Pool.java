@@ -154,7 +154,7 @@ public class Pool {
 
             List<StoredSubmission> storedSubmissions = transactionalStorageService.getBestSubmissionsForBlock(transactionalStorageService.getLastProcessedBlock() + 1);
             if (storedSubmissions == null || storedSubmissions.isEmpty()) {
-                onProcessedBlock(transactionalStorageService);
+                onProcessedBlock(transactionalStorageService, false);
                 return NextBlockPreProcess.shouldNotProcess();
             }
 
@@ -182,7 +182,7 @@ public class Pool {
                                     }
                                     minerTracker.onBlockNotWon(transactionalStorageService, transactionalStorageService.getLastProcessedBlock() + 1, nextBlockPreProcess.fastBlocks);
                                 }
-                                onProcessedBlock(transactionalStorageService);
+                                onProcessedBlock(transactionalStorageService, true);
                             }))
                             .onErrorComplete(t -> {
                                 logger.warn("Error processing block " + transactionalStorageService.getLastProcessedBlock() + 1, t);
@@ -199,7 +199,7 @@ public class Pool {
                 });
     }
 
-    private void onProcessedBlock(StorageService transactionalStorageService) {
+    private void onProcessedBlock(StorageService transactionalStorageService, boolean actuallyProcessed) {
         // TODO this needs to be done if block is behind nAvg otherwise fast block calculation breaks
         //storageService.removeBestSubmission(storageService.getLastProcessedBlock() + 1);
         transactionalStorageService.incrementLastProcessedBlock();
@@ -211,7 +211,9 @@ public class Pool {
         }
         minerTracker.setCurrentlyProcessingBlock(false);
         processBlockSemaphore.release();
-        minerTracker.payoutIfNeeded(storageService);
+        if (actuallyProcessed) {
+            minerTracker.payoutIfNeeded(storageService);
+        }
     }
 
     private void resetRound(MiningInfo newMiningInfo) {

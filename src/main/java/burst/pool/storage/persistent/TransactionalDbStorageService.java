@@ -21,7 +21,6 @@ public class TransactionalDbStorageService extends DbStorageService {
     private final Connection connection;
     private final Settings settings;
     private final SQLDialect sqlDialect;
-    private boolean isClosed = false;
 
     private TransactionalDbStorageService(PropertyService propertyService, MinerMaths minerMaths, BurstNodeService burstNodeService, Settings settings, HikariDataSource connectionPool, Connection connection, SQLDialect sqlDialect, CacheManager cacheManager, Map<Table<?>, Semaphore> cacheLocks) throws SQLException {
         super(propertyService, minerMaths, burstNodeService, settings, connectionPool, sqlDialect, cacheManager, cacheLocks);
@@ -53,10 +52,9 @@ public class TransactionalDbStorageService extends DbStorageService {
     }
 
     @Override
-    public synchronized void close() {
-        if (!isClosed) {
-            connectionPool.evictConnection(connection);
-        }
-        isClosed = true;
+    public synchronized void close() throws Exception {
+        // Change it back into a regular connection
+        connection.rollback();
+        connection.setAutoCommit(true);
     }
 }
