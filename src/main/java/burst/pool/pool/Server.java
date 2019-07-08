@@ -196,7 +196,7 @@ public class Server extends NanoHTTPD {
             if (!Objects.equals(burstCrypto.getBurstAddressFromPublic(publicKeyBytes), minerAddress)) { // TODO ideally would validate with node to avoid collisions
                 return new JsonPrimitive("Public key did not match miner's address.").toString();
             }
-            if (!BurstCrypto.getInstance().verify(signatureBytes, assignment.getBytes(), publicKeyBytes, true)) {
+            if (!burstCrypto.verify(signatureBytes, assignment.getBytes(), publicKeyBytes, true)) {
                 return new JsonPrimitive("Invalid signature").toString();
             }
             minerTracker.setMinerMinimumPayout(storageService, minerAddress, newMinimumPayout);
