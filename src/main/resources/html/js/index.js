@@ -185,6 +185,7 @@ function getMiners() {
 }
 
 function prepareMinerInfo(address) {
+    setCookie("getMinerLastValue", address);
     let minerAddress = escapeHtml(document.getElementById("minerAddress"));
     let minerName = escapeHtml(document.getElementById("minerName"));
     let minerPending = escapeHtml(document.getElementById("minerPending"));
@@ -292,6 +293,26 @@ function getWonBlocks() {
     });
 }
 
+function setCookie(name, value) {
+    document.cookie = name + "=" + value + ";";
+}
+
+function getCookie(name) {
+    name += "=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca =decodedCookie.split(';');
+    for(let i = 0; i <ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) === 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
 function setMinimumPayout() {
     var message = escapeHtml(document.getElementById("setMinimumMessage").value);
     var publicKey = escapeHtml(document.getElementById("setMinimumPublicKey").value);
@@ -315,6 +336,8 @@ function setMinimumPayout() {
         $("#setMinimumResult").show();
     });
 }
+
+document.getElementById("addressInput").value = getCookie("getMinerLastValue");
 
 getPoolInfo();
 getCurrentRound();
