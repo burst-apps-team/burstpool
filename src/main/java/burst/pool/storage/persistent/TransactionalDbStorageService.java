@@ -56,5 +56,7 @@ public class TransactionalDbStorageService extends DbStorageService {
         // Change it back into a regular connection
         connection.rollback();
         connection.setAutoCommit(true);
+        // The problem is that if another thread is using the same connection this kills that thread's operation
+        connectionPool.evictConnection(connection);
     }
 }
