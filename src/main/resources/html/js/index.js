@@ -4,6 +4,8 @@ const minerNotFound = "Miner not found";
 
 const genesisBaseTarget = 4398046511104 / 240;
 
+let maxSubmissions = "Unknown";
+
 let miners = new Array(0);
 const colors = [
     "#3366CC",
@@ -65,6 +67,7 @@ function getPoolInfo() {
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = response.nAvg;
         document.getElementById("nMin").innerText = response.nMin;
+        maxSubmissions = response.nAvg + response.nMin;
         document.getElementById("maxDeadline").innerText = response.maxDeadline;
         document.getElementById("processLag").innerText = response.processLag + " Blocks";
         document.getElementById("feeRecipient").innerText = response.feeRecipientRS;
@@ -176,7 +179,7 @@ function getMiners() {
             let currentRoundDeadline = miner.currentRoundBestDeadline == null ? "" : formatTime(miner.currentRoundBestDeadline);
             let minerAddress = formatMinerName(miner.addressRS, miner.address, miner.name, true);
             let userAgent = escapeHtml(miner.userAgent == null? "Unknown" : miner.userAgent);
-            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+"</td><td>"+(parseFloat(miner.share)*100).toFixed(3)+"%</td><td>"+userAgent+"</td></tr>";
+            table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+" / " + maxSubmissions + "</td><td>"+(parseFloat(miner.share)*100).toFixed(3)+"%</td><td>"+userAgent+"</td></tr>";
         }
         document.getElementById("minerCount").innerText = response.miners.length;
         document.getElementById("poolCapacity").innerText = formatCapacity(response.poolCapacity) + " TB";
