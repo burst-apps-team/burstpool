@@ -14,8 +14,6 @@ import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
 import com.google.gson.*;
 import fi.iki.elonen.NanoHTTPD;
-import org.bouncycastle.util.encoders.DecoderException;
-import org.bouncycastle.util.encoders.Hex;
 import org.ehcache.Cache;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
 import org.ehcache.config.builders.CacheManagerBuilder;
@@ -102,7 +100,7 @@ public class Server extends NanoHTTPD {
         } else if (Objects.equals(params.get("requestType"), "getMiningInfo")) {
             MiningInfo miningInfo = pool.getMiningInfo();
             if (miningInfo == null) return gson.toJson(JsonNull.INSTANCE);
-            return gson.toJson(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight()));
+            return gson.toJson(new MiningInfoResponse(burstCrypto.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight()));
         } else {
             return "404 not found";
         }
@@ -179,8 +177,8 @@ public class Server extends NanoHTTPD {
             }
             byte[] signatureBytes;
             try {
-                signatureBytes = Hex.decode(signature);
-            } catch (DecoderException e) {
+                signatureBytes = burstCrypto.parseHexString(signature);
+            } catch (Exception e) {
                 return new JsonPrimitive("Could not parse signature").toString();
             }
             if (signatureBytes.length != 64) {
@@ -188,8 +186,8 @@ public class Server extends NanoHTTPD {
             }
             byte[] publicKeyBytes;
             try {
-                publicKeyBytes = Hex.decode(publicKey);
-            } catch (DecoderException e) {
+                publicKeyBytes = burstCrypto.parseHexString(publicKey);
+            } catch (Exception e) {
                 return new JsonPrimitive("Could not parse publicKey").toString();
             }
             if (publicKeyBytes.length != 32) {

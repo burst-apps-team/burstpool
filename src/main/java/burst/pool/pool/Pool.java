@@ -15,11 +15,9 @@ import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import org.bouncycastle.util.encoders.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,7 +90,7 @@ public class Pool {
     private void onMiningInfo(MiningInfo newMiningInfo) {
         if (miningInfo.get() == null || !Arrays.equals(miningInfo.get().getGenerationSignature(), newMiningInfo.getGenerationSignature())
                 || !Objects.equals(miningInfo.get().getHeight(), newMiningInfo.getHeight())) {
-            logger.info("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + Hex.toHexString(newMiningInfo.getGenerationSignature()) +", diff " + newMiningInfo.getBaseTarget() + ")");
+            logger.info("NEW BLOCK (block " + newMiningInfo.getHeight() + ", gensig " + burstCrypto.toHexString(newMiningInfo.getGenerationSignature()) +", diff " + newMiningInfo.getBaseTarget() + ")");
             resetRound(newMiningInfo);
         }
     }
@@ -330,7 +328,7 @@ public class Pool {
         }
         MiningInfo miningInfo = Pool.this.miningInfo.get();
         if (miningInfo != null) {
-            jsonObject.add("miningInfo", gson.toJsonTree(new MiningInfoResponse(Hex.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())));
+            jsonObject.add("miningInfo", gson.toJsonTree(new MiningInfoResponse(burstCrypto.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())));
         }
         return jsonObject;
     }
