@@ -246,6 +246,7 @@ function formatCapacity(capacity) {
 }
 
 function onPageLoad() {
+    document.getElementById("addressInput").value = getCookie("getMinerLastValue");
     $('#minerInfoModal').on('show.bs.modal', function (event) {
         prepareMinerInfo(document.getElementById("addressInput").value);
     });
@@ -339,8 +340,6 @@ function setMinimumPayout() {
         $("#setMinimumResult").show();
     });
 }
-
-document.getElementById("addressInput").value = getCookie("getMinerLastValue");
 
 getPoolInfo();
 getCurrentRound();
