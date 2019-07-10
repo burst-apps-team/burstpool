@@ -322,19 +322,13 @@ public class DbStorageService implements StorageService {
     @Override
     public int getLastProcessedBlock() {
         try {
-            int lastProcessedBlock = getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> useDslContext(context -> context.select(POOL_STATE.VALUE)
+            return getFromCacheOr(POOL_STATE, POOL_STATE_LAST_PROCESSED_BLOCK, () -> useDslContext(context -> context.select(POOL_STATE.VALUE)
                     .from(POOL_STATE)
                     .where(POOL_STATE.KEY.eq(POOL_STATE_LAST_PROCESSED_BLOCK))
                     .fetchAny(result -> Integer.parseInt(result.get(POOL_STATE.VALUE)))));
-            if (lastProcessedBlock == 0) { // First run? Don't bother processing potentially hundreds of thousands of blocks that we weren't even running for
-                int height = (int) burstNodeService.getMiningInfo().blockingFirst().getHeight() - propertyService.getInt(Props.nMin);
-                setLastProcessedBlock(height);
-                return height;
-            } else {
-                return lastProcessedBlock;
-            }
-        } catch (NullPointerException e) {
-            return 0;
+        } catch (NullPointerException e) {int height = (int) burstNodeService.getMiningInfo().blockingFirst().getHeight() - ((propertyService.getInt(Props.processLag) + propertyService.getInt(Props.nAvg)) * 2);
+            setLastProcessedBlock(height);
+            return height;
         }
     }
 
