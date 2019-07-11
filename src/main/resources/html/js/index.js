@@ -49,10 +49,17 @@ function escapeHtml(string) {
 
 let chart = null;
 
-function formatTime(seconds) {
-    const date = new Date(null);
-    date.setSeconds(parseInt(seconds));
-    return date.toISOString().substr(11, 8);
+function formatTime(secs) {
+    const sec_num = parseInt(secs, 10);
+    const hours = Math.floor(sec_num / 3600);
+    const minutes = Math.floor(sec_num / 60) % 60;
+    let seconds;
+    seconds = sec_num % 60;
+
+    return [hours,minutes,seconds]
+        .map(v => v < 10 ? "0" + v : v)
+        .filter((v,i) => v !== "00" || i > 0)
+        .join(":")
 }
 
 function formatBaseTarget(baseTarget) {
