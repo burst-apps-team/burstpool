@@ -74,7 +74,7 @@ function getPoolInfo() {
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = response.nAvg;
         document.getElementById("nMin").innerText = response.nMin;
-        maxSubmissions = response.nAvg + response.nMin;
+        maxSubmissions = response.nAvg + response.processLag;
         document.getElementById("maxDeadline").innerText = response.maxDeadline;
         document.getElementById("processLag").innerText = response.processLag + " Blocks";
         document.getElementById("feeRecipient").innerText = response.feeRecipientRS;
@@ -298,7 +298,7 @@ function getWonBlocks() {
             let height = escapeHtml(wonBlock.height);
             let id = escapeHtml(wonBlock.id);
             let reward = escapeHtml(wonBlock.reward);
-            let minerName = formatMinerName(wonBlock.generator, wonBlock.generatorRS, null, true);
+            let minerName = formatMinerName(wonBlock.generatorRS, wonBlock.generator, null, true);
             table.innerHTML += "<tr><td>"+height+"</td><td>"+id+"</td><td>"+minerName+"</td><td>"+reward+"</td></tr>";
         }
     });
