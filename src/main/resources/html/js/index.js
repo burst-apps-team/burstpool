@@ -49,17 +49,32 @@ function escapeHtml(string) {
 
 let chart = null;
 
-function formatTime(secs) {
-    const sec_num = parseInt(secs, 10);
-    const hours = Math.floor(sec_num / 3600);
-    const minutes = Math.floor(sec_num / 60) % 60;
-    let seconds;
-    seconds = sec_num % 60;
+function filterTimePart(part, suffix) {
+    if (part === 0) {
+        part = null;
+    } else {
+        part = part.toString() + suffix;
+    }
+    return part;
+}
 
-    return [hours,minutes,seconds]
-        .map(v => v < 10 ? "0" + v : v)
-        .filter((v,i) => v !== "00" || i > 0)
-        .join(":")
+function formatTime(secs) {
+    secs = parseInt(secs, 10);
+    if (secs === null || secs < 0) return "";
+    if (secs === 0) return "0s";
+    let years = filterTimePart(Math.floor(secs / 3600 / 24 / 365), "y");
+    let days = filterTimePart(Math.floor((secs / 3600 / 24) % 365), "d");
+    let hours = filterTimePart(Math.floor((secs / 3600) % 24), "h");
+    let minutes = filterTimePart(Math.floor(secs / 60) % 60, "m");
+    let seconds = filterTimePart(secs % 60, "s");
+
+    let result = "";
+    if (years !== null) result += " " + years;
+    if (days !== null) result += " " + days;
+    if (hours !== null) result += " " + hours;
+    if (minutes !== null) result += " " + minutes;
+    if (seconds !== null) result += " " + seconds;
+    return result.substr(1);
 }
 
 function formatBaseTarget(baseTarget) {
@@ -70,11 +85,11 @@ function getPoolInfo() {
     fetch("/api/getConfig").then(http => {
         return http.json();
     }).then(response => {
+        maxSubmissions = response.nAvg + response.processLag;
         document.getElementById("poolName").innerText = response.poolName;
         document.getElementById("poolAccount").innerHTML = formatMinerName(response.poolAccountRS, response.poolAccount, response.poolAccount, true);
         document.getElementById("nAvg").innerText = response.nAvg;
         document.getElementById("nMin").innerText = response.nMin;
-        maxSubmissions = response.nAvg + response.processLag;
         document.getElementById("maxDeadline").innerText = response.maxDeadline;
         document.getElementById("processLag").innerText = response.processLag + " Blocks";
         document.getElementById("feeRecipient").innerText = response.feeRecipientRS;
@@ -180,7 +195,7 @@ function getMiners() {
         return http.json();
     }).then(response => {
         let table = document.getElementById("miners");
-        table.innerHTML = "<tr><th>Miner</th><th>Current Deadline</th><th>Pending Balance</th><th>Effective Capacity</th><th>nConf (Last (nAvg + processLag) rounds)</th><th>Share</th><th>Software</th></tr>";
+        table.innerHTML = "<tr><th>Miner</th><th>Current Deadline</th><th>Pending Balance</th><th>Effective Capacity</th><th>Confirmed Deadlines</th><th>Share</th><th>Software</th></tr>";
         for (let i = 0; i < response.miners.length; i++) {
             let miner = response.miners[i];
             let currentRoundDeadline = miner.currentRoundBestDeadline == null ? "" : formatTime(miner.currentRoundBestDeadline);
