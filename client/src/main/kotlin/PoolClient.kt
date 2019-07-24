@@ -3,7 +3,7 @@ import org.w3c.dom.HTMLInputElement
 import kotlin.browser.document
 import kotlin.browser.window
 import kotlin.js.Date
-import kotlin.math.roundToLong
+import kotlin.math.roundToInt
 
 object PoolClient {
     private var miners: Array<Miner> = emptyArray()
@@ -99,7 +99,7 @@ object PoolClient {
             }
             val bestDeadline = currentRound.bestDeadline
             if (bestDeadline != null) {
-                document.getElementById("bestDeadline")?.textContent = Util.formatTime(bestDeadline.deadline.toLong())
+                document.getElementById("bestDeadline")?.textContent = Util.formatTime(bestDeadline.deadline.toInt())
                 document.getElementById("bestMiner")?.textContent = formatMinerName(bestDeadline.minerRS, bestDeadline.miner, null, true)
                 document.getElementById("bestNonce")?.textContent = bestDeadline.nonce
             } else {
@@ -111,7 +111,7 @@ object PoolClient {
     }
 
     private fun updateRoundElapsed() {
-        document.getElementById("currentRoundElapsed")?.textContent = Util.formatTime((Date().getTime() / 1000).roundToLong())
+        document.getElementById("currentRoundElapsed")?.textContent = Util.formatTime((Date().getTime() / 1000).roundToInt())
     }
 
     private fun getMiners() {
@@ -130,7 +130,7 @@ object PoolClient {
                 val currentRoundDeadline = Util.formatTime(miner.currentRoundBestDeadline)
                 val minerAddress = formatMinerName(miner.addressRS, miner.address, miner.name, true)
                 val userAgent = (miner.userAgent ?: "Unknown").escapeHtml()
-                table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+Util.formatCapacity(miner.estimatedCapacity)+" TB</td><td>"+miner.nConf+" / " + maxSubmissions + "</td><td>"+(miner.share*100).round(3).toString()+"%</td><td>"+userAgent+"</td></tr>"
+                table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+Util.formatCapacity(miner.estimatedCapacity)+"</td><td>"+miner.nConf+" / " + maxSubmissions + "</td><td>"+(miner.share*100).round(3).toString()+"%</td><td>"+userAgent+"</td></tr>"
             }
             document.getElementById("minerCount")?.textContent = response.miners.size.toString()
             document.getElementById("poolCapacity")?.textContent = Util.formatCapacity(response.poolCapacity)
@@ -166,17 +166,10 @@ object PoolClient {
                         override var labels: Array<dynamic>? = topMinerNames.toTypedArray()
                         override var datasets: Array<ChartDataSets>? = arrayOf(object: ChartDataSets {
                             override var data = topMinerShares.toTypedArray()
-                            override var backgroundColor = minerColors
+                            override var backgroundColor = minerColors.toTypedArray()
                         })
                     }
-                    override var options: Chart.ChartOptions? = object: Chart.ChartOptions {
-                        override var title: Chart.ChartTitleOptions? = object: Chart.ChartTitleOptions {
-                            override var display: Boolean? = true
-                            override var text = "Pool Shares"
-                        }
-                        override var responsive: Boolean? = true
-                        override var maintainAspectRatio: Boolean? = true
-                    }
+                    override var options: Chart.ChartOptions? = js("{title:{display:true,text:\"Pool Shares\"},responsive:true,maintainAspectRatio:false}").unsafeCast<Chart.ChartOptions>()
                 })
             } else {
                 chart!!.data.datasets!![0].data = topMinerShares.toTypedArray()

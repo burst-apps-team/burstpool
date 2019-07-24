@@ -46,9 +46,9 @@ object Util {
         }
     }
 
-    fun formatTime(secsInt: Long?): String {
+    fun formatTime(secsInt: Int?): String {
         if (secsInt == null || secsInt < 0) return ""
-        if (secsInt == 0L) return "0s"
+        if (secsInt == 0) return "0s"
         val secs = secsInt.toDouble()
         val years = filterTimePart(floor(secs / 3600 / 24 / 365), "y")
         val days = filterTimePart(floor((secs / 3600 / 24) % 365), "d")
@@ -65,12 +65,12 @@ object Util {
         return result.substring(1)
     }
 
-    fun formatBaseTarget(baseTarget: Long): String {
-        return (genesisBaseTarget / baseTarget.toDouble()).round(3).toString() + " TB"
+    fun formatBaseTarget(baseTarget: Int): String {
+        return formatCapacity(genesisBaseTarget / baseTarget.toDouble())
     }
 
     fun formatCapacity(capacity: Double): String {
-        return capacity.round(3).toString()
+        return capacity.round(3).toString() + " TB"
     }
 
     fun getAccountExplorerLink(id: String): String {

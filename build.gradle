@@ -97,6 +97,8 @@ task installJsBundle(type: Copy) {
 }
 
 build.dependsOn installJsBundle
+shadowJar.dependsOn installJsBundle
+jar.dependsOn installJsBundle
 
 jar {
     manifest {

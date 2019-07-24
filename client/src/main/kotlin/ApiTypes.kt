@@ -25,7 +25,7 @@ external interface BestDeadline {
 
 external interface MiningInfo {
     val generationSignature: String
-    val baseTarget: Long
+    val baseTarget: Int
     val height: Int
 }
 
@@ -69,7 +69,7 @@ external interface Miner {
     val nConf: Int
     val share: Double
     val minimumPayout: String
-    val currentRoundBestDeadline: Long?
+    val currentRoundBestDeadline: Int?
     val name: String?
     val userAgent: String?
 }
