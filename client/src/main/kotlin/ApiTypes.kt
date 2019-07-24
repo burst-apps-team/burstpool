@@ -56,6 +56,11 @@ external interface WonBlocks {
     val wonBlocks: Array<WonBlock>
 }
 
+external interface TopMiners {
+    val topMiners: Array<Miner>
+    val othersShare: Double
+}
+
 external interface Miner {
     val address: String
     val addressRS: String

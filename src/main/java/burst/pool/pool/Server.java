@@ -207,7 +207,7 @@ public class Server extends NanoHTTPD {
             }
             minerTracker.setMinerMinimumPayout(storageService, minerAddress, newMinimumPayout);
             return new JsonPrimitive("Success").toString();
-        } else if (session.getUri().startsWith("/api/getTop10Miners")) {
+        } else if (session.getUri().startsWith("/api/getTopMiners")) {
             AtomicReference<Double> othersShare = new AtomicReference<>(1d);
             JsonArray topMiners = new JsonArray();
             storageService.getMinersFiltered().stream()

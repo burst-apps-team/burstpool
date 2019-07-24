@@ -2,6 +2,7 @@ import org.w3c.dom.Element
 import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLInputElement
+import org.w3c.dom.events.MouseEvent
 import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response
 import kotlin.browser.document
@@ -74,10 +75,9 @@ fun Element.hide() {
 
 var Element.value: String
     get() {
-        if (this !is HTMLInputElement) return ""
-        return this.value
+        return if (this !is HTMLInputElement) "" else this.value
     }
-    set(value: String) {
+    set(value) {
         if (this !is HTMLInputElement) return
         this.value = value
     }
@@ -86,3 +86,12 @@ fun Element.click() {
     if (this !is HTMLElement) return
     this.click()
 }
+
+var Element.onclick: ((MouseEvent) -> dynamic)?
+    get() {
+        return if (this !is HTMLElement) null else this.onclick
+    }
+    set(value) {
+        if (this !is HTMLInputElement) return
+        this.onclick = value
+    }

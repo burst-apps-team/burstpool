@@ -1,3 +1,4 @@
+import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLInputElement
 import kotlin.browser.document
 import kotlin.browser.window
@@ -12,7 +13,7 @@ object PoolClient {
 
     private const val noneFoundYet = "None found yet!"
     private const val loadingText =  "Loading..."
-    private const val minerNotFound = "Miner not found"
+    private const val minerNotFoundText = "Miner not found"
 
     fun init() {
         getPoolInfo()
@@ -38,6 +39,9 @@ object PoolClient {
 
     fun onPageLoaded() {
         document.getElementById("addressInput")?.value = WebUtil.getCookie("getMinerLastValue") ?: ""
+        document.getElementById("generateSetMinimumMessageButton")?.onclick = { generateSetMinimumMessage() }
+        document.getElementById("setMinimumPayoutButton")?.onclick = { setMinimumPayout() }
+        document.getElementById("getWonBlocksButton")?.onclick = { getWonBlocks() }
     }
 
     private fun formatMinerName(providedRS: String, id: String, providedName: String?, includeLink: Boolean): String {
@@ -122,8 +126,7 @@ object PoolClient {
                 return@then
             }
             table.innerHTML = "<tr><th>Miner</th><th>Current Deadline</th><th>Pending Balance</th><th>Effective Capacity</th><th>Confirmed Deadlines</th><th>Share</th><th>Software</th></tr>"
-            for (i in 0 until response.miners.size) {
-                val miner = response.miners[i]
+            for (miner in response.miners) {
                 val currentRoundDeadline = Util.formatTime(miner.currentRoundBestDeadline)
                 val minerAddress = formatMinerName(miner.addressRS, miner.address, miner.name, true)
                 val userAgent = (miner.userAgent ?: "Unknown").escapeHtml()
@@ -136,11 +139,106 @@ object PoolClient {
     }
 
     private fun getTopMiners() {
-
+        WebUtil.fetchJson<TopMiners>("/api/getTopMiners").then { response ->
+            if (response == null) {
+                console.error("Null top miners response")
+                return@then
+            }
+            val topMiners = response.topMiners
+            val topMinerNames = mutableListOf<String>()
+            val topMinerShares = mutableListOf<Double>()
+            for (miner in topMiners) {
+                topMinerNames.add(formatMinerName(miner.addressRS, miner.address, miner.name, false))
+                topMinerShares.add(miner.share * 100)
+            }
+            topMinerNames.add("Other")
+            topMinerShares.add(response.othersShare * 100)
+            val minerColors = Util.colors.slice(0..topMinerNames.size)
+            if (this.chart == null) {
+                val chartElement = document.getElementById("sharesChart")
+                if (chartElement == null || chartElement !is HTMLCanvasElement) {
+                    console.log("Shares chart null or not canvas element")
+                    return@then
+                }
+                this.chart = Chart(chartElement, object: Chart.ChartConfiguration {
+                    override var type = "pie"
+                    override var data: Chart.ChartData? = object: Chart.ChartData {
+                        override var labels: Array<dynamic>? = topMinerNames.toTypedArray()
+                        override var datasets: Array<ChartDataSets>? = arrayOf(object: ChartDataSets {
+                            override var data = topMinerShares.toTypedArray()
+                            override var backgroundColor = minerColors
+                        })
+                    }
+                    override var options: Chart.ChartOptions? = object: Chart.ChartOptions {
+                        override var title: Chart.ChartTitleOptions? = object: Chart.ChartTitleOptions {
+                            override var display: Boolean? = true
+                            override var text = "Pool Shares"
+                        }
+                        override var responsive: Boolean? = true
+                        override var maintainAspectRatio: Boolean? = true
+                    }
+                })
+            } else {
+                chart!!.data.datasets!![0].data = topMinerShares.toTypedArray()
+                chart!!.data.datasets!![0].backgroundColor = minerColors.toTypedArray()
+                chart!!.data.labels = topMinerNames.toTypedArray()
+                chart!!.update()
+            }
+        }
     }
 
     private fun prepareMinerInfo() {
-
+        val address = document.getElementById("addressInput")?.value
+        if (address == null) {
+            console.error("Null address field")
+            return
+        }
+        WebUtil.setCookie("getMinerLastValue", address)
+        val minerAddress = document.getElementById("minerAddress")
+        val minerPending = document.getElementById("minerPending")
+        val minerMinimumPayout = document.getElementById("minerMinimumPayout")
+        val minerCapacity = document.getElementById("minerCapacity")
+        val minerNConf = document.getElementById("minerNConf")
+        val minerShare = document.getElementById("minerShare")
+        val minerSoftware = document.getElementById("minerSoftware")
+        val setMinimumPayoutButton = document.getElementById("openSetMinimumPayoutModalButton")
+        if (minerAddress == null || minerPending == null || minerMinimumPayout == null || minerCapacity == null || minerNConf == null || minerShare == null || minerSoftware == null || setMinimumPayoutButton == null) {
+            console.error("Prepare miner info: null controls")
+            return
+        }
+        minerAddress.textContent = address
+        minerPending.textContent = loadingText
+        minerMinimumPayout.textContent = loadingText
+        minerCapacity.textContent = loadingText
+        minerNConf.textContent = loadingText
+        minerShare.textContent = loadingText
+        minerSoftware.textContent = loadingText
+        setMinimumPayoutButton.hide()
+        
+        var miner: Miner? = null
+        for (it in this.miners) {
+            if (it.addressRS == address || it.address == address || it.name?.toLowerCase() == address.toLowerCase()) {
+                miner = it
+            }
+        }
+        if (miner == null) {
+            minerPending.textContent = minerNotFoundText
+            minerMinimumPayout.textContent = minerNotFoundText
+            minerCapacity.textContent = minerNotFoundText
+            minerNConf.textContent = minerNotFoundText
+            minerShare.textContent = minerNotFoundText
+            minerSoftware.textContent = minerNotFoundText
+            setMinimumPayoutButton.hide()
+        } else {
+            minerAddress.innerHTML = formatMinerName(miner.addressRS, miner.address, null, true)
+            minerPending.textContent = miner.pendingBalance
+            minerMinimumPayout.textContent = miner.minimumPayout
+            minerCapacity.textContent = Util.formatCapacity(miner.estimatedCapacity)
+            minerNConf.textContent = miner.nConf.toString()
+            minerShare.textContent = (miner.share*100).round(3).toString() + "%"
+            minerSoftware.textContent = (miner.userAgent ?: "Unknown")
+            setMinimumPayoutButton.show()
+        }
     }
 
     private fun generateSetMinimumMessage() {
@@ -152,7 +250,7 @@ object PoolClient {
         }
         WebUtil.fetchJson<SetMinimumMessage>("/api/getSetMinimumMessage?address=$address&newPayout=$newPayout").then { response ->
             if (response == null) {
-                console.error("Null set minimum message response")
+                console.error("Null get set minimum message response")
                 return@then
             }
             document.getElementById("setMinimumMessage")?.value = response.message.escapeHtml()
@@ -172,14 +270,35 @@ object PoolClient {
                 return@then
             }
             table.innerHTML = "<tr><th>Height</th><th>ID</th><th>Winner</th><th>Reward + Fees</th></tr>"
-            for (i in 0 until wonBlocks.size) {
-                val wonBlock = wonBlocks[i]
+            for (wonBlock in wonBlocks) {
                 table.innerHTML += "<tr><td>"+wonBlock.height+"</td><td>"+wonBlock.id+"</td><td>"+ formatMinerName(wonBlock.generatorRS, wonBlock.generator, null, true)+"</td><td>"+wonBlock.reward+"</td></tr>"
             }
         }
     }
 
     private fun setMinimumPayout() {
-
+        val message = document.getElementById("setMinimumMessage")?.value
+        val publicKey = document.getElementById("setMinimumPublicKey")?.value
+        val signature = document.getElementById("setMinimumSignature")?.value
+        if (message == null || message.isEmpty()) {
+            window.alert("Please generate message")
+            return
+        }
+        if (publicKey == null || publicKey.isEmpty()) {
+            window.alert("Please enter public key")
+            return
+        }
+        if (signature == null || signature.isEmpty()) {
+            window.alert("Please enter signature")
+            return
+        }
+        WebUtil.fetchJson<String>("/api/setMinerMinimumPayout?assignment=$message&publicKey=$publicKey&signature=$signature", true).then { responseMessage ->
+            if (responseMessage == null) {
+                console.error("Null set minimum message response")
+                return@then
+            }
+            document.getElementById("setMinimumResultText")?.textContent = responseMessage
+            document.getElementById("setMinimumResult")?.show()
+        }
     }
 }

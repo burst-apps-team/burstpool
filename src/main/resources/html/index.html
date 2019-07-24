@@ -26,7 +26,7 @@
     <div class="collapse navbar-collapse" id="navbarContent">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active">
-                <a class="nav-link" href="#" onclick="getWonBlocks()" data-toggle="modal" data-target="#wonBlocksModal">Won Blocks</a>
+                <a class="nav-link" href="#" id = "getWonBlocksButton" data-toggle="modal" data-target="#wonBlocksModal">Won Blocks</a>
             </li>
             <li class="nav-item active">
                 <a class="nav-link" href="#" data-toggle="modal" data-target="#infoModal">Info</a>
@@ -175,9 +175,6 @@
                             <td>Miner Address</td><td><span id="minerAddress">Loading...</span></td>
                         </tr>
                         <tr>
-                            <td>Miner Name</td><td><span id="minerName">Loading...</span></td>
-                        </tr>
-                        <tr>
                             <td>Pending Balance</td><td><span id="minerPending">Loading...</span></td>
                         </tr>
                         <tr>
@@ -195,7 +192,7 @@
                         <tr>
                             <td>Software</td><td><span id="minerSoftware">Loading...</span></td>
                         </tr>
-                        <tr id="setMinimumPayoutButton">
+                        <tr id="openSetMinimumPayoutModalButton">
                             <td colspan="2">
                                 <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#setMinimumPayoutModal">Set Minimum Payout</button>
                             </td>
@@ -286,7 +283,7 @@
                     <label for="setMinimumAmount">New Minimum Payout:</label>
                     <input type="text" id="setMinimumAmount" class="form-control darkText" placeholder="Amount in BURST" />
                 </p><p>
-                    <button class="btn btn-primary" onclick="generateSetMinimumMessage();">Generate message to be signed</button>
+                    <button class="btn btn-primary" id="generateSetMinimumMessageButton">Generate message to be signed</button>
                 </p><p>
                     <label for="setMinimumMessage">Message to sign (Valid for 1 hour from when generated):</label>
                     <input type="text" disabled id="setMinimumMessage" class="form-control darkText" placeholder="Message to sign will appear here" />
@@ -297,7 +294,7 @@
                     <label for="setMinimumSignature">Message Signature:</label>
                     <input type="text" id="setMinimumSignature" class="form-control darkText" placeholder="Signature" />
                 </p><p>
-                    <button onclick="setMinimumPayout();" class="btn btn-primary">Set Minimum Payout</button>
+                    <button id="setMinimumPayoutButton" class="btn btn-primary">Set Minimum Payout</button>
                 </p><p>
                 <div class="callout callout-info" id="setMinimumResult">
                     Result: <span id="setMinimumResultText"></span>

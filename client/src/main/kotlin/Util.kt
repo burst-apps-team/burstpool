@@ -4,7 +4,7 @@ import kotlin.math.round
 object Util {
     private const val genesisBaseTarget = 4398046511104 / 240
 
-    private val colors = arrayOf(
+    val colors = arrayOf(
             "#3366CC",
             "#DC3912",
             "#FF9900",

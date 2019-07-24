@@ -45,7 +45,7 @@ public class Pool {
     private final Semaphore processDeadlineSemaphore = new Semaphore(1);
 
     // Variables
-    private final AtomicReference<Instant> roundStartTime = new AtomicReference<>();
+    private final AtomicReference<Instant> roundStartTime = new AtomicReference<>(Instant.now());
     private final AtomicReference<Submission> bestSubmission = new AtomicReference<>();
     private final AtomicReference<BigInteger> bestDeadline = new AtomicReference<>();
     private final AtomicReference<MiningInfo> miningInfo = new AtomicReference<>();

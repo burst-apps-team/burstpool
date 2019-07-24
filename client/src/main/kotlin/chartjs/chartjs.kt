@@ -30,6 +30,7 @@ open external class Chart {
     open var config: Chart.ChartConfiguration = definedExternally
     open var data: Chart.ChartData = definedExternally
     open var destroy: () -> Any = definedExternally
+    open var update: () -> Any = definedExternally
     open var stop: () -> Any = definedExternally
     open var resize: () -> Any = definedExternally
     open var clear: () -> Any = definedExternally
