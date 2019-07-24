@@ -10,6 +10,7 @@ object PoolClient {
     private var maxSubmissions = "Unknown"
     private var chart: Chart? = null
     private var roundStart: Int = 0
+    private var lastSelectedMinerRS: String = ""
 
     private const val noneFoundYet = "None found yet!"
     private const val loadingText =  "Loading..."
@@ -18,14 +19,9 @@ object PoolClient {
     fun init() {
         getPoolInfo()
         WebUtil.schedule({ updateRoundElapsed() }, 1000, false)
-        WebUtil.schedule({ getCurrentRound() }, 10000)
-        WebUtil.schedule({ getMiners() }, 60000) // TODO only refresh this when we detect that we forged a block
-        WebUtil.schedule({ getTopMiners() }, 60000)
-        WebUtil.addModalShowListener("minerInfoModal") { prepareMinerInfo() }
-        WebUtil.addModalShowListener("setMinimumPayoutModal") {
-            document.getElementById("setMinimumAddress")?.value = document.getElementById("minerAddress")?.textContent?.escapeHtml() ?: ""
-            document.getElementById("setMinimumResult")?.hide()
-        }
+        WebUtil.schedule({ getCurrentRound() }, 2000)
+        WebUtil.schedule({ getMiners() }, 10000)
+        WebUtil.schedule({ getTopMiners() }, 10000)
         val addressInput = document.getElementById("addressInput")
         if (addressInput is HTMLInputElement) {
             addressInput.onkeyup = { event ->
@@ -42,6 +38,11 @@ object PoolClient {
         document.getElementById("generateSetMinimumMessageButton")?.onclick = { generateSetMinimumMessage() }
         document.getElementById("setMinimumPayoutButton")?.onclick = { setMinimumPayout() }
         document.getElementById("getWonBlocksButton")?.onclick = { getWonBlocks() }
+        document.getElementById("getMinerButton")?.onclick = { prepareMinerInfo() }
+        document.getElementById("openSetMinimumPayoutModalButton")?.onclick = {
+            document.getElementById("setMinimumAddress")?.value = lastSelectedMinerRS
+            document.getElementById("setMinimumResult")?.hide()
+        }
     }
 
     private fun formatMinerName(providedRS: String, id: String, providedName: String?, includeLink: Boolean): String {
@@ -100,7 +101,7 @@ object PoolClient {
             val bestDeadline = currentRound.bestDeadline
             if (bestDeadline != null) {
                 document.getElementById("bestDeadline")?.textContent = Util.formatTime(bestDeadline.deadline.toInt())
-                document.getElementById("bestMiner")?.textContent = formatMinerName(bestDeadline.minerRS, bestDeadline.miner, null, true)
+                document.getElementById("bestMiner")?.innerHTML = formatMinerName(bestDeadline.minerRS, bestDeadline.miner, null, true)
                 document.getElementById("bestNonce")?.textContent = bestDeadline.nonce
             } else {
                 document.getElementById("bestDeadline")?.textContent = noneFoundYet
@@ -111,7 +112,7 @@ object PoolClient {
     }
 
     private fun updateRoundElapsed() {
-        document.getElementById("currentRoundElapsed")?.textContent = Util.formatTime((Date().getTime() / 1000).roundToInt())
+        document.getElementById("currentRoundElapsed")?.textContent = Util.formatTime(((Date().getTime() / 1000) - roundStart).roundToInt())
     }
 
     private fun getMiners() {
@@ -157,7 +158,7 @@ object PoolClient {
             if (this.chart == null) {
                 val chartElement = document.getElementById("sharesChart")
                 if (chartElement == null || chartElement !is HTMLCanvasElement) {
-                    console.log("Shares chart null or not canvas element")
+                    console.error("Shares chart null or not canvas element")
                     return@then
                 }
                 this.chart = Chart(chartElement, object: Chart.ChartConfiguration {
@@ -194,8 +195,8 @@ object PoolClient {
         val minerNConf = document.getElementById("minerNConf")
         val minerShare = document.getElementById("minerShare")
         val minerSoftware = document.getElementById("minerSoftware")
-        val setMinimumPayoutButton = document.getElementById("openSetMinimumPayoutModalButton")
-        if (minerAddress == null || minerPending == null || minerMinimumPayout == null || minerCapacity == null || minerNConf == null || minerShare == null || minerSoftware == null || setMinimumPayoutButton == null) {
+        val setMinimumPayoutButtonTableRow = document.getElementById("openSetMinimumPayoutModalButtonTr")
+        if (minerAddress == null || minerPending == null || minerMinimumPayout == null || minerCapacity == null || minerNConf == null || minerShare == null || minerSoftware == null || setMinimumPayoutButtonTableRow == null) {
             console.error("Prepare miner info: null controls")
             return
         }
@@ -206,7 +207,7 @@ object PoolClient {
         minerNConf.textContent = loadingText
         minerShare.textContent = loadingText
         minerSoftware.textContent = loadingText
-        setMinimumPayoutButton.hide()
+        setMinimumPayoutButtonTableRow.hide()
         
         var miner: Miner? = null
         for (it in this.miners) {
@@ -221,8 +222,9 @@ object PoolClient {
             minerNConf.textContent = minerNotFoundText
             minerShare.textContent = minerNotFoundText
             minerSoftware.textContent = minerNotFoundText
-            setMinimumPayoutButton.hide()
+            setMinimumPayoutButtonTableRow.hide()
         } else {
+            lastSelectedMinerRS = miner.addressRS
             minerAddress.innerHTML = formatMinerName(miner.addressRS, miner.address, null, true)
             minerPending.textContent = miner.pendingBalance
             minerMinimumPayout.textContent = miner.minimumPayout
@@ -230,7 +232,7 @@ object PoolClient {
             minerNConf.textContent = miner.nConf.toString()
             minerShare.textContent = (miner.share*100).round(3).toString() + "%"
             minerSoftware.textContent = (miner.userAgent ?: "Unknown")
-            setMinimumPayoutButton.show()
+            setMinimumPayoutButtonTableRow.show()
         }
     }
 

@@ -1,19 +1,15 @@
 import org.w3c.dom.Element
-import org.w3c.dom.HTMLCanvasElement
 import org.w3c.dom.HTMLElement
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.MouseEvent
 import org.w3c.fetch.RequestInit
-import org.w3c.fetch.Response
 import kotlin.browser.document
 import kotlin.browser.window
 import kotlin.js.Promise
-import kotlin.reflect.KClass
 
 external fun decodeURIComponent(encodedURI: String): String
 
 object WebUtil {
-    private val modalListeners: MutableMap<String, () -> Unit> = mutableMapOf()
 
     fun setCookie(name: String, value: String) {
         document.cookie = "$name=$value;"
@@ -47,20 +43,6 @@ object WebUtil {
         window.setInterval(handler, repeatEveryMs)
         if (runImmediately) handler()
     }
-
-    fun addModalShowListener(modalId: String, listener: () -> Unit) {
-        modalListeners[modalId] = listener
-    }
-
-    fun initModalShowListeners() {
-        document.addEventListener("show.bs.modal", { event ->
-            modalListeners.forEach { entry ->
-                if (entry.key == event.target.asDynamic().id as String?) {
-                    entry.value()
-                }
-            }
-        })
-    }
 }
 
 fun Element.show() {
@@ -92,6 +74,6 @@ var Element.onclick: ((MouseEvent) -> dynamic)?
         return if (this !is HTMLElement) null else this.onclick
     }
     set(value) {
-        if (this !is HTMLInputElement) return
+        if (this !is HTMLElement) return
         this.onclick = value
     }

@@ -20,7 +20,7 @@ external interface BestDeadline {
     val miner: String
     val minerRS: String
     val nonce: String
-    val deadline: String
+    val deadline: Int
 }
 
 external interface MiningInfo {
