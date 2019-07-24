@@ -12,13 +12,13 @@ buildscript {
     }
 }
 
-apply plugin: 'kotlin2js'
-apply plugin: 'kotlin-dce-js'
-apply plugin: 'org.jetbrains.kotlin.frontend'
-
 repositories {
     jcenter()
 }
+
+apply plugin: 'kotlin2js'
+apply plugin: 'kotlin-dce-js'
+apply plugin: 'org.jetbrains.kotlin.frontend'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
@@ -40,14 +40,6 @@ kotlinFrontend {
 compileKotlin2Js {
     kotlinOptions.metaInfo = true
     kotlinOptions.outputFile = "$project.buildDir.path/js/${project.name}.js"
-    kotlinOptions.sourceMap = true
-    kotlinOptions.moduleKind = 'commonjs'
-    kotlinOptions.main = "call"
-}
-
-compileTestKotlin2Js {
-    kotlinOptions.metaInfo = true
-    kotlinOptions.outputFile = "$project.buildDir.path/js-tests/${project.name}-tests.js"
     kotlinOptions.sourceMap = true
     kotlinOptions.moduleKind = 'commonjs'
     kotlinOptions.main = "call"
