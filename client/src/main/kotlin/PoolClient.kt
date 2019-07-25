@@ -7,7 +7,9 @@ import kotlin.math.roundToInt
 
 object PoolClient {
     private var miners: Array<Miner> = emptyArray()
-    private var maxSubmissions = "Unknown"
+    private var maxSubmissions = Int.MAX_VALUE
+    private var processLag = 0
+    private var maxSubmissionsText = "Unknown"
     private var chart: Chart? = null
     private var roundStart: Int = 0
     private var lastSelectedMinerRS: String = ""
@@ -17,23 +19,15 @@ object PoolClient {
     private const val minerNotFoundText = "Miner not found"
 
     fun init() {
+        // Nothing to do until the page is loaded.
+    }
+
+    fun onPageLoaded() {
         getPoolInfo()
         WebUtil.schedule({ updateRoundElapsed() }, 1000, false)
         WebUtil.schedule({ getCurrentRound() }, 2000)
         WebUtil.schedule({ getMiners() }, 10000)
         WebUtil.schedule({ getTopMiners() }, 10000)
-        val addressInput = document.getElementById("addressInput")
-        if (addressInput is HTMLInputElement) {
-            addressInput.onkeyup = { event ->
-                if (event.keyCode == 13) {
-                    event.preventDefault()
-                    document.getElementById("getMinerButton")?.click()
-                }
-            }
-        }
-    }
-
-    fun onPageLoaded() {
         document.getElementById("addressInput")?.value = WebUtil.getCookie("getMinerLastValue") ?: ""
         document.getElementById("generateSetMinimumMessageButton")?.onclick = { generateSetMinimumMessage() }
         document.getElementById("setMinimumPayoutButton")?.onclick = { setMinimumPayout() }
@@ -42,6 +36,15 @@ object PoolClient {
         document.getElementById("openSetMinimumPayoutModalButton")?.onclick = {
             document.getElementById("setMinimumAddress")?.value = lastSelectedMinerRS
             document.getElementById("setMinimumResult")?.hide()
+        }
+        val addressInput = document.getElementById("addressInput")
+        if (addressInput is HTMLInputElement) {
+            addressInput.onkeyup = { event ->
+                if (event.keyCode == 13) {
+                    event.preventDefault()
+                    document.getElementById("getMinerButton")?.click()
+                }
+            }
         }
     }
 
@@ -69,7 +72,9 @@ object PoolClient {
                 console.error("Null pool config")
                 return@then
             }
-            this.maxSubmissions = (poolConfig.nAvg + poolConfig.processLag).toString()
+            this.maxSubmissions = poolConfig.nAvg
+            this.processLag = poolConfig.processLag
+            this.maxSubmissionsText = poolConfig.nAvg.toString()
             document.getElementById("poolName")?.textContent = poolConfig.poolName
             document.getElementById("poolAccount")?.innerHTML = formatMinerName(poolConfig.poolAccountRS, poolConfig.poolAccount, poolConfig.poolAccount, true)
             document.getElementById("nAvg")?.textContent = poolConfig.nAvg.toString()
@@ -100,7 +105,7 @@ object PoolClient {
             }
             val bestDeadline = currentRound.bestDeadline
             if (bestDeadline != null) {
-                document.getElementById("bestDeadline")?.textContent = Util.formatTime(bestDeadline.deadline.toInt())
+                document.getElementById("bestDeadline")?.textContent = Util.formatTime(bestDeadline.deadline)
                 document.getElementById("bestMiner")?.innerHTML = formatMinerName(bestDeadline.minerRS, bestDeadline.miner, null, true)
                 document.getElementById("bestNonce")?.textContent = bestDeadline.nonce
             } else {
@@ -130,8 +135,11 @@ object PoolClient {
             for (miner in response.miners) {
                 val currentRoundDeadline = Util.formatTime(miner.currentRoundBestDeadline)
                 val minerAddress = formatMinerName(miner.addressRS, miner.address, miner.name, true)
-                val userAgent = (miner.userAgent ?: "Unknown").escapeHtml()
-                table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+Util.formatCapacity(miner.estimatedCapacity)+"</td><td>"+miner.nConf+" / " + maxSubmissions + "</td><td>"+(miner.share*100).round(3).toString()+"%</td><td>"+userAgent+"</td></tr>"
+                val userAgent = miner.userAgent ?: "Unknown"
+                var nConf = miner.nConf - this.processLag
+                if (nConf < 0) nConf = 0
+                if (nConf > this.maxSubmissions) nConf = this.maxSubmissions
+                table.innerHTML += "<tr><td>"+minerAddress+"</td><td>"+currentRoundDeadline+"</td><td>"+miner.pendingBalance+"</td><td>"+Util.formatCapacity(miner.estimatedCapacity)+"</td><td>"+nConf+" / " + maxSubmissionsText + "</td><td>"+(miner.share*100).round(3).toString()+"%</td><td>"+userAgent+"</td></tr>"
             }
             document.getElementById("minerCount")?.textContent = response.miners.size.toString()
             document.getElementById("poolCapacity")?.textContent = Util.formatCapacity(response.poolCapacity)
