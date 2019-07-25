@@ -7,6 +7,7 @@ import burst.kit.entity.response.MiningInfo;
 import burst.kit.entity.response.http.MiningInfoResponse;
 import burst.kit.service.BurstNodeService;
 import burst.pool.miners.MinerTracker;
+import burst.pool.payout.PayoutService;
 import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.StorageService;
@@ -36,6 +37,7 @@ public class Pool {
     private final StorageService storageService;
     private final PropertyService propertyService;
     private final MinerTracker minerTracker;
+    private final PayoutService payoutService;
     private final CompositeDisposable disposables = new CompositeDisposable();
 
     private final Semaphore processBlockSemaphore = new Semaphore(1);
@@ -49,11 +51,12 @@ public class Pool {
     private final AtomicReference<MiningInfo> miningInfo = new AtomicReference<>();
     private final Set<BurstAddress> myRewardRecipients = new HashSet<>();
 
-    public Pool(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService, MinerTracker minerTracker) {
+    public Pool(BurstNodeService nodeService, StorageService storageService, PropertyService propertyService, MinerTracker minerTracker, PayoutService payoutService) {
         this.storageService = storageService;
         this.minerTracker = minerTracker;
         this.propertyService = propertyService;
         this.nodeService = nodeService;
+        this.payoutService = payoutService;
         disposables.add(refreshMiningInfoThread());
         disposables.add(processBlocksThread());
         resetRound(null);
@@ -191,7 +194,7 @@ public class Pool {
         minerTracker.setCurrentlyProcessingBlock(false);
         processBlockSemaphore.release();
         if (actuallyProcessed) {
-            minerTracker.payoutIfNeeded(storageService);
+            payoutService.payoutIfNeeded(storageService);
         }
     }
 

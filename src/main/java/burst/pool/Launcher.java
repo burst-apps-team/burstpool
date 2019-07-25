@@ -3,6 +3,8 @@ package burst.pool;
 import burst.kit.service.BurstNodeService;
 import burst.pool.miners.MinerMaths;
 import burst.pool.miners.MinerTracker;
+import burst.pool.payout.BurstPayoutService;
+import burst.pool.payout.PayoutService;
 import burst.pool.pool.Pool;
 import burst.pool.pool.Server;
 import burst.pool.storage.config.PropertyService;
@@ -39,7 +41,8 @@ public class Launcher {
             System.exit(-1);
         }
         MinerTracker minerTracker = new MinerTracker(nodeService, propertyService);
-        Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker);
+        PayoutService payoutService = new BurstPayoutService(nodeService, propertyService, minerTracker);
+        Pool pool = new Pool(nodeService, storageService, propertyService, minerTracker, payoutService);
         Server server = new Server(storageService, propertyService, pool, minerTracker);
         try {
             server.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
