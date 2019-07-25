@@ -5,14 +5,13 @@ package burst.pool.db.tables.records;
 
 
 import burst.pool.db.tables.BestSubmissions;
-
-import javax.annotation.Generated;
-
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Record5;
 import org.jooq.Row5;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import javax.annotation.Generated;
 
 
 /**

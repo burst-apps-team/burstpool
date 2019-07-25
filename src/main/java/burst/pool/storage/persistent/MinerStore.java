@@ -3,7 +3,6 @@ package burst.pool.storage.persistent;
 import burst.kit.entity.BurstValue;
 import burst.pool.miners.Deadline;
 
-import java.math.BigInteger;
 import java.util.List;
 
 public interface MinerStore {

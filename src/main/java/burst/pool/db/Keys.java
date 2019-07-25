@@ -4,26 +4,13 @@
 package burst.pool.db;
 
 
-import burst.pool.db.tables.BestSubmissions;
-import burst.pool.db.tables.FlywaySchemaHistory;
-import burst.pool.db.tables.MinerDeadlines;
-import burst.pool.db.tables.Miners;
-import burst.pool.db.tables.Payouts;
-import burst.pool.db.tables.PoolState;
-import burst.pool.db.tables.WonBlocks;
-import burst.pool.db.tables.records.BestSubmissionsRecord;
-import burst.pool.db.tables.records.FlywaySchemaHistoryRecord;
-import burst.pool.db.tables.records.MinerDeadlinesRecord;
-import burst.pool.db.tables.records.MinersRecord;
-import burst.pool.db.tables.records.PayoutsRecord;
-import burst.pool.db.tables.records.PoolStateRecord;
-import burst.pool.db.tables.records.WonBlocksRecord;
-
-import javax.annotation.Generated;
-
+import burst.pool.db.tables.*;
+import burst.pool.db.tables.records.*;
 import org.jooq.Identity;
 import org.jooq.UniqueKey;
 import org.jooq.impl.Internal;
+
+import javax.annotation.Generated;
 
 
 /**

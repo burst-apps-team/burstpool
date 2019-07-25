@@ -6,7 +6,6 @@ import burst.pool.storage.config.PropertyService;
 import burst.pool.storage.config.Props;
 import burst.pool.storage.persistent.MinerStore;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;

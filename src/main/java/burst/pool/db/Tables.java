@@ -4,13 +4,7 @@
 package burst.pool.db;
 
 
-import burst.pool.db.tables.BestSubmissions;
-import burst.pool.db.tables.FlywaySchemaHistory;
-import burst.pool.db.tables.MinerDeadlines;
-import burst.pool.db.tables.Miners;
-import burst.pool.db.tables.Payouts;
-import burst.pool.db.tables.PoolState;
-import burst.pool.db.tables.WonBlocks;
+import burst.pool.db.tables.*;
 
 import javax.annotation.Generated;
 

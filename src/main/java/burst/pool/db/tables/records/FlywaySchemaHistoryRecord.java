@@ -5,16 +5,14 @@ package burst.pool.db.tables.records;
 
 
 import burst.pool.db.tables.FlywaySchemaHistory;
-
-import java.sql.Timestamp;
-
-import javax.annotation.Generated;
-
 import org.jooq.Field;
 import org.jooq.Record1;
 import org.jooq.Record10;
 import org.jooq.Row10;
 import org.jooq.impl.UpdatableRecordImpl;
+
+import javax.annotation.Generated;
+import java.sql.Timestamp;
 
 
 /**
