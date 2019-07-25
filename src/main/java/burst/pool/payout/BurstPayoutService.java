@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class BurstPayoutService extends AbstractPayoutService implements AutoCloseable {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractPayoutService.class);
+    private static final Logger logger = LoggerFactory.getLogger(BurstPayoutService.class);
 
     private final BurstCrypto burstCrypto = BurstCrypto.getInstance();
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
