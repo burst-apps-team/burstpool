@@ -45,7 +45,7 @@ dependencies {
     implementation "org.slf4j:slf4j-api:1.7.26"
     implementation 'com.zaxxer:HikariCP:3.3.1'
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation group: 'org.ehcache', name: 'ehcache', version: '3.7.1'
+    implementation group: 'org.ehcache', name: 'ehcache', version: '3.8.0'
 
     // Needed for build script so "compile" needed
     //compile "com.h2database:h2:1.4.197"
