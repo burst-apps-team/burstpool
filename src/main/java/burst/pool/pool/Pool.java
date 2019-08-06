@@ -241,11 +241,13 @@ public class Pool {
         }
 
         MiningInfo localMiningInfo = miningInfo.get();
+
         // TODO poc2 switch
         BigInteger deadline = burstCrypto.calculateDeadline(submission.getMiner(), Long.parseUnsignedLong(submission.getNonce().toString()), localMiningInfo.getGenerationSignature(), burstCrypto.calculateScoop(localMiningInfo.getGenerationSignature(), localMiningInfo.getHeight()), localMiningInfo.getBaseTarget(), 2);
+        BigInteger maxDeadline = BigInteger.valueOf(propertyService.getLong(Props.maxDeadline));
 
-        if (deadline.compareTo(BigInteger.valueOf(propertyService.getLong(Props.maxDeadline))) >= 0) {
-            throw new SubmissionException("Deadline exceeds maximum allowed deadline");
+        if (deadline.compareTo(maxDeadline) > 0) {
+            throw new SubmissionException("Deadline exceeds maximum allowed deadline (Submitted " + deadline.toString() + ", maximum is " + maxDeadline.toString() + ")");
         }
 
         if (logger.isDebugEnabled()) {
