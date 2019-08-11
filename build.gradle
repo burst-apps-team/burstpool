@@ -41,7 +41,7 @@ dependencies {
     implementation "org.jooq:jooq-meta"
     implementation "org.jooq:jooq-codegen"
     implementation "org.apache.logging.log4j:log4j-api:2.11.2"
-    implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.11.2"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.12.1"
     implementation "org.slf4j:slf4j-api:1.7.26"
     implementation 'com.zaxxer:HikariCP:3.3.1'
     implementation 'com.google.code.gson:gson:2.8.5'
