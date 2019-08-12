@@ -50,7 +50,7 @@ dependencies {
     // Needed for build script so "compile" needed
     //compile "com.h2database:h2:1.4.197"
     //jooqRuntime "com.h2database:h2:1.4.197"
-    compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
+    compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.3'
     jooqRuntime group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
 }
 
