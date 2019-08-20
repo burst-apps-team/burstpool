@@ -119,3 +119,5 @@ build/
 !gradle-wrapper.jar
 
 *.log
+
+/src/main/resources/html/js/main.bundle.js

@@ -88,17 +88,22 @@ generateBurstPoolJooqSchemaSource.dependsOn flywayMigrate
 generateBurstPoolJooqSchemaSource.onlyIf {System.getProperty("generateSchema") == "true"}
 flywayMigrate.onlyIf {System.getProperty("generateSchema") == "true"}
 
-task buildJar(dependsOn: shadowJar)
-
-task installJsBundle(type: Copy) {
-    dependsOn(':client:bundle')
-    from file("$projectDir/client/build/bundle/main.bundle.js")
-    into file("$projectDir/src/main/resources/html/js/")
+task removeJsBundle << {
+    delete {
+        delete "$projectDir/client/build/bundle/main.bundle.js"
+        delete "$projectDir/src/main/resources/html/js/"
+    }
 }
 
-build.dependsOn installJsBundle
-shadowJar.dependsOn installJsBundle
-jar.dependsOn installJsBundle
+task copyJsBundle << {
+    copy {
+        from file("$projectDir/client/build/bundle/main.bundle.js")
+        into file("$projectDir/src/main/resources/html/js/")
+    }
+}
+
+copyJsBundle.dependsOn(removeJsBundle, ':client:bundle')
+assemble.dependsOn copyJsBundle
 
 jar {
     manifest {
