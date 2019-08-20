@@ -28,8 +28,12 @@ apply plugin: 'nu.studer.jooq'
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
-def dburl =  "jdbc:mariadb://localhost:3306/pooldb"
-def dbusername = "root"
+def dbUrl =  "jdbc:mariadb://localhost:3306/pooldb"
+def dbUsername = "root"
+
+def jooqVersion = "3.11.12"
+def bundleSource = "$projectDir/client/build/bundle/main.bundle.js"
+def bundleTarget = "$projectDir/src/main/resources/html/js/"
 
 dependencies {
     implementation 'org.apache.poi:poi-ooxml:4.1.0'
@@ -37,26 +41,24 @@ dependencies {
     implementation 'com.github.burst-apps-team:burstkit4j:0.12.6'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation "org.flywaydb:flyway-core:5.2.4"
-    implementation "org.jooq:jooq"
-    implementation "org.jooq:jooq-meta"
-    implementation "org.jooq:jooq-codegen"
-    implementation "org.apache.logging.log4j:log4j-api:2.12.1"
-    implementation "org.apache.logging.log4j:log4j-slf4j-impl:2.12.1"
+    implementation "org.jooq:jooq:$jooqVersion"
+    implementation "org.jooq:jooq-meta$jooqVersion"
+    implementation "org.jooq:jooq-codegen$jooqVersion"
+    def log4jVersion = "2.12.1"
+    implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
     implementation "org.slf4j:slf4j-api:1.7.28"
     implementation 'com.zaxxer:HikariCP:3.3.1'
     implementation 'com.google.code.gson:gson:2.8.5'
-    implementation group: 'org.ehcache', name: 'ehcache', version: '3.8.0'
-
-    // Needed for build script so "compile" needed
-    //compile "com.h2database:h2:1.4.197"
-    //jooqRuntime "com.h2database:h2:1.4.197"
-    compile group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.3'
-    jooqRuntime group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.4.1'
+    implementation "org.ehcache:ehcache:3.8.0"
+    def mariaDbVersion = "2.4.3"
+    implementation "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
+    jooqRuntime "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
 }
 
 flyway {
-    url = "${dburl}"
-    user = "${dbusername}"
+    url = "${jooqVersion}"
+    user = "${dbUsername}"
     locations = ["filesystem:"+project.projectDir.toString()+"/src/main/resources/db/migration"]
 }
 
@@ -65,8 +67,8 @@ jooq {
     edition = "OSS"
     burstPool(sourceSets.main) {
         jdbc {
-            url = "${dburl}"
-            user = "${dbusername}"
+            url = "${dbUrl}"
+            user = "${dbUsername}"
         }
         generator {
             name = 'org.jooq.codegen.JavaGenerator'
@@ -90,20 +92,21 @@ flywayMigrate.onlyIf {System.getProperty("generateSchema") == "true"}
 
 task removeJsBundle << {
     delete {
-        delete "$projectDir/client/build/bundle/main.bundle.js"
-        delete "$projectDir/src/main/resources/html/js/"
+        delete bundleSource
+        delete bundleTarget
     }
 }
 
 task copyJsBundle << {
     copy {
-        from file("$projectDir/client/build/bundle/main.bundle.js")
-        into file("$projectDir/src/main/resources/html/js/")
+        from file(bundleSource)
+        into file(bundleTarget)
     }
 }
 
 copyJsBundle.dependsOn(removeJsBundle, ':client:bundle')
 assemble.dependsOn copyJsBundle
+shadowJar.dependsOn copyJsBundle
 
 jar {
     manifest {

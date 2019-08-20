@@ -120,4 +120,4 @@ build/
 
 *.log
 
-/src/main/resources/html/js/main.bundle.js
+*.bundle.js
