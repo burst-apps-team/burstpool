@@ -42,8 +42,8 @@ dependencies {
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation "org.flywaydb:flyway-core:5.2.4"
     implementation "org.jooq:jooq:$jooqVersion"
-    implementation "org.jooq:jooq-meta$jooqVersion"
-    implementation "org.jooq:jooq-codegen$jooqVersion"
+    implementation "org.jooq:jooq-meta:$jooqVersion"
+    implementation "org.jooq:jooq-codegen:$jooqVersion"
     def log4jVersion = "2.12.1"
     implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
@@ -57,18 +57,18 @@ dependencies {
 }
 
 flyway {
-    url = "${jooqVersion}"
-    user = "${dbUsername}"
+    url = dbUrl
+    user = dbUsername
     locations = ["filesystem:"+project.projectDir.toString()+"/src/main/resources/db/migration"]
 }
 
 jooq {
-    version = "3.11.9"
+    version = jooqVersion
     edition = "OSS"
     burstPool(sourceSets.main) {
         jdbc {
-            url = "${dbUrl}"
-            user = "${dbUsername}"
+            url = dbUrl
+            user = dbUsername
         }
         generator {
             name = 'org.jooq.codegen.JavaGenerator'
