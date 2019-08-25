@@ -109,7 +109,10 @@ public class Server extends NanoHTTPD {
         } else if (Objects.equals(params.get("requestType"), "getMiningInfo")) {
             MiningInfo miningInfo = pool.getMiningInfo();
             if (miningInfo == null) return gson.toJson(JsonNull.INSTANCE);
-            return gson.toJson(new MiningInfoResponse(burstCrypto.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight()));
+            // TODO remove dependency on internal burstkit4j class
+            JsonObject miningInfoJson = gson.toJsonTree(new MiningInfoResponse(burstCrypto.toHexString(miningInfo.getGenerationSignature()), miningInfo.getBaseTarget(), miningInfo.getHeight())).getAsJsonObject();
+            miningInfoJson.addProperty("targetDeadline", propertyService.getLong(Props.maxDeadline));
+            return miningInfoJson.toString();
         } else {
             return "404 not found";
         }
