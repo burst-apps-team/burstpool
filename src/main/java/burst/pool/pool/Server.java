@@ -94,6 +94,20 @@ public class Server extends NanoHTTPD {
             } catch (Exception ignored) {}
             Submission submission = new Submission(BurstAddress.fromEither(params.get("accountId")), nonce);
             try {
+                String heightString = params.get("blockheight");
+                if (heightString != null && !Objects.equals(heightString, "")) {
+                    long blockHeight;
+                    try {
+                        blockHeight = Long.parseUnsignedLong(heightString);
+                    } catch (NumberFormatException e) {
+                        throw new SubmissionException("Malformed blockheight");
+                    }
+                    MiningInfo miningInfo = pool.getMiningInfo();
+                    if (miningInfo == null) throw new SubmissionException("Cannot submit, new round starting");
+                    if (blockHeight != miningInfo.getHeight()) {
+                        throw new SubmissionException("Given block height does not match current blockchain height");
+                    }
+                }
                 if (submission.getMiner() == null) {
                     throw new SubmissionException("Account ID not set");
                 }
