@@ -74,6 +74,9 @@ object PoolClient {
             }
             this.maxSubmissions = poolConfig.nAvg
             this.processLag = poolConfig.processLag
+            if (this.maxSubmissionsText == "Unknown") { // If this is the first fetch, don't leave it lingering as "Unknown", refresh the miners table
+                getMiners()
+            }
             this.maxSubmissionsText = poolConfig.nAvg.toString()
             document.getElementById("poolName")?.textContent = poolConfig.poolName
             document.getElementById("poolAccount")?.innerHTML = formatMinerName(poolConfig.poolAccountRS, poolConfig.poolAccount, poolConfig.poolAccount, true)
