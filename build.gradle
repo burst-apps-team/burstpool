@@ -105,8 +105,7 @@ task copyJsBundle << {
 }
 
 copyJsBundle.dependsOn(removeJsBundle, ':client:bundle')
-assemble.dependsOn copyJsBundle
-shadowJar.dependsOn copyJsBundle
+processResources.dependsOn copyJsBundle
 
 jar {
     manifest {
