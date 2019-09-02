@@ -31,7 +31,7 @@ targetCompatibility = 1.8
 def dbUrl =  "jdbc:mariadb://localhost:3306/pooldb"
 def dbUsername = "root"
 
-def jooqVersion = "3.11.12"
+def jooqVersion = "3.12.0"
 def bundleSource = "$projectDir/client/build/bundle/main.bundle.js"
 def bundleTarget = "$projectDir/src/main/resources/html/js/"
 
