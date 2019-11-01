@@ -1,6 +1,6 @@
 buildscript {
     dependencies {
-        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.4'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:5.1.0'
         classpath 'nu.studer:gradle-jooq-plugin:3.0.3'
     }
 
@@ -12,7 +12,7 @@ buildscript {
 }
 
 plugins {
-    id "org.flywaydb.flyway" version "6.0.0"
+    id "org.flywaydb.flyway" version "6.0.8"
 }
 
 repositories {
@@ -31,14 +31,13 @@ targetCompatibility = 1.8
 def dbUrl =  "jdbc:mariadb://localhost:3306/pooldb"
 def dbUsername = "root"
 
-def jooqVersion = "3.12.0"
+def jooqVersion = "3.12.1"
 def bundleSource = "$projectDir/client/build/bundle/main.bundle.js"
 def bundleTarget = "$projectDir/src/main/resources/html/js/"
 
 dependencies {
-    implementation 'org.apache.poi:poi-ooxml:4.1.0'
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.12'
-    implementation 'com.github.burst-apps-team:burstkit4j:0.12.6'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.13'
+    implementation 'com.github.burst-apps-team:burstkit4j:v0.12.6'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation "org.flywaydb:flyway-core:5.2.4"
     implementation "org.jooq:jooq:$jooqVersion"
@@ -48,10 +47,10 @@ dependencies {
     implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
     implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
     implementation "org.slf4j:slf4j-api:1.7.28"
-    implementation 'com.zaxxer:HikariCP:3.3.1'
-    implementation 'com.google.code.gson:gson:2.8.5'
-    implementation "org.ehcache:ehcache:3.8.0"
-    def mariaDbVersion = "2.4.3"
+    implementation 'com.zaxxer:HikariCP:3.4.1'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation "org.ehcache:ehcache:3.8.1"
+    def mariaDbVersion = "2.5.1"
     implementation "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
     jooqRuntime "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
 }
@@ -90,17 +89,21 @@ generateBurstPoolJooqSchemaSource.dependsOn flywayMigrate
 generateBurstPoolJooqSchemaSource.onlyIf {System.getProperty("generateSchema") == "true"}
 flywayMigrate.onlyIf {System.getProperty("generateSchema") == "true"}
 
-task removeJsBundle << {
-    delete {
-        delete bundleSource
-        delete bundleTarget
+task removeJsBundle {
+    doLast {
+        delete {
+            "$bundleSource"
+            "$bundleTarget"
+        }
     }
 }
 
-task copyJsBundle << {
-    copy {
-        from file(bundleSource)
-        into file(bundleTarget)
+task copyJsBundle {
+    doLast {
+        copy {
+            from "$bundleSource"
+            into "$bundleTarget"
+        }
     }
 }
 
