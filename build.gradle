@@ -36,7 +36,7 @@ def bundleSource = "$projectDir/client/build/bundle/main.bundle.js"
 def bundleTarget = "$projectDir/src/main/resources/html/js/"
 
 dependencies {
-    implementation 'io.reactivex.rxjava2:rxjava:2.2.13'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.14'
     implementation 'com.github.burst-apps-team:burstkit4j:v0.12.6'
     implementation 'org.nanohttpd:nanohttpd:2.3.1'
     implementation "org.flywaydb:flyway-core:5.2.4"
