@@ -198,7 +198,7 @@ public class Server extends NanoHTTPD {
             if (Instant.now().getEpochSecond() - currentTime > 60*60) { // 1 Hour
                 return new JsonPrimitive("Assignment has expired").toString();
             }
-            if (newMinimumPayout.compareTo(BurstValue.fromBurst(propertyService.getFloat(Props.minimumMinimumPayout))) <= 0) {
+            if (newMinimumPayout.compareTo(BurstValue.fromBurst(propertyService.getFloat(Props.minimumMinimumPayout))) < 0) {
                 return new JsonPrimitive("New minimum payout is below the amount allowed by the pool").toString();
             }
             byte[] signatureBytes;
