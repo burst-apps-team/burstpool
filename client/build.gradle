@@ -16,6 +16,7 @@ repositories {
     jcenter()
 }
 
+// TODO upgrade to new kotlin.js plugin when they actually document it :/
 apply plugin: 'kotlin2js'
 apply plugin: 'kotlin-dce-js'
 apply plugin: 'org.jetbrains.kotlin.frontend'
