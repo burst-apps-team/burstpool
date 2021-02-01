@@ -57,7 +57,7 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:3.4.1'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation "org.ehcache:ehcache:3.8.1"
-    def mariaDbVersion = "2.5.1"
+    def mariaDbVersion = "2.7.2"
     implementation "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
     jooqRuntime "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
 }
